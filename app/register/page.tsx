@@ -1,10 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '../api/auth';
 import Link from 'next/link';
 
-export default function RegisterPage() {
+function RegisterContent() {
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
@@ -104,5 +104,13 @@ export default function RegisterPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#020617] flex items-center justify-center text-white">Loading...</div>}>
+            <RegisterContent />
+        </Suspense>
     );
 }
