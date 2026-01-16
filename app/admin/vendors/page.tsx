@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LucideSearch, LucideMoreVertical, LucideCalendarClock, LucideBan } from 'lucide-react';
 
-const API_URL = 'http://localhost:4000';
+const API_URL = 'http://ledger.thekada.in';
 
 export default function VendorManagement() {
     const [vendors, setVendors] = useState<any[]>([]);
@@ -108,8 +108,8 @@ export default function VendorManagement() {
                                 </td>
                                 <td className="p-4">
                                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${v.subscription?.status === 'ACTIVE'
-                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                            : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                        : 'bg-red-500/10 text-red-400 border-red-500/20'
                                         }`}>
                                         {v.subscription?.status}
                                     </span>

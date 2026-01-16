@@ -1,0 +1,57 @@
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
+
+export async function POST(req: Request) {
+    try {
+        const { phoneNumber, password } = await req.json();
+
+        if (!phoneNumber || !password) {
+            return NextResponse.json({ error: 'Phone number and password are required' }, { status: 400 });
+        }
+
+        // Find Vendor
+        const vendor = await prisma.vendor.findUnique({
+            where: { phoneNumber },
+        });
+
+        if (!vendor) {
+            return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+        }
+
+        // Verify Password
+        // Handle migration case: if password is null/empty in DB (shouldn't happen with new schema but good safety)
+        if (!vendor.password) {
+            return NextResponse.json({ error: 'Please reset your password' }, { status: 400 });
+        }
+
+        const isValid = await bcrypt.compare(password, vendor.password);
+
+        if (!isValid) {
+            return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+        }
+
+        // Generate JWT
+        const token = jwt.sign(
+            { sub: vendor.id, phone: vendor.phoneNumber },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        return NextResponse.json({
+            access_token: token,
+            vendor: {
+                id: vendor.id,
+                phone: vendor.phoneNumber,
+                businessName: vendor.businessName,
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}

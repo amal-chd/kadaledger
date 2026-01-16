@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:4000';
+const API_URL = 'http://ledger.thekada.in';
 
 export const authApi = {
     login: async (phone: string) => {

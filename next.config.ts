@@ -6,14 +6,14 @@ const nextConfig: NextConfig = {
   compress: true,
   generateEtags: true,
   pageExtensions: ["ts", "tsx"],
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.BACKEND_URL || 'http://localhost:4000'}/:path*`,
-      },
-    ];
-  },
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: '/api/:path*',
+  //       destination: `${process.env.BACKEND_URL || 'http://localhost:4000'}/:path*`,
+  //     },
+  //   ];
+  // },
 };
 
 export default nextConfig;

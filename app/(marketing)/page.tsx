@@ -26,7 +26,7 @@ export default function Home() {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
     const handlePayment = async (plan: 'starter' | 'professional' | 'business', amount: number) => {
-        const res = await fetch('http://localhost:3000/api/payments/create-order', {
+        const res = await fetch('/api/payments/create-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount }),
@@ -41,7 +41,7 @@ export default function Home() {
             description: `Subscription for ${plan} plan`,
             order_id: order.id,
             handler: async function (response: any) {
-                const verifyRes = await fetch('http://localhost:3000/api/payments/verify', {
+                const verifyRes = await fetch('/api/payments/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
