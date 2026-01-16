@@ -42,6 +42,9 @@ const Navbar = () => {
 
           {/* Center: Logo */}
           <Link href="/" className="flex items-center gap-2 group absolute left-1/2 transform -translate-x-1/2">
+            <div className="relative w-8 h-8">
+              <img src="/logo.png" alt="Kada Ledger" className="w-full h-full object-contain" />
+            </div>
             <span className="text-2xl font-bold tracking-tight text-white">
               Kada Ledger
             </span>
