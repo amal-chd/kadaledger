@@ -3,36 +3,37 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
+
+import Image from 'next/image';
 
 export default function LoginPage() {
     const [phone, setPhone] = useState('');
-    const [otp, setOtp] = useState('');
-    const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const handleSendOtp = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        try {
-            await authApi.login(phone);
-            setStep('OTP');
-        } catch (err) {
-            alert('Failed to send OTP');
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const handleVerify = async (e: React.FormEvent) => {
-        e.preventDefault();
+        if (!phone || phone.length < 10) {
+            toast.error('Please enter a valid phone number');
+            return;
+        }
+
+        if (!password) {
+            toast.error('Please enter your password');
+            return;
+        }
+
         setLoading(true);
         try {
-            const { access_token } = await authApi.verify(phone, otp);
+            const { access_token } = await authApi.login({ phoneNumber: phone, password });
             localStorage.setItem('token', access_token);
+            toast.success('Login successful!');
             router.push('/dashboard');
-        } catch (err) {
-            alert('Invalid OTP');
+        } catch (err: any) {
+            toast.error(err.message || 'Login failed. Please check your credentials.');
         } finally {
             setLoading(false);
         }
@@ -46,57 +47,53 @@ export default function LoginPage() {
 
             <div className="max-w-md w-full glass-card p-10 rounded-[2.5rem] relative z-10 border border-white/10 shadow-2xl backdrop-blur-xl">
                 <div className="text-center mb-8">
+                    <div className="flex justify-center mb-6">
+                        <Image src="/brand-logo-final.png" alt="Kada Ledger" width={80} height={80} className="w-20 h-auto rounded-2xl shadow-xl shadow-blue-500/20" />
+                    </div>
                     <h1 className="text-4xl font-bold text-white mb-2">Welcome Back</h1>
                     <p className="text-blue-200/80">Login to access your dashboard.</p>
                 </div>
 
-                {step === 'PHONE' ? (
-                    <form onSubmit={handleSendOtp} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-blue-200/60 mb-2 pl-1">Phone Number</label>
-                            <input
-                                type="tel"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all focus:bg-white/10"
-                                placeholder="9876543210"
-                                required
-                            />
-                        </div>
-                        <button
-                            disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {loading ? 'Sending Code...' : 'Send OTP'}
-                        </button>
-                    </form>
-                ) : (
-                    <form onSubmit={handleVerify} className="space-y-6 animate-fade-in-up">
-                        <div>
-                            <label className="block text-sm font-medium text-blue-200/60 mb-2 pl-1">Enter OTP</label>
-                            <input
-                                type="text"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 outline-none text-center tracking-[1em] text-xl transition-all focus:bg-white/10"
-                                placeholder="XXXXXX"
-                                required
-                            />
-                        </div>
-                        <button
-                            disabled={loading}
-                            className="w-full bg-emerald-500 hover:bg-emerald-400 text-white py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {loading ? 'Verifying...' : 'Verify & Login'}
-                        </button>
-                        <button type="button" onClick={() => setStep('PHONE')} className="w-full text-sm text-blue-300/60 hover:text-white transition-colors">
-                            Change Phone Number
-                        </button>
-                    </form>
-                )}
+                <form onSubmit={handleLogin} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-blue-200/60 mb-2 pl-1">Phone Number</label>
+                        <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all focus:bg-white/10"
+                            placeholder="Enter your phone number"
+                            required
+                        />
+                    </div>
 
-                <div className="mt-8 text-center text-sm text-blue-200/60">
-                    Don't have an account? <Link href="/register?plan=trial" className="text-blue-400 hover:text-white hover:underline transition-colors font-medium">Start Free Trial</Link>
+                    <div>
+                        <label className="block text-sm font-medium text-blue-200/60 mb-2 pl-1">Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all focus:bg-white/10"
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        disabled={loading}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                    >
+                        {loading ? 'Logging in...' : 'Login'}
+                    </button>
+                </form>
+
+                <div className="mt-8 text-center">
+                    <p className="text-blue-200/60">
+                        Don't have an account?{' '}
+                        <Link href="/register?plan=trial" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                            Sign up
+                        </Link>
+                    </p>
                 </div>
             </div>
         </div>

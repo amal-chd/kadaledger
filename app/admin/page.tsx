@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const API_URL = 'http://ledger.thekada.in';
+const API_URL = '/api';
 
 export default function AdminPage() {
     const [vendors, setVendors] = useState<any[]>([]);

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, use } from 'react';
 
-const API_URL = 'http://ledger.thekada.in';
+const API_URL = '/api';
 
 export default function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
     // Unwrap params using React.use() or await in async component (Next.js 15+)

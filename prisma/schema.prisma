@@ -11,7 +11,7 @@ model Vendor {
   id            String         @id @default(uuid())
   phoneNumber   String         @unique
   businessName  String?
-  password      String         // [NEW] Added for password auth
+  password      String?        // [MODIFIED] Optional for OTP-based auth
   language      String?        @default("English")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt

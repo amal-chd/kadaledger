@@ -23,11 +23,11 @@ export async function GET(req: Request) {
 
         return NextResponse.json({
             id: vendor.id,
-            name: vendor.ownerName || '', // Handle legacy/missing fields
+            // name: vendor.ownerName || '', // Removed: Field does not exist in schema
             businessName: vendor.businessName,
             phoneNumber: vendor.phoneNumber,
-            businessCategory: vendor.businessCategory || 'Retail',
-            city: vendor.city || '',
+            // businessCategory: vendor.businessCategory || 'Retail', // Removed
+            // city: vendor.city || '', // Removed
             language: vendor.language || 'English',
             subscription: vendor.subscription
         });
@@ -51,13 +51,10 @@ export async function PATCH(req: Request) {
         // And subscription related updates if needed (usually handled by payment webhook, but okay for trial start)
 
         // Extract only allowed fields
-        const { businessName, ownerName, businessCategory, city, language, plan, trialStartDate } = body;
+        const { businessName, language, plan, trialStartDate } = body;
 
         const updateData: any = {
             businessName,
-            ownerName,
-            businessCategory,
-            city,
             language
         };
 

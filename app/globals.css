@@ -160,10 +160,28 @@
 @layer base {
   * {
     @apply border-[color:var(--color-border)];
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-[color:var(--color-background)] text-[color:var(--color-foreground)] font-sans selection:bg-blue-500/30;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    height: 100%;
+    width: 100%;
   }
 
   h1,
@@ -196,7 +214,7 @@
   }
 
   .container-width {
-    @apply max-w-7xl mx-auto px-6 sm:px-8;
+    @apply max-w-7xl mx-auto px-5 sm:px-8;
   }
 
   /* Ambient Background Glows */
@@ -212,7 +230,7 @@
     perspective: 1000px;
   }
 
-  /* Hide Scrollbar for Floating Container */
+  /* Hide Scrollbar */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -220,10 +238,6 @@
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-
-  html {
-    scroll-behavior: smooth;
   }
 
   .snap-x-mandatory {

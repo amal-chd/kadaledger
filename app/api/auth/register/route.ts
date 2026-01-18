@@ -49,17 +49,40 @@ export async function POST(req: Request) {
             { expiresIn: '7d' }
         );
 
-        return NextResponse.json({
+        return corsResponse(NextResponse.json({
             access_token: token,
             vendor: {
                 id: vendor.id,
                 phone: vendor.phoneNumber,
                 businessName: vendor.businessName,
             }
-        });
+        }));
 
     } catch (error) {
         console.error('Register error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return corsResponse(NextResponse.json({ error: 'Internal server error' }, { status: 500 }));
     }
 }
+
+export async function OPTIONS() {
+    return handleOptions();
+}
+
+function corsResponse(res: NextResponse) {
+    res.headers.set('Access-Control-Allow-Origin', '*');
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PATCH');
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res;
+}
+
+function handleOptions() {
+    return new NextResponse(null, {
+        status: 204,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PATCH',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+    });
+}
+

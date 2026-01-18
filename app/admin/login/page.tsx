@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const API_URL = 'http://ledger.thekada.in';
+const API_URL = '/api';
 
 export default function AdminLogin() {
     const [email, setEmail] = useState('');
@@ -37,6 +37,9 @@ export default function AdminLogin() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-900">
             <div className="w-full max-w-md p-8 bg-slate-800 rounded-2xl shadow-xl border border-slate-700">
+                <div className="flex justify-center mb-6">
+                    <img src="/brand-logo-final.png" alt="Kada Ledger Logo" className="h-20 w-auto" />
+                </div>
                 <h1 className="text-3xl font-bold text-white mb-2 text-center">Admin Login</h1>
                 <p className="text-slate-400 text-center mb-8">Authorised Personnel Only</p>
 

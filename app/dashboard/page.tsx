@@ -2,13 +2,16 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const API_URL = 'http://ledger.thekada.in';
+const API_URL = '/api';
+
+import { useCustomerView } from '@/contexts/customer-view-context';
 
 export default function Dashboard() {
     const [vendor, setVendor] = useState<any>(null);
     const [customers, setCustomers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const { openCustomer } = useCustomerView();
 
     useEffect(() => {
         fetchData();
@@ -92,16 +95,20 @@ export default function Dashboard() {
 
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-4">
-                    <h2 className="text-xl font-bold mb-4">Customers</h2>
+                    <h2 className="text-xl font-bold mb-4 text-white">Customers</h2>
                     {customers.map(c => (
-                        <div key={c.id} className="p-4 rounded-xl bg-surface border border-white/5 flex justify-between items-center hover:border-indigo-500/30">
+                        <div
+                            key={c.id}
+                            onClick={() => openCustomer(c.id)}
+                            className="p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center hover:bg-white/10 transition-colors cursor-pointer"
+                        >
                             <div>
-                                <div className="font-bold">{c.name}</div>
-                                <div className="text-sm text-slate-500">{c.phoneNumber}</div>
+                                <div className="font-bold text-white">{c.name}</div>
+                                <div className="text-sm text-slate-400">{c.phoneNumber}</div>
                             </div>
                             <div className="text-right">
-                                <div className={`font-mono font-bold ${Number(c.balance) > 0 ? 'text-red-400' : 'text-green-400'}`}>₹{c.balance}</div>
-                                <div className="text-xs text-slate-600">Balance</div>
+                                <div className={`font-mono font-bold ${Number(c.balance) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>₹{c.balance}</div>
+                                <div className="text-xs text-slate-400">Balance</div>
                             </div>
                         </div>
                     ))}
@@ -117,7 +124,7 @@ export default function Dashboard() {
                                 placeholder="Name"
                                 value={newCustomerName}
                                 onChange={e => setNewCustomerName(e.target.value)}
-                                className="w-full bg-slate-800 border-none rounded-lg px-4 py-3"
+                                className="w-full bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             />
                             <input
@@ -125,10 +132,10 @@ export default function Dashboard() {
                                 placeholder="Phone"
                                 value={newCustomerPhone}
                                 onChange={e => setNewCustomerPhone(e.target.value)}
-                                className="w-full bg-slate-800 border-none rounded-lg px-4 py-3"
+                                className="w-full bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             />
-                            <button className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-lg font-bold">Add Customer</button>
+                            <button className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-white shadow-lg shadow-blue-600/20 transition-all">Add Customer</button>
                         </form>
                     </div>
                 </div>

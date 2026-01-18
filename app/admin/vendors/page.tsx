@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LucideSearch, LucideMoreVertical, LucideCalendarClock, LucideBan } from 'lucide-react';
 
-const API_URL = 'http://ledger.thekada.in';
+const API_URL = '/api';
 
 export default function VendorManagement() {
     const [vendors, setVendors] = useState<any[]>([]);
