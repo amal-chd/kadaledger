@@ -4,9 +4,10 @@ import { getJwtPayload } from '@/lib/auth';
 
 export async function GET(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const user = await getJwtPayload();
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -14,7 +15,7 @@ export async function GET(
 
         const customer = await prisma.customer.findUnique({
             where: {
-                id: params.id,
+                id: id,
                 vendorId: user.sub, // Ensure security
             },
             include: {
