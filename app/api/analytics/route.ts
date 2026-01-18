@@ -4,6 +4,10 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
+// Mark this route as dynamic to prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(req: Request) {
     try {
         const authHeader = req.headers.get('Authorization');

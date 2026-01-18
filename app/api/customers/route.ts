@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getJwtPayload } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET: Fetch all customers for the logged-in vendor
 export async function GET(req: Request) {
     try {

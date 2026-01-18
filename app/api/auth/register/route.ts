@@ -3,6 +3,9 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+export const dynamic = 'force-dynamic';
+
+
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
 export async function POST(req: Request) {
