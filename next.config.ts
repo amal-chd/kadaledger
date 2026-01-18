@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
   compress: true,
   generateEtags: true,
   pageExtensions: ["ts", "tsx"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+  // Skip static optimization for API routes
+  skipTrailingSlashRedirect: true,
   // async rewrites() {
   //   return [
   //     {
