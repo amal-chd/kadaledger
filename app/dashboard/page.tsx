@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 const API_URL = '/api';
 
 import { useCustomerView } from '@/contexts/customer-view-context';
+import { useDataRefresh } from '@/contexts/data-refresh-context';
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
     const [vendor, setVendor] = useState<any>(null);
@@ -12,10 +14,18 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const { openCustomer } = useCustomerView();
+    const { refreshTrigger, lastUpdate, triggerRefresh } = useDataRefresh();
 
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Re-fetch when refresh is triggered
+    useEffect(() => {
+        if (lastUpdate.customer || lastUpdate.dashboard) {
+            fetchData();
+        }
+    }, [lastUpdate.customer, lastUpdate.dashboard]);
 
     const fetchData = async () => {
         const token = localStorage.getItem('token');
@@ -52,17 +62,29 @@ export default function Dashboard() {
     const addCustomer = async (e: React.FormEvent) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-        await fetch(`${API_URL}/customers`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: newCustomerName, phoneNumber: newCustomerPhone })
-        });
-        setNewCustomerName('');
-        setNewCustomerPhone('');
-        fetchData();
+        try {
+            const res = await fetch(`${API_URL}/customers`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: newCustomerName, phoneNumber: newCustomerPhone })
+            });
+
+            if (res.ok) {
+                setNewCustomerName('');
+                setNewCustomerPhone('');
+                toast.success('Customer added successfully!');
+                // Trigger refresh for all components
+                triggerRefresh('customer');
+                triggerRefresh('dashboard');
+            } else {
+                toast.error('Failed to add customer');
+            }
+        } catch (error) {
+            toast.error('Error adding customer');
+        }
     };
 
     if (loading) return <div className="p-10 text-center">Loading...</div>;

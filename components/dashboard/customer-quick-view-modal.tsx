@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Phone, Plus, Minus, Calendar, ExternalLink, Loader2 } from 'lucide-react';
 import { useCustomerView } from '@/contexts/customer-view-context';
+import { useDataRefresh } from '@/contexts/data-refresh-context';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function CustomerQuickViewModal() {
     const { selectedCustomerId, closeCustomer } = useCustomerView();
+    const { triggerRefresh } = useDataRefresh();
     const router = useRouter();
     const [customer, setCustomer] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
@@ -75,11 +77,16 @@ export default function CustomerQuickViewModal() {
             });
 
             if (res.ok) {
-                toast.success('Transaction added!');
+                toast.success(`${actionType === 'CREDIT' ? 'Credit' : 'Payment'} added successfully!`);
                 setAmount('');
                 setDescription('');
                 setActionType(null);
-                fetchCustomer(customer.id); // Refresh data
+                fetchCustomer(customer.id); // Refresh customer data
+
+                // Trigger global refresh for all components
+                triggerRefresh('transaction');
+                triggerRefresh('customer');
+                triggerRefresh('dashboard');
             } else {
                 toast.error('Failed to add transaction');
             }

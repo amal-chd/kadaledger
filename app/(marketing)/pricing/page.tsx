@@ -50,7 +50,7 @@ export default function PricingPage() {
                     />
                 </div>
 
-                <div className="container-width relative z-10 px-4 text-center">
+                <div className="container-mobile relative z-10 px-4 text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6 md:mb-8">
                         <Zap size={14} className="fill-blue-400" /> Flexible Plans
                     </div>
@@ -66,35 +66,36 @@ export default function PricingPage() {
             </section>
 
             <section className="relative z-10 px-4 pb-20 md:pb-32">
-                <div className="container-width grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                <div className="container-mobile grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                     {/* Basic */}
                     <div className="glass-card p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 flex flex-col hover:border-blue-500/20 transition-all duration-500">
                         <div className="mb-6 md:mb-8">
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white/5 flex items-center justify-center text-blue-400 mb-4 md:mb-6">
-                                <Shield size={20} className="md:w-6 md:h-6" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 mb-4 md:mb-6">
+                                <Star size={20} className="md:w-6 md:h-6 fill-emerald-400" />
                             </div>
-                            <h3 className="text-xl md:text-2xl font-bold text-white mb-1 md:mb-2">Starter</h3>
-                            <p className="text-blue-200/50 text-xs md:text-sm">Perfect for small shops & individual vendors.</p>
+                            <h3 className="text-xl md:text-2xl font-bold text-white mb-1 md:mb-2">Free Trial</h3>
+                            <p className="text-blue-200/50 text-xs md:text-sm">Try all features risk-free for 14 days.</p>
                         </div>
                         <div className="mb-6 md:mb-8">
                             <span className="text-4xl md:text-5xl font-bold text-white">Free</span>
-                            <span className="text-blue-200/50 ml-2 text-sm">forever</span>
+                            <span className="text-blue-200/50 ml-2 text-sm">for 14 days</span>
                         </div>
                         <ul className="space-y-3 md:space-y-4 mb-8 md:mb-10 text-left flex-1">
                             {[
-                                "Up to 50 Customers",
-                                "Basic Reporting",
-                                "Mobile App Access",
-                                "Basic Transactions",
-                                "Email Support"
+                                "Unlimited Customers",
+                                "Full Analytics Dashboard",
+                                "WhatsApp Reminders",
+                                "GST Invoicing",
+                                "Multi-User Access",
+                                "Priority Support"
                             ].map((feature, i) => (
                                 <li key={i} className="flex items-center gap-2 md:gap-3 text-blue-100/70 text-xs md:text-sm font-medium">
-                                    <CheckCircle2 size={14} className="text-blue-500 shrink-0 md:w-4 md:h-4" /> {feature}
+                                    <CheckCircle2 size={14} className="text-emerald-500 shrink-0 md:w-4 md:h-4" /> {feature}
                                 </li>
                             ))}
                         </ul>
-                        <Link href="/register" className="w-full py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm md:text-base text-center hover:bg-white/10 transition-all">
-                            Get Started
+                        <Link href="/register?plan=trial" className="w-full py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-emerald-600 text-white font-bold text-sm md:text-base text-center hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/30">
+                            Start Free Trial
                         </Link>
                     </div>
 
@@ -111,7 +112,7 @@ export default function PricingPage() {
                             <p className="text-blue-200/50 text-xs md:text-sm">Designed for growing retail businesses.</p>
                         </div>
                         <div className="mb-6 md:mb-8">
-                            <span className="text-4xl md:text-5xl font-bold text-white">₹499</span>
+                            <span className="text-4xl md:text-5xl font-bold text-white">₹199</span>
                             <span className="text-blue-200/50 ml-2 text-sm">/ month</span>
                         </div>
                         <ul className="space-y-3 md:space-y-4 mb-8 md:mb-10 text-left flex-1">
@@ -139,8 +140,8 @@ export default function PricingPage() {
                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white/5 flex items-center justify-center text-purple-400 mb-4 md:mb-6">
                                 <Shield size={20} className="md:w-6 md:h-6" />
                             </div>
-                            <h3 className="text-xl md:text-2xl font-bold text-white mb-1 md:mb-2">Business</h3>
-                            <p className="text-blue-200/50 text-xs md:text-sm">For multi-store chains & franchises.</p>
+                            <h3 className="text-xl md:text-2xl font-bold text-white mb-1 md:mb-2">Enterprise</h3>
+                            <p className="text-blue-200/50 text-xs md:text-sm">Custom solutions for large businesses.</p>
                         </div>
                         <div className="mb-6 md:mb-8">
                             <span className="text-4xl md:text-5xl font-bold text-white">Custom</span>

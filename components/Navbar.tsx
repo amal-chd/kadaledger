@@ -29,8 +29,8 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-4 md:top-8 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-5xl transition-all duration-700 rounded-full border ${isScrolled
-          ? 'bg-[#0B0F19]/70 backdrop-blur-2xl border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] py-2'
+        className={`fixed top-0 left-0 md:left-1/2 md:-translate-x-1/2 z-50 w-full md:w-[94%] md:max-w-5xl transition-all duration-700 rounded-b-3xl md:rounded-full border md:border ${isScrolled
+          ? 'bg-[#0B0F19]/70 backdrop-blur-2xl border-white/10 md:shadow-[0_20px_50px_rgba(0,0,0,0.5)] py-2'
           : 'bg-white/[0.03] backdrop-blur-xl border-white/5 py-3 md:py-4'
           }`}
       >
@@ -85,8 +85,8 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-[#050810]/95 backdrop-blur-3xl lg:hidden flex flex-col pt-24 px-4 sm:px-6 animate-in fade-in slide-in-from-top-10 duration-500 overflow-y-auto pb-10">
-          <div className="flex flex-col gap-6 text-center glass-card p-8 sm:p-12 rounded-[2.5rem] md:rounded-[3rem] border border-white/10 shadow-3xl">
+        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-md lg:hidden flex flex-col pt-24 px-4 sm:px-6 animate-in fade-in slide-in-from-top-10 duration-500 overflow-y-auto pb-10">
+          <div className="flex flex-col gap-6 text-center glass-card bg-[#0B0F19]/80 backdrop-blur-2xl p-8 sm:p-12 rounded-[2.5rem] md:rounded-[3rem] border border-white/20 shadow-3xl">
             <div className="flex flex-col gap-4">
               {navLinks.map((item, idx) => (
                 <Link
@@ -104,7 +104,7 @@ const Navbar = () => {
             <div className="flex flex-col gap-4">
               <Link
                 href="/login"
-                className="w-full text-center py-4 font-bold text-blue-100 border border-white/5 rounded-2xl bg-white/5 backdrop-blur-md active:scale-95 transition-all"
+                className="w-full text-center py-4 font-bold text-blue-100 border border-white/20 rounded-2xl bg-white/10 backdrop-blur-md active:scale-95 transition-all hover:bg-white/20"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Login

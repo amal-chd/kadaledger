@@ -133,7 +133,7 @@ export default function HomeContent() {
             )}
 
             {/* HERO SECTION */}
-            <section className="relative pt-32 pb-8 md:pt-48 md:pb-32 overflow-hidden bg-[#050810]">
+            <section className="relative pt-20 pb-8 md:pt-48 md:pb-32 overflow-hidden bg-[#050810]">
                 {/* Aurora Background */}
                 <div className="absolute inset-0 z-0">
                     <Aurora
@@ -150,8 +150,8 @@ export default function HomeContent() {
                     <div className="absolute bottom-[10%] right-[20%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] mix-blend-screen animate-float"></div>
                 </div>
 
-                <div className="container-width relative z-10">
-                    <div className="text-center max-w-4xl mx-auto mb-8 md:mb-20 px-2">
+                <div className="container-mobile relative z-10">
+                    <div className="text-center max-w-4xl mx-auto mb-8 md:mb-20">
                         <h1 className="text-[34px] md:text-7xl font-bold text-white mb-4 md:mb-8 leading-[1.2] md:leading-[1.1] tracking-tight">
                             India's Best <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 text-glow">
@@ -324,7 +324,7 @@ export default function HomeContent() {
 
             {/* PARTNERS */}
             <section className="py-6 md:py-10 border-t border-white/5 border-b bg-[#0B0F19]">
-                <div className="container-width">
+                <div className="container-mobile">
                     <div className="relative w-full overflow-hidden">
                         <div className="flex w-max animate-marquee gap-12 md:gap-24 opacity-50 hover:opacity-100 transition-opacity duration-500">
                             {[...Array(2)].map((_, widthIndex) => (
@@ -350,8 +350,8 @@ export default function HomeContent() {
                     <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[120px]"></div>
                 </div>
 
-                <div className="container-width relative z-10">
-                    <div className="text-center mb-12 md:mb-24">
+                <div className="container-mobile relative z-10">
+                    <div className="text-center mb-10 md:mb-24">
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-6">
                             <Zap size={14} /> Powering Modern India
                         </div>
@@ -467,7 +467,7 @@ export default function HomeContent() {
             {/* TRUST SECTION */}
             {/* NUMBERS SECTION */}
             <section className="py-10 md:py-24 relative overflow-hidden">
-                <div className="container-width">
+                <div className="container-mobile">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12">
                         {[
                             { label: "Active Merchants", value: "100K+" },
@@ -485,8 +485,8 @@ export default function HomeContent() {
             </section>
 
             {/* PRICING PREVIEW SECTION */}
-            <section className="py-24 md:py-32 relative overflow-hidden" id="pricing">
-                <div className="container-width relative z-10">
+            <section className="py-16 md:py-32 relative overflow-hidden" id="pricing">
+                <div className="container-mobile relative z-10">
                     <div className="glass-card rounded-[3.5rem] border border-white/5 bg-gradient-to-br from-blue-600/5 via-transparent to-indigo-600/5 p-8 md:p-20 overflow-hidden relative">
                         {/* Background Accents */}
                         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
@@ -555,7 +555,7 @@ export default function HomeContent() {
 
             {/* FAQ */}
             <section className="py-12 md:py-24 relative overflow-hidden">
-                <div className="container-width max-w-4xl">
+                <div className="container-mobile max-w-4xl mx-auto">
                     <h2 className="text-3xl md:text-5xl font-bold text-white mb-10 md:mb-16 text-center">Frequently Asked Questions</h2>
 
                     <div className="space-y-4">
@@ -586,7 +586,7 @@ export default function HomeContent() {
 
             {/* DOWNLOAD CTA */}
             <section className="py-12 md:py-20 relative overflow-hidden">
-                <div className="container-width">
+                <div className="container-mobile">
                     <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-[3rem] p-12 md:p-20 relative overflow-hidden border border-white/10 text-center">
                         <div className="relative z-10 max-w-3xl mx-auto">
                             <h2 className="text-3xl md:text-5xl font-bold text-white mb-8">Ready to grow your business?</h2>
@@ -595,23 +595,35 @@ export default function HomeContent() {
                                 and payments more effectively. Download the app today.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                                <Link href="#" className="transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-blue-500/20 rounded-2xl overflow-hidden">
-                                    <Image
-                                        src="/play-store-badge.png"
-                                        alt="Get it on Google Play"
-                                        width={200}
-                                        height={60}
-                                        className="h-14 w-auto object-contain"
-                                    />
+                                {/* Google Play Button */}
+                                <Link
+                                    href="#"
+                                    className="group relative px-8 py-4 bg-black hover:bg-gray-900 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-blue-500/20 border border-white/10 flex items-center gap-4 min-w-[200px]"
+                                >
+                                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                                        <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92z" fill="#32BBFF" />
+                                        <path d="M14.5 12.707l3.607 3.606-10.49 5.873a1.004 1.004 0 01-.618.001l10.5-5.874-3-3.006z" fill="#32BBFF" />
+                                        <path d="M18.106 16.313l3.888-2.178a1 1 0 000-1.77l-3.888-2.178-3.606 3.606 3.606 3.606v-.086z" fill="#32BBFF" />
+                                        <path d="M14.5 11.293L7.617 4.314 18.106 10.187l-3.606 3.606z" fill="#32BBFF" />
+                                    </svg>
+                                    <div className="text-left">
+                                        <div className="text-[10px] text-white/70 font-medium">GET IT ON</div>
+                                        <div className="text-lg font-bold text-white">Google Play</div>
+                                    </div>
                                 </Link>
-                                <Link href="#" className="transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-indigo-500/20 rounded-2xl overflow-hidden">
-                                    <Image
-                                        src="/app-store-badge.png"
-                                        alt="Download on the App Store"
-                                        width={200}
-                                        height={60}
-                                        className="h-14 w-auto object-contain"
-                                    />
+
+                                {/* App Store Button */}
+                                <Link
+                                    href="#"
+                                    className="group relative px-8 py-4 bg-black hover:bg-gray-900 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-indigo-500/20 border border-white/10 flex items-center gap-4 min-w-[200px]"
+                                >
+                                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="white">
+                                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                                    </svg>
+                                    <div className="text-left">
+                                        <div className="text-[10px] text-white/70 font-medium">Download on the</div>
+                                        <div className="text-lg font-bold text-white">App Store</div>
+                                    </div>
                                 </Link>
                             </div>
                         </div>

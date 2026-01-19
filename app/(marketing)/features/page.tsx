@@ -37,7 +37,7 @@ export default function FeaturesPage() {
             />
 
             {/* Hero Section */}
-            <section className="relative pt-32 pb-20 md:pt-48 md:pb-32">
+            <section className="relative pt-20 pb-16 md:pt-48 md:pb-32">
                 <div className="absolute inset-0 z-0">
                     <Aurora
                         colorStops={["#2563EB", "#7cff67", "#4F46E5"]}
@@ -47,7 +47,7 @@ export default function FeaturesPage() {
                     />
                 </div>
 
-                <div className="container-width relative z-10 px-6 text-center">
+                <div className="container-mobile relative z-10 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8">
                         <Star size={14} className="fill-blue-400" /> Platform Features
                     </div>
@@ -63,7 +63,7 @@ export default function FeaturesPage() {
             </section>
 
             {/* Feature Bento Grid */}
-            <section className="container-width relative z-10 px-6 pb-32">
+            <section className="container-mobile relative z-10 pb-20 md:pb-32">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
                         {
