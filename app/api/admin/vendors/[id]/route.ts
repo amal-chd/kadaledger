@@ -100,7 +100,19 @@ export async function PATCH(
 
         const { id: vendorId } = await params;
         const body = await req.json();
-        const { planType, status } = body;
+        const { planType, status, businessName, phoneNumber, language } = body;
+
+        // Update Vendor Profile
+        if (businessName || phoneNumber || language) {
+            await prisma.vendor.update({
+                where: { id: vendorId },
+                data: {
+                    businessName,
+                    phoneNumber,
+                    language
+                }
+            });
+        }
 
         // Perform update
         // Note: For subscription, we might need to update the related Subscription model or the Vendor if fields are there.
@@ -155,10 +167,23 @@ export async function DELETE(
 
         const { id: vendorId } = await params;
 
-        // Instead of hard delete, maybe just anonymize or flag? 
-        // For now, let's implement hard delete but be careful.
-        // Actually, deleting a vendor cascades to customers/transactions usually.
+        // Manually cascade delete related records
+        // 1. Delete Transactions
+        await prisma.transaction.deleteMany({
+            where: { vendorId }
+        });
 
+        // 2. Delete Customers
+        await prisma.customer.deleteMany({
+            where: { vendorId }
+        });
+
+        // 3. Delete Subscription
+        await prisma.subscription.deleteMany({
+            where: { vendorId }
+        });
+
+        // 4. Finally Delete Vendor
         await prisma.vendor.delete({
             where: { id: vendorId }
         });

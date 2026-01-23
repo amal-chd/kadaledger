@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
@@ -11,16 +11,29 @@ import {
     UserX,
     MoreVertical,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    Save
 } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
-export default function VendorDetailsPage({ params }: { params: { id: string } }) {
+export default function VendorDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const [vendor, setVendor] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isEditingPlan, setIsEditingPlan] = useState(false);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [editForm, setEditForm] = useState({ businessName: '', phoneNumber: '' });
     const router = useRouter();
+
+    useEffect(() => {
+        if (vendor) {
+            setEditForm({
+                businessName: vendor.businessName || '',
+                phoneNumber: vendor.phoneNumber || ''
+            });
+        }
+    }, [vendor]);
 
     useEffect(() => {
         fetchVendorDetails();
@@ -29,7 +42,7 @@ export default function VendorDetailsPage({ params }: { params: { id: string } }
     const fetchVendorDetails = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`/api/admin/vendors/${params.id}`, {
+            const res = await fetch(`/api/admin/vendors/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -49,7 +62,7 @@ export default function VendorDetailsPage({ params }: { params: { id: string } }
     const handleUpdatePlan = async (newPlan: string) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`/api/admin/vendors/${params.id}`, {
+            const res = await fetch(`/api/admin/vendors/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -70,6 +83,30 @@ export default function VendorDetailsPage({ params }: { params: { id: string } }
         }
     };
 
+    const handleUpdateProfile = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/admin/vendors/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(editForm)
+            });
+
+            if (res.ok) {
+                toast.success('Profile updated successfully');
+                setIsEditingProfile(false);
+                fetchVendorDetails();
+            } else {
+                toast.error('Failed to update profile');
+            }
+        } catch (error) {
+            toast.error('Update failed');
+        }
+    };
+
     const handleDeleteVendor = async () => {
         if (!confirm('Are you sure you want to delete this vendor? This action cannot be undone and will remove all their customer data.')) {
             return;
@@ -77,7 +114,7 @@ export default function VendorDetailsPage({ params }: { params: { id: string } }
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`/api/admin/vendors/${params.id}`, {
+            const res = await fetch(`/api/admin/vendors/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -102,22 +139,71 @@ export default function VendorDetailsPage({ params }: { params: { id: string } }
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <button
-                    onClick={() => router.back()}
-                    className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
-                >
-                    <ArrowLeft size={20} />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-white mb-1">{vendor.businessName || 'Unnamed Business'}</h1>
-                    <div className="flex items-center gap-2 text-slate-400 text-sm">
-                        <span>{vendor.phoneNumber}</span>
-                        <span>•</span>
-                        <span>Joined {format(new Date(vendor.createdAt), 'MMMM d, yyyy')}</span>
-                    </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+
+                    {isEditingProfile ? (
+                        <div className="flex flex-col gap-2">
+                            <input
+                                type="text"
+                                value={editForm.businessName}
+                                onChange={(e) => setEditForm({ ...editForm, businessName: e.target.value })}
+                                className="bg-[#020617] border border-blue-500 rounded-lg px-3 py-1 text-white font-bold text-xl focus:outline-none"
+                                placeholder="Business Name"
+                            />
+                            <input
+                                type="text"
+                                value={editForm.phoneNumber}
+                                onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                                className="bg-[#020617] border border-blue-500 rounded-lg px-3 py-1 text-slate-300 text-sm font-mono focus:outline-none"
+                                placeholder="Phone Number"
+                            />
+                        </div>
+                    ) : (
+                        <div>
+                            <h1 className="text-2xl font-bold text-white mb-1">{vendor.businessName || 'Unnamed Business'}</h1>
+                            <div className="flex items-center gap-2 text-slate-400 text-sm">
+                                <span>{vendor.phoneNumber}</span>
+                                <span>•</span>
+                                <span>Joined {format(new Date(vendor.createdAt), 'MMMM d, yyyy')}</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
-                <div className="ml-auto flex gap-3">
+
+                <div className="flex items-center gap-3">
+                    {isEditingProfile ? (
+                        <>
+                            <button
+                                onClick={() => setIsEditingProfile(false)}
+                                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl text-sm font-bold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleUpdateProfile}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
+                            >
+                                <Save size={16} />
+                                Save Changes
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setIsEditingProfile(true)}
+                            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
+                        >
+                            <Settings size={16} />
+                            Edit Profile
+                        </button>
+                    )}
+
                     <button
                         onClick={handleDeleteVendor}
                         className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
@@ -210,8 +296,8 @@ export default function VendorDetailsPage({ params }: { params: { id: string } }
                                 <div className="text-xs text-slate-400 uppercase font-bold mb-1">Current Plan</div>
                                 <div className="text-xl font-bold text-white mb-2">{vendor.subscription?.planType || 'TRIAL'}</div>
                                 <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-bold ${vendor.subscription?.status === 'ACTIVE'
-                                        ? 'bg-emerald-500/20 text-emerald-400'
-                                        : 'bg-amber-500/20 text-amber-400'
+                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                    : 'bg-amber-500/20 text-amber-400'
                                     }`}>
                                     <div className={`w-1.5 h-1.5 rounded-full ${vendor.subscription?.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-amber-400'
                                         }`}></div>
@@ -230,8 +316,8 @@ export default function VendorDetailsPage({ params }: { params: { id: string } }
                                         key={plan}
                                         onClick={() => handleUpdatePlan(plan)}
                                         className={`w-full text-left p-3 rounded-xl border text-sm font-medium transition-all ${vendor.subscription?.planType === plan
-                                                ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20'
-                                                : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:border-white/20'
+                                            ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20'
+                                            : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:border-white/20'
                                             }`}
                                     >
                                         {plan}

@@ -29,9 +29,13 @@ export default function VendorsPage() {
                 const data = await res.json();
                 setVendors(data.data);
                 setTotalPages(data.meta.pages);
+            } else {
+                console.error('Fetch failed with status:', res.status);
+                // toast.error('Failed to load vendors'); // Optional: show toast if needed, but console is good for now
             }
         } catch (error) {
             console.error('Failed to fetch vendors', error);
+            // toast.error('Network error loading vendors');
         } finally {
             setLoading(false);
         }
