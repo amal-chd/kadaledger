@@ -25,7 +25,7 @@ export default function ReportsPage() {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('/api/transactions/report', { // Assuming this endpoint exists or generic transactions fetch
+            const res = await fetch('/api/transactions/report', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -34,13 +34,12 @@ export default function ReportsPage() {
                 body: JSON.stringify({ startDate: dateStart, endDate: dateEnd })
             });
 
-            // If specific report endpoint not ready, we can fetch all transactions formatted
-            // For now, let's mock it or use existing transactions list if possible. 
-            // Better to use actual data.
-            // Let's assume we can fetch transactions.
+            if (!res.ok) {
+                throw new Error('Failed to fetch report data');
+            }
 
-            // Fallback to client-side generation for now to "ensure works"
-            // even if backend search isn't perfect yet.
+            const reportData = await res.json();
+            const { transactions, summary } = reportData;
 
             // Create PDF
             const doc: any = new jsPDF();
@@ -51,22 +50,31 @@ export default function ReportsPage() {
             doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
             doc.text(`Period: ${dateStart} to ${dateEnd}`, 14, 36);
 
-            // Mock data for demonstration if API fails or for "works perfectly" request
-            // Ideally we fetch real data.
-            const headers = [['Date', 'Description', 'Type', 'Amount']];
-            const data = [
-                ['2025-10-01', 'Payment from Rahul', 'Credit', '5000'],
-                ['2025-10-02', 'Goods sold to Priya', 'Debit', '2000'],
-                ['2025-10-05', 'Payment from Amit', 'Credit', '12000'],
-            ];
+            // Add summary
+            doc.setFontSize(12);
+            doc.text(`Total Transactions: ${summary.count}`, 14, 44);
+            doc.text(`Total Credit: ₹${summary.totalCredit.toLocaleString()}`, 14, 50);
+            doc.text(`Total Payment: ₹${summary.totalPayment.toLocaleString()}`, 14, 56);
+            doc.text(`Net Balance: ₹${summary.netBalance.toLocaleString()}`, 14, 62);
+
+            // Prepare table data
+            const headers = [['Date', 'Customer', 'Description', 'Type', 'Amount']];
+            const data = transactions.map((tx: any) => [
+                new Date(tx.date).toLocaleDateString('en-IN'),
+                tx.customer?.name || 'N/A',
+                tx.description || '-',
+                tx.type,
+                `₹${tx.amount.toLocaleString()}`
+            ]);
 
             doc.autoTable({
-                startY: 45,
+                startY: 70,
                 head: headers,
                 body: data,
                 theme: 'grid',
                 headStyles: { fillColor: [37, 99, 235] }, // Blue-600
-                alternateRowStyles: { fillColor: [240, 250, 255] }
+                alternateRowStyles: { fillColor: [240, 250, 255] },
+                styles: { fontSize: 9 }
             });
 
             doc.save(`Kada_Report_${dateStart}_${dateEnd}.pdf`);

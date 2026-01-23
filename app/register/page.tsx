@@ -3,7 +3,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '../api/auth';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import Image from 'next/image';
 import { Home, Eye, EyeOff, CheckCircle, Star, Zap, Shield, ArrowRight, Sparkles } from 'lucide-react';
 
@@ -22,34 +22,78 @@ function RegisterContent() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!businessName || !phone || !password) {
-            toast.error('Please fill in all required fields');
+        // Enhanced validation with specific error messages
+        if (!businessName) {
+            toast.error('🏪 Business name is required');
             return;
         }
 
-        if (password !== confirmPassword) {
-            toast.error('Passwords do not match');
+        if (businessName.length < 3) {
+            toast.error('🏪 Business name must be at least 3 characters');
+            return;
+        }
+
+        if (!phone) {
+            toast.error('📱 Phone number is required');
             return;
         }
 
         if (phone.length < 10) {
-            toast.error('Please enter a valid phone number');
+            toast.error('📱 Please enter a valid 10-digit phone number');
+            return;
+        }
+
+        if (!password) {
+            toast.error('🔒 Password is required');
             return;
         }
 
         if (password.length < 6) {
-            toast.error('Password must be at least 6 characters');
+            toast.error('🔒 Password must be at least 6 characters');
+            return;
+        }
+
+        if (!confirmPassword) {
+            toast.error('🔒 Please confirm your password');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            toast.error('🔒 Passwords do not match');
             return;
         }
 
         setLoading(true);
+        const loadingToast = toast.loading('✨ Creating your account...');
+
         try {
             const { access_token } = await authApi.register({ businessName, phoneNumber: phone, password });
             localStorage.setItem('token', access_token);
-            toast.success('Registration successful! 🎉');
-            router.push('/onboarding');
+
+            toast.success('🎉 Registration successful! Welcome to Kada Ledger!', {
+                id: loadingToast,
+                duration: 5000
+            });
+
+            // Small delay for better UX
+            setTimeout(() => {
+                router.push('/onboarding');
+            }, 1000);
         } catch (err: any) {
-            toast.error(err.message || 'Registration failed. Please try again.');
+            // Enhanced error handling with specific messages
+            let errorMessage = '❌ Registration failed. Please try again.';
+
+            if (err.message?.includes('already exists') || err.message?.includes('duplicate')) {
+                errorMessage = '👤 This phone number is already registered. Please login instead.';
+            } else if (err.message?.includes('network') || err.message?.includes('fetch')) {
+                errorMessage = '🌐 Network error. Please check your connection';
+            } else if (err.message?.includes('invalid')) {
+                errorMessage = '⚠️ Invalid information provided. Please check your details';
+            } else if (err.message) {
+                errorMessage = `❌ ${err.message}`;
+            }
+
+            toast.error(errorMessage, { id: loadingToast });
         } finally {
             setLoading(false);
         }
@@ -70,6 +114,31 @@ function RegisterContent() {
 
     return (
         <div className="h-screen bg-[#020617] flex relative overflow-hidden">
+            {/* Toast Notifications */}
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#1e293b',
+                        color: '#fff',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                    },
+                    success: {
+                        iconTheme: {
+                            primary: '#10b981',
+                            secondary: '#fff',
+                        },
+                    },
+                    error: {
+                        iconTheme: {
+                            primary: '#ef4444',
+                            secondary: '#fff',
+                        },
+                    },
+                }}
+            />
+
             {/* Background Effects */}
             <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[150px] animate-pulse pointer-events-none"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px] pointer-events-none"></div>

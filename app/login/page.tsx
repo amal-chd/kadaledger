@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import Image from 'next/image';
 import { Home, Eye, EyeOff, Shield, Zap, Users, ArrowRight } from 'lucide-react';
 
@@ -17,24 +17,55 @@ export default function LoginPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!phone || phone.length < 10) {
-            toast.error('Please enter a valid phone number');
+        // Validation with specific error messages
+        if (!phone) {
+            toast.error('📱 Phone number is required');
+            return;
+        }
+
+        if (phone.length < 10) {
+            toast.error('📱 Please enter a valid 10-digit phone number');
             return;
         }
 
         if (!password) {
-            toast.error('Please enter your password');
+            toast.error('🔒 Password is required');
+            return;
+        }
+
+        if (password.length < 6) {
+            toast.error('🔒 Password must be at least 6 characters');
             return;
         }
 
         setLoading(true);
+        const loadingToast = toast.loading('🔐 Signing you in...');
+
         try {
             const { access_token } = await authApi.login({ phoneNumber: phone, password });
             localStorage.setItem('token', access_token);
-            toast.success('Login successful!');
-            router.push('/dashboard');
+
+            toast.success('✅ Login successful! Redirecting...', { id: loadingToast });
+
+            // Small delay for better UX
+            setTimeout(() => {
+                router.push('/dashboard');
+            }, 500);
         } catch (err: any) {
-            toast.error(err.message || 'Login failed. Please check your credentials.');
+            // Enhanced error handling with specific messages
+            let errorMessage = '❌ Login failed. Please try again.';
+
+            if (err.message?.includes('credentials') || err.message?.includes('Invalid')) {
+                errorMessage = '🔐 Invalid phone number or password';
+            } else if (err.message?.includes('network') || err.message?.includes('fetch')) {
+                errorMessage = '🌐 Network error. Please check your connection';
+            } else if (err.message?.includes('not found') || err.message?.includes('404')) {
+                errorMessage = '👤 Account not found. Please register first';
+            } else if (err.message) {
+                errorMessage = `❌ ${err.message}`;
+            }
+
+            toast.error(errorMessage, { id: loadingToast });
         } finally {
             setLoading(false);
         }
@@ -42,6 +73,31 @@ export default function LoginPage() {
 
     return (
         <div className="h-screen bg-[#020617] flex relative overflow-hidden">
+            {/* Toast Notifications */}
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#1e293b',
+                        color: '#fff',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                    },
+                    success: {
+                        iconTheme: {
+                            primary: '#10b981',
+                            secondary: '#fff',
+                        },
+                    },
+                    error: {
+                        iconTheme: {
+                            primary: '#ef4444',
+                            secondary: '#fff',
+                        },
+                    },
+                }}
+            />
+
             {/* Background Effects */}
             <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[150px] animate-pulse pointer-events-none"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px] pointer-events-none"></div>

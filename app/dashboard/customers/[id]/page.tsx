@@ -77,6 +77,52 @@ export default function CustomerDetailsPage() {
         }
     };
 
+    const downloadCustomerPDF = async () => {
+        try {
+            const jsPDF = (await import('jspdf')).default;
+            await import('jspdf-autotable');
+
+            const doc: any = new jsPDF();
+
+            doc.setFontSize(20);
+            doc.text('Customer Transaction Report', 14, 22);
+            doc.setFontSize(11);
+            doc.text(`Customer: ${customer.name}`, 14, 30);
+            doc.text(`Phone: ${customer.phoneNumber}`, 14, 36);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 42);
+
+            // Balance summary
+            doc.setFontSize(12);
+            doc.text(`Current Balance: ₹${Math.abs(customer.balance).toLocaleString()}`, 14, 50);
+            doc.text(`Status: ${customer.balance < 0 ? 'You will Give' : customer.balance > 0 ? 'You will Get' : 'Settled'}`, 14, 56);
+
+            // Prepare table data
+            const headers = [['Date', 'Description', 'Type', 'Amount']];
+            const data = customer.transactions?.map((tx: any) => [
+                new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+                tx.description || (tx.type === 'PAYMENT' ? 'Payment Received' : 'Credit Given'),
+                tx.type,
+                `₹${tx.amount.toLocaleString()}`
+            ]) || [];
+
+            doc.autoTable({
+                startY: 65,
+                head: headers,
+                body: data,
+                theme: 'grid',
+                headStyles: { fillColor: [37, 99, 235] },
+                alternateRowStyles: { fillColor: [240, 250, 255] },
+                styles: { fontSize: 9 }
+            });
+
+            doc.save(`${customer.name}_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+            toast.success('Report downloaded successfully');
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to generate report');
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -140,7 +186,10 @@ export default function CustomerDetailsPage() {
             <div className="bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                     <h3 className="font-bold text-slate-900 dark:text-white text-lg">Transaction History</h3>
-                    <button className="text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-4 py-2 rounded-lg transition-colors">
+                    <button
+                        onClick={downloadCustomerPDF}
+                        className="text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-4 py-2 rounded-lg transition-colors"
+                    >
                         <Download size={16} /> PDF Report
                     </button>
                 </div>
