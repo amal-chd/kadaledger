@@ -7,7 +7,8 @@ import {
     DollarSign,
     Activity,
     CreditCard,
-    Calendar
+    Calendar,
+    Crown
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -28,7 +29,25 @@ export default function AdminDashboard() {
 
             if (res.ok) {
                 const data = await res.json();
-                setStats(data);
+
+                const {
+                    totalVendors,
+                    totalCustomers,
+                    totalPending,
+                    todaysVolume,
+                    todaysCount
+                } = data.overview;
+                const { totalRevenue, activeCount, recentList } = data.subscriptions;
+
+                // Combine existing overview with new stats
+                setStats({
+                    ...data,
+                    overview: {
+                        ...data.overview,
+                        totalRevenue,
+                        activeCount
+                    }
+                });
             }
         } catch (error) {
             console.error('Failed to fetch admin stats', error);
@@ -55,6 +74,21 @@ export default function AdminDashboard() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard
+                    title="Total Revenue"
+                    value={`₹${stats.overview.totalRevenue?.toLocaleString() || 0}`}
+                    icon={DollarSign}
+                    trend="Est. Monthly"
+                    trendUp={true}
+                    color="emerald"
+                />
+                <StatCard
+                    title="Active Subscribers"
+                    value={stats.overview.activeCount || 0}
+                    icon={Crown}
+                    color="purple"
+                    subtitle="Paying & Trial Accounts"
+                />
                 <StatCard
                     title="Total Vendors"
                     value={stats.overview.totalVendors}
@@ -141,6 +175,47 @@ export default function AdminDashboard() {
                                         <tr>
                                             <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
                                                 No vendors found
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Recent Subscribers Section */}
+                    <div className="flex items-center justify-between mt-8">
+                        <h2 className="text-xl font-bold text-white">Recent Subscribers</h2>
+                        <a href="/admin/vendors" className="text-sm text-blue-400 hover:text-blue-300">View All</a>
+                    </div>
+                    <div className="bg-[#0B0F19] border border-white/5 rounded-2xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-white/5 text-slate-400 text-xs uppercase font-medium">
+                                    <tr>
+                                        <th className="px-6 py-4">Business</th>
+                                        <th className="px-6 py-4">Plan</th>
+                                        <th className="px-6 py-4 text-right">Start Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {stats.subscriptions.recentList.map((sub: any) => (
+                                        <tr key={sub.id} className="text-sm hover:bg-white/5 transition-colors">
+                                            <td className="px-6 py-4 text-white font-medium">{sub.businessName}</td>
+                                            <td className="px-6 py-4">
+                                                <span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded-md text-xs font-bold border border-blue-500/20">
+                                                    {sub.subscription.planType}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right text-slate-400">
+                                                {format(new Date(sub.subscription.startDate), 'MMM d, yyyy')}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {stats.subscriptions.recentList.length === 0 && (
+                                        <tr>
+                                            <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
+                                                No recent premium subscribers
                                             </td>
                                         </tr>
                                     )}
