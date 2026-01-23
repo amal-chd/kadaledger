@@ -23,18 +23,8 @@ export default function LoginPage() {
             return;
         }
 
-        if (phone.length < 10) {
-            toast.error('📱 Please enter a valid 10-digit phone number');
-            return;
-        }
-
         if (!password) {
             toast.error('🔒 Password is required');
-            return;
-        }
-
-        if (password.length < 6) {
-            toast.error('🔒 Password must be at least 6 characters');
             return;
         }
 
@@ -42,14 +32,20 @@ export default function LoginPage() {
         const loadingToast = toast.loading('🔐 Signing you in...');
 
         try {
-            const { access_token } = await authApi.login({ phoneNumber: phone, password });
+            const response = await authApi.login({ phoneNumber: phone, password });
+            const { access_token, role } = response;
             localStorage.setItem('token', access_token);
 
             toast.success('✅ Login successful! Redirecting...', { id: loadingToast });
 
             // Small delay for better UX
             setTimeout(() => {
-                router.push('/dashboard');
+                // Redirect based on role
+                if (role === 'ADMIN') {
+                    router.push('/admin');
+                } else {
+                    router.push('/dashboard');
+                }
             }, 500);
         } catch (err: any) {
             // Enhanced error handling with specific messages

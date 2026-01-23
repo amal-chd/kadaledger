@@ -16,6 +16,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Phone number and password are required' }, { status: 400 });
         }
 
+        // Check for admin credentials first
+        if (phoneNumber === 'admin' && password === 'admin123') {
+            const adminToken = jwt.sign(
+                { sub: 'admin', role: 'ADMIN', phoneNumber: 'admin' },
+                JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+            return corsResponse(NextResponse.json({
+                access_token: adminToken,
+                role: 'ADMIN',
+                message: 'Admin login successful'
+            }));
+        }
+
         // Find Vendor
         const vendor = await prisma.vendor.findUnique({
             where: { phoneNumber },
@@ -39,13 +53,14 @@ export async function POST(req: Request) {
 
         // Generate JWT
         const token = jwt.sign(
-            { sub: vendor.id, phone: vendor.phoneNumber },
+            { sub: vendor.id, phone: vendor.phoneNumber, role: 'VENDOR' },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
 
         return corsResponse(NextResponse.json({
             access_token: token,
+            role: 'VENDOR',
             vendor: {
                 id: vendor.id,
                 phone: vendor.phoneNumber,

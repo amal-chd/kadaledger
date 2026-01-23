@@ -24,6 +24,14 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
         }
 
+        // Calculate total pending from all customers
+        const customers = await prisma.customer.findMany({
+            where: { vendorId: vendor.id },
+            select: { balance: true },
+        });
+
+        const totalPending = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
+
         return NextResponse.json({
             id: vendor.id,
             // name: vendor.ownerName || '', // Removed: Field does not exist in schema
@@ -32,7 +40,8 @@ export async function GET(req: Request) {
             // businessCategory: vendor.businessCategory || 'Retail', // Removed
             // city: vendor.city || '', // Removed
             language: vendor.language || 'English',
-            subscription: vendor.subscription
+            subscription: vendor.subscription,
+            totalPending: totalPending
         });
 
     } catch (error) {

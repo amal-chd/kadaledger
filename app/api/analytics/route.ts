@@ -78,12 +78,44 @@ export async function GET(req: Request) {
             }
         });
 
+        // 6. Chart Data - Last 7 Days Revenue
+        const chartData = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+
+            const dayRevenue = await prisma.transaction.aggregate({
+                where: {
+                    vendorId,
+                    type: { in: ['DEBIT', 'PAYMENT'] },
+                    date: {
+                        gte: date,
+                        lt: nextDate
+                    }
+                },
+                _sum: {
+                    amount: true
+                }
+            });
+
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            chartData.push({
+                name: dayNames[date.getDay()],
+                revenue: dayRevenue._sum.amount || 0
+            });
+        }
+
         return NextResponse.json({
             totalCustomers,
             totalOutstanding: openBalance._sum.balance || 0,
             todaysCollection: todaysCollections._sum.amount || 0,
             todaysCredit: todaysCredit._sum.amount || 0,
-            recentTransactions
+            recentTransactions,
+            chartData
         });
 
     } catch (error) {

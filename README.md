@@ -14,7 +14,7 @@ pnpm dev
 bun dev
 ```
 
-Open [https://kadaledger.vercel.app](https://kadaledger.vercel.app) with your browser to see the result.
+Open [https://ledger.thekada.in](https://ledger.thekada.in) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

@@ -93,7 +93,7 @@ export default function DashboardLayout({
                     )}
 
                     {/* Sidebar */}
-                    <aside className={`w-64 bg-white dark:bg-[#0f172a]/60 backdrop-blur-xl border-r border-slate-200 dark:border-white/5 fixed h-full z-40 transition-all duration-300 ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+                    <aside className={`w-64 bg-white dark:bg-[#0f172a]/60 backdrop-blur-xl fixed h-full z-40 transition-all duration-300 ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
                         } md:block`}>
                         <div className="h-24 flex items-center justify-between px-8 border-b border-slate-100 dark:border-white/5">
                             <Link href="/dashboard" className="flex items-center gap-3">

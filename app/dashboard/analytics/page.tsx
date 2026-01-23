@@ -70,12 +70,7 @@ export default function AnalyticsPage() {
                         className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none"
                     >
                         <h3 className="text-slate-500 dark:text-slate-400 mb-2">{card.title}</h3>
-                        <div className="flex items-end justify-between">
-                            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{card.value}</h2>
-                            <span className={`text-${card.color}-500 text-sm font-bold bg-${card.color}-500/10 px-2 py-1 rounded-lg`}>
-                                {card.change}
-                            </span>
-                        </div>
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{card.value}</h2>
                     </motion.div>
                 ))}
             </div>

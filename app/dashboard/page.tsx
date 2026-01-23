@@ -111,7 +111,7 @@ export default function Dashboard() {
                 </div>
                 <div className="p-6 rounded-2xl glass-card">
                     <div className="text-slate-400 text-sm mb-1">Customers</div>
-                    <div className="text-3xl font-bold">{customers.length}</div>
+                    <div className="text-3xl font-bold text-white">{customers.length}</div>
                 </div>
             </div>
 

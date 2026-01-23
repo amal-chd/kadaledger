@@ -165,8 +165,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                             <div className="mb-4">
                                 <h3 className="text-lg font-bold text-white mb-1">Business</h3>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-white">₹{billingCycle === 'monthly' ? '499' : '4990'}</span>
-                                    <span className="text-slate-400 text-sm">/ {billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                                    <span className="text-3xl font-bold text-white">Custom</span>
                                 </div>
                             </div>
                             <ul className="space-y-3 mb-8 flex-1">
@@ -175,12 +174,10 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                 <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-purple-500 shrink-0" /> Priority Support</li>
                             </ul>
                             <button
-                                onClick={() => handlePayment('business', billingCycle === 'monthly' ? 499 : 4990)}
-                                disabled={loadingPlan === 'business'}
+                                onClick={() => window.open('mailto:support@kadaledger.com?subject=Business Plan Inquiry', '_blank')}
                                 className="w-full py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-sm transition-all flex items-center justify-center gap-2"
                             >
-                                {loadingPlan === 'business' && <Loader2 size={16} className="animate-spin" />}
-                                Select Business
+                                Contact Us
                             </button>
                         </div>
                     </div>
