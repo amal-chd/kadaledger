@@ -1,17 +1,9 @@
+'use client';
+
 import { CheckCircle2, Star, Zap, Shield, Crown } from 'lucide-react';
 import Link from 'next/link';
 import Aurora from '@/components/marketing/Aurora';
-
-export const metadata = {
-    title: "Pricing Plans - Best Value Khata App for Businesses",
-    description: "Explore affordable pricing plans for Kada Ledger. Choose from Starter, Pro, or Enterprise plans to manage your business ledger and credits with automated reminders.",
-    keywords: ["khata book price", "digital ledger cost", "Kada Ledger plans", "business accounting pricing india", "ledger book subscription"],
-    openGraph: {
-        title: "Kada Ledger Pricing - Simple & Transparent",
-        description: "Choose the perfect plan to digitize your business finance.",
-        images: ['/brand-logo-final.png'],
-    }
-};
+import { useState, useEffect } from 'react';
 
 const pricingJsonLd = {
     "@context": "https://schema.org",
@@ -27,11 +19,37 @@ const pricingJsonLd = {
         "lowPrice": "0",
         "highPrice": "9990",
         "priceCurrency": "INR",
-        "offerCount": "3"
+        "offerCount": "2"
     }
 };
 
 export default function PricingPage() {
+    const [plans, setPlans] = useState<any[]>([]);
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const res = await fetch('/api/plans');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPlans(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch plans");
+            }
+        };
+        fetchPlans();
+    }, []);
+
+    const getPlanPrice = () => {
+        const planName = billingCycle === 'monthly' ? 'professional' : 'professional_yearly';
+        const plan = plans.find(p => p.name === planName);
+        return plan ? plan.price : (billingCycle === 'monthly' ? 199 : 1999);
+    };
+
+    const getPlanInterval = () => billingCycle === 'monthly' ? '/ month' : '/ year';
+
     return (
         <main className="min-h-screen bg-[#050810] selection:bg-blue-500/30 overflow-hidden">
             <script
@@ -58,15 +76,29 @@ export default function PricingPage() {
                         Simple, Transparent<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Pricing for Bharat</span>
                     </h1>
-                    <p className="text-blue-100/70 text-sm md:text-xl leading-relaxed max-w-2xl mx-auto font-medium">
+                    <p className="text-blue-100/70 text-sm md:text-xl leading-relaxed max-w-2xl mx-auto font-medium mb-10">
                         Choose the plan that best fits your business needs.
-                        No hidden fees, no complexity. Scale as you grow.
+                        No hidden fees, no complexity.
                     </p>
+
+                    {/* Billing Toggle */}
+                    <div className="flex items-center justify-center gap-4 mb-8">
+                        <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-white' : 'text-blue-200/50'}`}>Monthly</span>
+                        <div
+                            onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+                            className="w-14 h-8 bg-blue-600/20 border border-blue-500/30 rounded-full relative cursor-pointer transition-colors hover:bg-blue-600/30"
+                        >
+                            <div className={`absolute top-1 left-1 w-6 h-6 bg-blue-500 rounded-full transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-full' : ''}`}></div>
+                        </div>
+                        <span className={`text-sm font-medium ${billingCycle === 'yearly' ? 'text-white' : 'text-blue-200/50'}`}>
+                            Yearly <span className="text-emerald-400 text-xs">(Save ~16%)</span>
+                        </span>
+                    </div>
                 </div>
             </section>
 
             <section className="relative z-10 px-4 pb-20 md:pb-32">
-                <div className="container-mobile grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                <div className="container-mobile max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                     {/* Basic */}
                     <div className="glass-card p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 flex flex-col hover:border-blue-500/20 transition-all duration-500">
                         <div className="mb-6 md:mb-8">
@@ -99,7 +131,7 @@ export default function PricingPage() {
                         </Link>
                     </div>
 
-                    {/* Pro */}
+                    {/* Premium (Professional) */}
                     <div className="glass-card p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-blue-600/30 bg-blue-600/5 relative shadow-2xl shadow-blue-900/20 transform md:scale-105 flex flex-col">
                         <div className="absolute top-0 right-6 md:right-10 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] md:text-[10px] uppercase tracking-widest font-black px-3 md:px-4 py-1.5 md:py-2 rounded-full shadow-lg">
                             Most Popular
@@ -108,12 +140,12 @@ export default function PricingPage() {
                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 mb-4 md:mb-6">
                                 <Crown size={20} className="md:w-6 md:h-6" />
                             </div>
-                            <h3 className="text-xl md:text-2xl font-bold text-white mb-1 md:mb-2">Professional</h3>
-                            <p className="text-blue-200/50 text-xs md:text-sm">Designed for growing retail businesses.</p>
+                            <h3 className="text-xl md:text-2xl font-bold text-white mb-1 md:mb-2">{billingCycle === 'monthly' ? 'Premium Monthly' : 'Premium Yearly'}</h3>
+                            <p className="text-blue-200/50 text-xs md:text-sm">Everything you need to grow your business.</p>
                         </div>
                         <div className="mb-6 md:mb-8">
-                            <span className="text-4xl md:text-5xl font-bold text-white">₹199</span>
-                            <span className="text-blue-200/50 ml-2 text-sm">/ month</span>
+                            <span className="text-4xl md:text-5xl font-bold text-white">₹{getPlanPrice()}</span>
+                            <span className="text-blue-200/50 ml-2 text-sm">{getPlanInterval()}</span>
                         </div>
                         <ul className="space-y-3 md:space-y-4 mb-8 md:mb-10 text-left flex-1">
                             {[
@@ -122,46 +154,16 @@ export default function PricingPage() {
                                 "WhatsApp Reminders",
                                 "Multi-User Access",
                                 "GST Invoicing",
-                                "Priority Support"
+                                "Priority Support",
+                                ...(billingCycle === 'yearly' ? ["2 Months Free"] : [])
                             ].map((feature, i) => (
                                 <li key={i} className="flex items-center gap-2 md:gap-3 text-blue-100/90 text-xs md:text-sm font-semibold">
                                     <CheckCircle2 size={14} className="text-blue-400 shrink-0 md:w-4 md:h-4" /> {feature}
                                 </li>
                             ))}
                         </ul>
-                        <Link href="/register" className="w-full py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-blue-600 text-white font-bold text-sm md:text-base text-center hover:bg-blue-500 transition-all shadow-xl shadow-blue-600/30">
-                            Start Free Trial
-                        </Link>
-                    </div>
-
-                    {/* Enterprise */}
-                    <div className="glass-card p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 flex flex-col hover:border-purple-500/20 transition-all duration-500">
-                        <div className="mb-6 md:mb-8">
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white/5 flex items-center justify-center text-purple-400 mb-4 md:mb-6">
-                                <Shield size={20} className="md:w-6 md:h-6" />
-                            </div>
-                            <h3 className="text-xl md:text-2xl font-bold text-white mb-1 md:mb-2">Enterprise</h3>
-                            <p className="text-blue-200/50 text-xs md:text-sm">Custom solutions for large businesses.</p>
-                        </div>
-                        <div className="mb-6 md:mb-8">
-                            <span className="text-4xl md:text-5xl font-bold text-white">Custom</span>
-                        </div>
-                        <ul className="space-y-3 md:space-y-4 mb-8 md:mb-10 text-left flex-1">
-                            {[
-                                "Custom Dashboard",
-                                "Franchise Management",
-                                "White Labeling",
-                                "API Integrations",
-                                "Dedicated Account Manager",
-                                "24/7 Phone Support"
-                            ].map((feature, i) => (
-                                <li key={i} className="flex items-center gap-2 md:gap-3 text-blue-100/70 text-xs md:text-sm font-medium">
-                                    <CheckCircle2 size={14} className="text-purple-500 shrink-0 md:w-4 md:h-4" /> {feature}
-                                </li>
-                            ))}
-                        </ul>
-                        <Link href="/contact" className="w-full py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm md:text-base text-center hover:bg-white/10 transition-all">
-                            Contact Sales
+                        <Link href={`/register?plan=${billingCycle === 'monthly' ? 'professional' : 'professional_yearly'}`} className="w-full py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-blue-600 text-white font-bold text-sm md:text-base text-center hover:bg-blue-500 transition-all shadow-xl shadow-blue-600/30">
+                            Get Started
                         </Link>
                     </div>
                 </div>

@@ -10,7 +10,8 @@ import {
     Menu,
     X,
     Settings,
-    Shield
+    Shield,
+    Layers
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -55,6 +56,7 @@ export default function AdminLayout({
 
     const navItems = [
         { href: '/admin', label: 'Overview', icon: LayoutDashboard },
+        { href: '/admin/plans', label: 'Plans', icon: Layers },
         { href: '/admin/vendors', label: 'Vendors', icon: Users },
         { href: '/admin/transactions', label: 'Transactions', icon: CreditCard },
         { href: '/admin/settings', label: 'Settings', icon: Settings },

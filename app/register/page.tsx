@@ -1,5 +1,5 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '../api/auth';
 import Link from 'next/link';
@@ -99,7 +99,36 @@ function RegisterContent() {
         }
     };
 
-    const planBenefits = plan === 'trial' ? [
+    const [plans, setPlans] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const res = await fetch('/api/plans');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPlans(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch plans");
+            }
+        };
+        fetchPlans();
+    }, []);
+
+    const getPlanPrice = (planName: string) => {
+        const plan = plans.find(p => p.name === planName);
+        return plan ? plan.price : (planName === 'starter' ? 0 : (planName === 'professional' ? 199 : 999));
+    };
+
+    const isPremium = plan?.includes('professional');
+    const planBenefits = isPremium ? [
+        'Premium features included',
+        'Advanced Analytics',
+        'WhatsApp Reminders',
+        'Priority Phone Support',
+        'Multi-user access'
+    ] : (plan === 'trial' ? [
         '14 days free trial',
         'Unlimited customers',
         'WhatsApp reminders',
@@ -110,7 +139,7 @@ function RegisterContent() {
         'Up to 50 customers',
         'Basic features',
         'Email support'
-    ];
+    ]);
 
     return (
         <div className="h-screen bg-[#020617] flex relative overflow-hidden">
@@ -180,18 +209,18 @@ function RegisterContent() {
                     </div>
 
                     {/* Plan Highlight */}
-                    {plan === 'trial' && (
+                    {(plan === 'trial' || isPremium) && (
                         <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-blue-500/20">
                             <div className="flex items-center gap-2 mb-4">
                                 <Sparkles className="text-blue-400" size={24} />
-                                <h3 className="text-xl font-bold text-white">Premium Trial Plan</h3>
+                                <h3 className="text-xl font-bold text-white">{isPremium ? 'Premium Plan' : 'Premium Trial Plan'}</h3>
                             </div>
                             <p className="text-blue-200/70 text-sm mb-4">
-                                Experience all premium features absolutely free for 14 days. No credit card required!
+                                {isPremium ? 'Excellent choice! You are signing up for the Premium plan.' : 'Experience all premium features absolutely free for 14 days. No credit card required!'}
                             </p>
                             <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold">
                                 <CheckCircle size={16} />
-                                Worth ₹199/month - Free for you!
+                                Worth ₹{getPlanPrice(plan && plan.includes('yearly') ? 'professional_yearly' : 'professional')}/{plan && plan.includes('yearly') ? 'year' : 'month'}
                             </div>
                         </div>
                     )}

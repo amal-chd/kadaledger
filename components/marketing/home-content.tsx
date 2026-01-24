@@ -15,9 +15,10 @@ import {
     Shield,
     Smartphone,
     CreditCard,
-    Zap
+    Zap,
+    Crown
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Aurora from './Aurora';
 
 export default function HomeContent() {
@@ -28,52 +29,35 @@ export default function HomeContent() {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+    // Dynamic Pricing
+    const [plans, setPlans] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const res = await fetch('/api/plans');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPlans(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch plans");
+            }
+        };
+        fetchPlans();
+    }, []);
+
+    const getPlanPrice = (planName: string) => {
+        const plan = plans.find(p => p.name === planName);
+        return plan ? plan.price : (planName === 'starter' ? 0 : (planName === 'professional' ? 199 : 999));
+    };
+
+
     const scrollToFeatures = () => {
         const element = document.getElementById('features');
         if (element) {
             element.scrollIntoView({ behavior: 'smooth' });
         }
-    };
-
-    const handlePayment = async (plan: 'starter' | 'professional' | 'business', amount: number) => {
-        const res = await fetch('/api/payments/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount }),
-        });
-        const order = await res.json();
-
-        const options = {
-            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-            amount: order.amount,
-            currency: "INR",
-            name: "Kada Ledger",
-            description: `Subscription for ${plan} plan`,
-            order_id: order.id,
-            handler: async function (response: any) {
-                const verifyRes = await fetch('/api/payments/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature
-                    }),
-                });
-                const verifyData = await verifyRes.json();
-                if (verifyData.status === 'success') {
-                    alert('Payment Successful! Plan activated.');
-                } else {
-                    alert('Payment verification failed.');
-                }
-            },
-            theme: {
-                color: "#2563EB"
-            }
-        };
-
-        const rzp1 = new (window as any).Razorpay(options);
-        rzp1.open();
     };
 
     return (
@@ -522,19 +506,9 @@ export default function HomeContent() {
                                         icon: <Smartphone className="text-blue-400" />
                                     },
                                     {
-                                        title: 'Professional',
+                                        title: 'Premium',
                                         desc: 'Advanced tools for growing businesses with staff management.',
-                                        icon: <TrendingUp className="text-indigo-400" />
-                                    },
-                                    {
-                                        title: 'Business',
-                                        desc: 'Enterprise capabilities for multi-location inventory and billing.',
-                                        icon: <Users className="text-emerald-400" />
-                                    },
-                                    {
-                                        title: 'Custom',
-                                        desc: 'Bespoke solutions for distributors and large organizations.',
-                                        icon: <CheckCircle2 className="text-purple-400" />
+                                        icon: <Crown className="text-indigo-400" />
                                     }
                                 ].map((item, i) => (
                                     <div key={i} className="p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-white/20 transition-all hover:-translate-y-1">
@@ -586,7 +560,7 @@ export default function HomeContent() {
                             },
                             {
                                 q: 'How much does it cost?',
-                                a: 'We offer a feature-rich "Starter" plan that is free forever for small businesses. for advanced features like Staff Management, Custom Branding, and Priority Support, our Premium plans start at just ₹99/month.'
+                                a: `We offer a feature-rich "Starter" plan that is free forever for small businesses. for advanced features like Staff Management, Custom Branding, and Priority Support, our Premium plans start at just ₹${getPlanPrice('professional')}/month.`
                             }
                         ].map((faq, i) => (
                             <div key={i} className="glass-panel border border-white/5 overflow-hidden">

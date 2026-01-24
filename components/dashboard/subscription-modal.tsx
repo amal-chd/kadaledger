@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle2, X, Loader2 } from 'lucide-react';
 import Script from 'next/script';
 import toast from 'react-hot-toast';
@@ -13,16 +13,51 @@ interface SubscriptionModalProps {
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+    const [plans, setPlans] = useState<any[]>([]);
 
-    if (!isOpen) return null;
+    useEffect(() => {
+        if (isOpen) {
+            fetchPlans();
+        }
+    }, [isOpen]);
 
-    const handlePayment = async (plan: 'starter' | 'professional' | 'business', amount: number) => {
-        setLoadingPlan(plan);
+    const fetchPlans = async () => {
+        try {
+            const res = await fetch('/api/plans');
+            if (res.ok) {
+                const data = await res.json();
+                setPlans(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch plans");
+        }
+    };
+
+    const getPlanPrice = (planName: string, cycle: 'monthly' | 'yearly') => {
+        if (planName === 'starter') return 0;
+        // For professional, we check the specific plan based on cycle
+        const targetPlanName = cycle === 'monthly' ? 'professional' : 'professional_yearly';
+        const plan = plans.find(p => p.name === targetPlanName);
+        return plan ? plan.price : (cycle === 'monthly' ? 199 : 1999);
+    };
+
+    const handlePayment = async (planName: 'starter' | 'professional') => {
+        const price = getPlanPrice(planName, billingCycle);
+
+        if (planName === 'starter') {
+            toast.success("Free plan activated!");
+            onClose();
+            return;
+        }
+
+        const actualPlanName = billingCycle === 'monthly' ? 'professional' : 'professional_yearly';
+
+        setLoadingPlan(planName);
         try {
             const res = await fetch('/api/payments/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount }),
+                body: JSON.stringify({ amount: price }),
             });
 
             if (!res.ok) throw new Error('Failed to create order');
@@ -30,11 +65,11 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             const order = await res.json();
 
             const options = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!, // Using the same key as landing page
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
                 amount: order.amount,
                 currency: "INR",
                 name: "Kada Ledger",
-                description: `Subscription for ${plan} plan`,
+                description: `Subscription for ${actualPlanName} plan`,
                 order_id: order.id,
                 handler: async function (response: any) {
                     try {
@@ -51,7 +86,6 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                         if (verifyData.status === 'success') {
                             toast.success('Payment Successful! Plan activated.');
                             onClose();
-                            // Optional: Refresh profile/page
                             window.location.reload();
                         } else {
                             toast.error('Payment verification failed.');
@@ -76,6 +110,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         }
     };
 
+    if (!isOpen) return null;
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <Script
@@ -83,7 +119,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 src="https://checkout.razorpay.com/v1/checkout.js"
             />
 
-            <div className="bg-[#0f172a] border border-white/10 rounded-3xl w-full max-w-5xl max-h-[90vh] overflow-y-auto relative shadow-2xl">
+            <div className="bg-[#0f172a] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative shadow-2xl">
                 <button
                     onClick={onClose}
                     className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-10"
@@ -108,12 +144,12 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                 onClick={() => setBillingCycle('yearly')}
                                 className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingCycle === 'yearly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
                             >
-                                Yearly (Save 20%)
+                                Yearly (Save ~16%)
                             </button>
                         </div>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
                         {/* Plan 1: Starter */}
                         <div className="glass-card p-6 border border-white/10 rounded-2xl flex flex-col hover:bg-white/5 transition-colors">
                             <div className="mb-4">
@@ -133,15 +169,17 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                             </button>
                         </div>
 
-                        {/* Plan 2: Professional */}
+                        {/* Plan 2: Premium */}
                         <div className="glass-card p-6 border-2 border-blue-500 rounded-2xl flex flex-col bg-blue-900/10 relative transform md:scale-105 shadow-xl shadow-blue-900/20">
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                                 Recommended
                             </div>
                             <div className="mb-4">
-                                <h3 className="text-lg font-bold text-white mb-1">Professional</h3>
+                                <h3 className="text-lg font-bold text-white mb-1">Premium</h3>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-white">₹{billingCycle === 'monthly' ? '199' : '1990'}</span>
+                                    <span className="text-3xl font-bold text-white">
+                                        ₹{getPlanPrice('professional', billingCycle)}
+                                    </span>
                                     <span className="text-slate-400 text-sm">/ {billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
                                 </div>
                             </div>
@@ -149,35 +187,17 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                 <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-blue-400 shrink-0" /> Up to 3 Users</li>
                                 <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-blue-400 shrink-0" /> WhatsApp Reminders</li>
                                 <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-blue-400 shrink-0" /> Advanced Analytics</li>
+                                {billingCycle === 'yearly' && (
+                                    <li className="flex gap-3 text-sm text-emerald-400 font-bold"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> 2 Months Free</li>
+                                )}
                             </ul>
                             <button
-                                onClick={() => handlePayment('professional', billingCycle === 'monthly' ? 199 : 1990)}
+                                onClick={() => handlePayment('professional')}
                                 disabled={loadingPlan === 'professional'}
                                 className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2"
                             >
                                 {loadingPlan === 'professional' && <Loader2 size={16} className="animate-spin" />}
-                                Upgrade to Pro
-                            </button>
-                        </div>
-
-                        {/* Plan 3: Business */}
-                        <div className="glass-card p-6 border border-white/10 rounded-2xl flex flex-col hover:bg-white/5 transition-colors">
-                            <div className="mb-4">
-                                <h3 className="text-lg font-bold text-white mb-1">Business</h3>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-white">Custom</span>
-                                </div>
-                            </div>
-                            <ul className="space-y-3 mb-8 flex-1">
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-purple-500 shrink-0" /> Unlimited Users</li>
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-purple-500 shrink-0" /> Custom Invoicing</li>
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-purple-500 shrink-0" /> Priority Support</li>
-                            </ul>
-                            <button
-                                onClick={() => window.open('mailto:support@kadaledger.com?subject=Business Plan Inquiry', '_blank')}
-                                className="w-full py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-sm transition-all flex items-center justify-center gap-2"
-                            >
-                                Contact Us
+                                Upgrade to Premium
                             </button>
                         </div>
                     </div>
