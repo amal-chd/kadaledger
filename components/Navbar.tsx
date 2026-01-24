@@ -29,7 +29,7 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-6 left-0 md:left-1/2 md:-translate-x-1/2 z-50 w-full md:w-[94%] md:max-w-5xl transition-all duration-700 rounded-b-3xl md:rounded-full border md:border ${isScrolled
+        className={`fixed top-0 md:top-6 left-0 md:left-1/2 md:-translate-x-1/2 z-50 w-full md:w-[94%] md:max-w-5xl transition-all duration-700 rounded-b-3xl md:rounded-full border md:border ${isScrolled
           ? 'bg-[#0B0F19]/70 backdrop-blur-2xl border-white/10 md:shadow-[0_20px_50px_rgba(0,0,0,0.5)] py-2'
           : 'bg-white/[0.03] backdrop-blur-xl border-white/5 py-3 md:py-4'
           }`}
