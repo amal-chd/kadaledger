@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan, vendorId: bodyVendorId } = body;
 
         const generated_signature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
@@ -20,16 +20,10 @@ export async function POST(req: Request) {
         }
 
         // Payment Successful - Update Vendor Subscription
-        // Note: For now, we need to know WHICH vendor paid. 
-        // In a real app, we would pass vendor ID in metadata or require auth here.
-        // Assuming client sends Authorization header or cookie.
 
         let vendorId = null;
 
-        // Attempt to get user from token if present, otherwise we can't update subscription automatically unless passed in body
-        // For simplicity in this session, let's assume the user is logged in
-        const authHeader = req.headers.get('Cookie');
-        // Or Authorization header if sent from client. Let's check headers.
+        // 1. Try to get vendorId from Token (Preferred)
         const authHeaderBearer = req.headers.get('Authorization');
 
         if (authHeaderBearer?.startsWith('Bearer ')) {
@@ -40,12 +34,14 @@ export async function POST(req: Request) {
             } catch (e) { /* ignore */ }
         }
 
+        // 2. Fallback to vendorId from body (for mobile if auth header fails/missing)
+        if (!vendorId && bodyVendorId) {
+            vendorId = bodyVendorId;
+        }
+
         // If we have a vendorId, update their subscription
         if (vendorId) {
-            // Determine plan based on amount paid or metadata (simplified here)
-            // Ideally we fetched the order details or passed plan type.
-            // For now, let's just mark as PROFESSIONAL if paid (logic can be improved)
-
+            const targetPlan = plan ? plan.toUpperCase() : 'PROFESSIONAL';
             const startDate = new Date();
             const endDate = new Date();
             endDate.setDate(startDate.getDate() + 30); // 30 Days
@@ -54,14 +50,14 @@ export async function POST(req: Request) {
                 where: { vendorId: vendorId },
                 data: {
                     status: 'ACTIVE',
-                    planType: 'PROFESSIONAL', // Defaulting to PRO for now as it's the main upgrade
+                    planType: targetPlan,
                     startDate: startDate,
                     endDate: endDate
                 }
             });
-
-            // Or create if not exists (upsert logic usually better)
         }
+
+        // Or create if not exists (upsert logic usually better)
 
         return NextResponse.json({ status: 'success', paymentId: razorpay_payment_id });
 
