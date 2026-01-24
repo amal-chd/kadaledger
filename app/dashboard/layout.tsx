@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CustomerViewProvider } from '@/contexts/customer-view-context';
 
 export default function DashboardLayout({
     children,
@@ -56,7 +57,9 @@ export default function DashboardLayout({
                     </div>
                 </header>
 
-                {children}
+                <CustomerViewProvider>
+                    {children}
+                </CustomerViewProvider>
             </main>
         </div>
     );

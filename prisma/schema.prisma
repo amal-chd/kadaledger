@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Vendor {
+  id            String         @id @default(uuid())
+  phoneNumber   String         @unique
+  businessName  String?
+  password      String?        // [MODIFIED] Optional for OTP-based auth
+  language      String?        @default("English")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  subscription  Subscription?
+  customers     Customer[]
+  transactions  Transaction[]
+}
+
+model Customer {
+  id           String        @id @default(uuid())
+  name         String?
+  phoneNumber  String?
+  vendorId     String
+  balance      Float         @default(0.0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  vendor       Vendor        @relation(fields: [vendorId], references: [id])
+  transactions Transaction[]
+  
+  @@unique([vendorId, phoneNumber])
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  amount      Float
+  type        String   // CREDIT or DEBIT/PAYMENT
+  description String?
+  date        DateTime @default(now())
+  vendorId    String
+  customerId  String
+  
+  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+  customer    Customer @relation(fields: [customerId], references: [id])
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  vendorId  String   @unique
+  planType  String   // TRIAL, MONTHLY, YEARLY
+  status    String   // ACTIVE, EXPIRED
+  startDate DateTime @default(now())
+  endDate   DateTime
+  
+  vendor    Vendor   @relation(fields: [vendorId], references: [id])
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
