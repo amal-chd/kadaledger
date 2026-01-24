@@ -1,174 +1,144 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, ChevronLeft, ChevronRight, Download } from 'lucide-react';
-import { format } from 'date-fns';
 
-export default function VendorsPage() {
+import { useEffect, useState } from 'react';
+import { LucideSearch, LucideMoreVertical, LucideCalendarClock, LucideBan } from 'lucide-react';
+
+const API_URL = 'http://localhost:4000';
+
+export default function VendorManagement() {
     const [vendors, setVendors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            fetchVendors();
-        }, 300); // Debounce search
-        return () => clearTimeout(timeoutId);
-    }, [search, page]);
+        fetchVendors();
+    }, []);
 
     const fetchVendors = async () => {
-        setLoading(true);
+        const token = localStorage.getItem('admin_token');
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`/api/admin/vendors?page=${page}&limit=10&search=${search}`, {
+            const res = await fetch(`${API_URL}/admin/vendors`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
             if (res.ok) {
                 const data = await res.json();
-                setVendors(data.data);
-                setTotalPages(data.meta.pages);
-            } else {
-                console.error('Fetch failed with status:', res.status);
-                // toast.error('Failed to load vendors'); // Optional: show toast if needed, but console is good for now
+                setVendors(data);
             }
-        } catch (error) {
-            console.error('Failed to fetch vendors', error);
-            // toast.error('Network error loading vendors');
+        } catch (e) {
+            console.error(e);
         } finally {
             setLoading(false);
         }
     };
 
-    return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Vendor Management</h1>
-                    <p className="text-slate-400">Manage all registered businesses and their subscriptions.</p>
-                </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors">
-                    <Download size={18} />
-                    Export Data
-                </button>
-            </div>
+    const manageSub = async (id: string, action: 'extend' | 'expire') => {
+        const token = localStorage.getItem('admin_token');
+        if (!confirm(`Are you sure you want to ${action} this subscription?`)) return;
 
-            {/* Filters */}
-            <div className="bg-[#0B0F19] border border-white/5 p-4 rounded-xl flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+        try {
+            const res = await fetch(`${API_URL}/admin/vendors/${id}/${action}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                fetchVendors(); // Refresh
+                alert('Success');
+            } else {
+                alert('Failed');
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const filteredVendors = vendors.filter(v =>
+        v.businessName?.toLowerCase().includes(search.toLowerCase()) ||
+        v.phoneNumber.includes(search)
+    );
+
+    if (loading) return <div className="p-8 text-white">Loading vendors...</div>;
+
+    return (
+        <div className="p-8">
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold text-white">Vendor Management</h1>
+
+                <div className="relative">
+                    <LucideSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                     <input
                         type="text"
-                        placeholder="Search vendors by name or phone..."
+                        placeholder="Search vendors..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full bg-[#020617] border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                        className="pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-blue-500 w-64"
                     />
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-[#020617] border border-white/10 text-slate-300 hover:text-white rounded-lg transition-colors">
-                    <Filter size={18} />
-                    Filter
-                </button>
             </div>
 
-            {/* Vendors Table */}
-            <div className="bg-[#0B0F19] border border-white/5 rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-white/5 text-slate-400 text-xs uppercase font-medium">
-                            <tr>
-                                <th className="px-6 py-4">Vendor Details</th>
-                                <th className="px-6 py-4">Subscription</th>
-                                <th className="px-6 py-4">Stats</th>
-                                <th className="px-6 py-4">Total Pending</th>
-                                <th className="px-6 py-4">Joined Date</th>
-                                <th className="px-6 py-4 text-right">Action</th>
+            <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-slate-900/50 border-b border-slate-700 text-slate-400">
+                            <th className="p-4 font-medium">Business</th>
+                            <th className="p-4 font-medium">Contact</th>
+                            <th className="p-4 font-medium">Stats</th>
+                            <th className="p-4 font-medium">Plan</th>
+                            <th className="p-4 font-medium">Status</th>
+                            <th className="p-4 font-medium text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700">
+                        {filteredVendors.map(v => (
+                            <tr key={v.id} className="hover:bg-slate-700/20 transition-colors">
+                                <td className="p-4">
+                                    <div className="font-bold text-white">{v.businessName || 'N/A'}</div>
+                                    <div className="text-xs text-slate-500">ID: {v.id.substring(0, 8)}...</div>
+                                </td>
+                                <td className="p-4 text-slate-300">
+                                    {v.phoneNumber}
+                                </td>
+                                <td className="p-4">
+                                    <div className="text-sm text-slate-300">{v.customerCount} Cust.</div>
+                                    <div className="text-xs text-emerald-400">₹{v.totalPending} Pending</div>
+                                </td>
+                                <td className="p-4">
+                                    <span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs font-bold uppercase">
+                                        {v.subscription?.planType}
+                                    </span>
+                                </td>
+                                <td className="p-4">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${v.subscription?.status === 'ACTIVE'
+                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                            : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                        }`}>
+                                        {v.subscription?.status}
+                                    </span>
+                                </td>
+                                <td className="p-4 text-right">
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            onClick={() => manageSub(v.id, 'extend')}
+                                            title="Extend Subscription 30 Days"
+                                            className="p-2 hover:bg-slate-600 rounded-lg text-blue-400 transition-all"
+                                        >
+                                            <LucideCalendarClock size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => manageSub(v.id, 'expire')}
+                                            title="Expire Subscription"
+                                            className="p-2 hover:bg-slate-600 rounded-lg text-red-400 transition-all"
+                                        >
+                                            <LucideBan size={18} />
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-20 text-center text-slate-500">
-                                        Loading vendors...
-                                    </td>
-                                </tr>
-                            ) : vendors.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-20 text-center text-slate-500">
-                                        No vendors found matching your search.
-                                    </td>
-                                </tr>
-                            ) : (
-                                vendors.map((v) => (
-                                    <tr
-                                        key={v.id}
-                                        className="text-sm hover:bg-white/5 transition-colors group cursor-pointer"
-                                        onClick={() => window.location.href = `/admin/vendors/${v.id}`}
-                                    >
-                                        <td className="px-6 py-4">
-                                            <div>
-                                                <div className="font-bold text-white mb-1">{v.businessName || 'Unnamed Business'}</div>
-                                                <div className="text-slate-500 text-xs font-mono">{v.phoneNumber}</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`
-                                                inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border
-                                                ${v.subscription?.status === 'ACTIVE'
-                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                                }
-                                            `}>
-                                                {v.subscription?.planType || 'TRIAL'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <div className="text-slate-300 text-xs">{v.customerCount} Customers</div>
-                                                <div className="text-slate-500 text-xs">{v.transactionCount} Trans.</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-red-400 font-bold font-mono">
-                                            ₹{v.totalPending.toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-400">
-                                            {format(new Date(v.createdAt), 'MMM d, yyyy')}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors">
-                                                <MoreVertical size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                {!loading && vendors.length > 0 && (
-                    <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between">
-                        <div className="text-sm text-slate-500">
-                            Page {page} of {totalPages}
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-                            <button
-                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                disabled={page === totalPages}
-                                className="p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
+                        ))}
+                    </tbody>
+                </table>
+                {filteredVendors.length === 0 && (
+                    <div className="p-8 text-center text-slate-500">
+                        No vendors found matching your search.
                     </div>
                 )}
             </div>

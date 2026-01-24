@@ -1,15 +1,7 @@
 {
   "framework": "nextjs",
-  "buildCommand": "next build",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
-  "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_AUTH_ENABLED": "true"
-  },
-  "build": {
-    "env": {
-      "SKIP_ENV_VALIDATION": "1"
-    }
-  }
+  "outputDirectory": ".next"
 }

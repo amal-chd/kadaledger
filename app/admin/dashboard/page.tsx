@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LucideUsers, LucideDollarSign, LucideActivity, LucideTrendingUp } from 'lucide-react';
 
-const API_URL = '/api';
+const API_URL = 'http://localhost:4000';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState<any>(null);

@@ -2,30 +2,17 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const API_URL = '/api';
-
-import { useCustomerView } from '@/contexts/customer-view-context';
-import { useDataRefresh } from '@/contexts/data-refresh-context';
-import toast from 'react-hot-toast';
+const API_URL = 'http://localhost:4000';
 
 export default function Dashboard() {
     const [vendor, setVendor] = useState<any>(null);
     const [customers, setCustomers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const { openCustomer } = useCustomerView();
-    const { refreshTrigger, lastUpdate, triggerRefresh } = useDataRefresh();
 
     useEffect(() => {
         fetchData();
     }, []);
-
-    // Re-fetch when refresh is triggered
-    useEffect(() => {
-        if (lastUpdate.customer || lastUpdate.dashboard) {
-            fetchData();
-        }
-    }, [lastUpdate.customer, lastUpdate.dashboard]);
 
     const fetchData = async () => {
         const token = localStorage.getItem('token');
@@ -62,29 +49,17 @@ export default function Dashboard() {
     const addCustomer = async (e: React.FormEvent) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-        try {
-            const res = await fetch(`${API_URL}/customers`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name: newCustomerName, phoneNumber: newCustomerPhone })
-            });
-
-            if (res.ok) {
-                setNewCustomerName('');
-                setNewCustomerPhone('');
-                toast.success('Customer added successfully!');
-                // Trigger refresh for all components
-                triggerRefresh('customer');
-                triggerRefresh('dashboard');
-            } else {
-                toast.error('Failed to add customer');
-            }
-        } catch (error) {
-            toast.error('Error adding customer');
-        }
+        await fetch(`${API_URL}/customers`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: newCustomerName, phoneNumber: newCustomerPhone })
+        });
+        setNewCustomerName('');
+        setNewCustomerPhone('');
+        fetchData();
     };
 
     if (loading) return <div className="p-10 text-center">Loading...</div>;
@@ -111,26 +86,22 @@ export default function Dashboard() {
                 </div>
                 <div className="p-6 rounded-2xl glass-card">
                     <div className="text-slate-400 text-sm mb-1">Customers</div>
-                    <div className="text-3xl font-bold text-white">{customers.length}</div>
+                    <div className="text-3xl font-bold">{customers.length}</div>
                 </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-4">
-                    <h2 className="text-xl font-bold mb-4 text-white">Customers</h2>
+                    <h2 className="text-xl font-bold mb-4">Customers</h2>
                     {customers.map(c => (
-                        <div
-                            key={c.id}
-                            onClick={() => openCustomer(c.id)}
-                            className="p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center hover:bg-white/10 transition-colors cursor-pointer"
-                        >
+                        <div key={c.id} className="p-4 rounded-xl bg-surface border border-white/5 flex justify-between items-center hover:border-indigo-500/30">
                             <div>
-                                <div className="font-bold text-white">{c.name}</div>
-                                <div className="text-sm text-slate-400">{c.phoneNumber}</div>
+                                <div className="font-bold">{c.name}</div>
+                                <div className="text-sm text-slate-500">{c.phoneNumber}</div>
                             </div>
                             <div className="text-right">
-                                <div className={`font-mono font-bold ${Number(c.balance) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>₹{c.balance}</div>
-                                <div className="text-xs text-slate-400">Balance</div>
+                                <div className={`font-mono font-bold ${Number(c.balance) > 0 ? 'text-red-400' : 'text-green-400'}`}>₹{c.balance}</div>
+                                <div className="text-xs text-slate-600">Balance</div>
                             </div>
                         </div>
                     ))}
@@ -146,7 +117,7 @@ export default function Dashboard() {
                                 placeholder="Name"
                                 value={newCustomerName}
                                 onChange={e => setNewCustomerName(e.target.value)}
-                                className="w-full bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-slate-800 border-none rounded-lg px-4 py-3"
                                 required
                             />
                             <input
@@ -154,10 +125,10 @@ export default function Dashboard() {
                                 placeholder="Phone"
                                 value={newCustomerPhone}
                                 onChange={e => setNewCustomerPhone(e.target.value)}
-                                className="w-full bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-slate-800 border-none rounded-lg px-4 py-3"
                                 required
                             />
-                            <button className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-white shadow-lg shadow-blue-600/20 transition-all">Add Customer</button>
+                            <button className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-lg font-bold">Add Customer</button>
                         </form>
                     </div>
                 </div>
