@@ -78,7 +78,7 @@ export async function GET(req: Request) {
             return sum + (revenueMap[sub.planType] || 0);
         }, 0);
 
-        const activeSubscribersCount = allSubscriptions.length;
+        const activeSubscribersCount = allSubscriptions.filter(sub => sub.planType !== 'TRIAL').length;
 
         // Recent 5 Subscribers (Active)
         const recentSubscribers = await prisma.vendor.findMany({
