@@ -560,10 +560,34 @@ export default function HomeContent() {
 
                     <div className="space-y-4">
                         {[
-                            { q: 'Is my data secure with Kada Ledger?', a: 'Absolutely. We use bank-grade 256-bit encryption to store your data. Your financial information is never shared with third parties without your explicit consent.' },
-                            { q: 'Can I use the app offline?', a: 'Yes! You can record transactions offline. The app automatically syncs your data to the cloud once you are back online.' },
-                            { q: 'Is it GST compliant?', a: 'Yes, all invoices generated are fully GST compliant. You can easily export GSTR-1 and GSTR-3B reports for your tax filings.' },
-                            { q: 'How much does it cost?', a: 'The basic version is free forever. Our Premium plan with advanced analytics starts at just ₹99/month.' }
+                            {
+                                q: 'What is Kada Ledger?',
+                                a: 'Kada Ledger is India\'s most premium digital khata and credit management app. It replaces traditional paper ledgers with a secure, cloud-based system that helps you track customer dues, manage staff, and automate payment reminders.'
+                            },
+                            {
+                                q: 'Is my data safe if I lose my phone?',
+                                a: 'Yes, 100%. Your data is securely synced to our cloud servers in real-time. Even if you lose your phone, you can simply log in to your account on a new device using your registered phone number, and all your data will be restored instantly.'
+                            },
+                            {
+                                q: 'How do WhatsApp reminders work?',
+                                a: 'Kada Ledger allows you to send automated or manual payment reminders directly to your customers via WhatsApp. This professional approach helps you collect payments 3x faster without the need for awkward personal follow-ups.'
+                            },
+                            {
+                                q: 'Can I accept online payments?',
+                                a: 'Absolutely. You can send payment links along with invoices or reminders. Customers can pay you using UPI (Google Pay, PhonePe, Paytm), Credit Cards, or Net Banking, and the amount is settled directly to your bank account.'
+                            },
+                            {
+                                q: 'Is it suitable for my business?',
+                                a: 'Kada Ledger is built for any business that offers credit (udhar). It is perfect for Kirana stores, Wholesalers, Distributors, Mobile Shops, Pharmacies, Garment Stores, and even Freelancers.'
+                            },
+                            {
+                                q: 'Is it GST compliant?',
+                                a: 'Yes, our invoicing system is fully GST compliant. You can generate professional invoices with your branding and easily export GSTR-1 and GSTR-3B reports for seamless tax filing.'
+                            },
+                            {
+                                q: 'How much does it cost?',
+                                a: 'We offer a feature-rich "Starter" plan that is free forever for small businesses. for advanced features like Staff Management, Custom Branding, and Priority Support, our Premium plans start at just ₹99/month.'
+                            }
                         ].map((faq, i) => (
                             <div key={i} className="glass-panel border border-white/5 overflow-hidden">
                                 <button

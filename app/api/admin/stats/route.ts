@@ -61,47 +61,6 @@ export async function GET(req: Request) {
             }
         });
 
-        // Subscription Stats
-        const allSubscriptions = await prisma.subscription.findMany({
-            where: { status: 'ACTIVE' }
-        });
-
-        // Estimate revenue based on active plans (Monthly pricing assumption for simplicity)
-        const revenueMap: Record<string, number> = {
-            'TRIAL': 0,
-            'PROFESSIONAL': 199,
-            'BUSINESS': 499,
-            'ENTERPRISE': 0 // Custom
-        };
-
-        const totalRevenue = allSubscriptions.reduce((sum, sub) => {
-            return sum + (revenueMap[sub.planType] || 0);
-        }, 0);
-
-        const activeSubscribersCount = allSubscriptions.filter(sub => sub.planType !== 'TRIAL').length;
-
-        // Recent 5 Subscribers (Active)
-        const recentSubscribers = await prisma.vendor.findMany({
-            where: {
-                subscription: {
-                    status: 'ACTIVE',
-                    planType: { not: 'TRIAL' } // Show paying customers mostly
-                }
-            },
-            take: 5,
-            orderBy: {
-                subscription: {
-                    startDate: 'desc'
-                }
-            },
-            select: {
-                id: true,
-                businessName: true,
-                phoneNumber: true,
-                subscription: true
-            }
-        });
-
         return NextResponse.json({
             overview: {
                 totalVendors,
@@ -109,11 +68,6 @@ export async function GET(req: Request) {
                 totalPending,
                 todaysVolume: todaysTransactions._sum.amount || 0,
                 todaysCount: todaysTransactions._count
-            },
-            subscriptions: {
-                totalRevenue,
-                activeCount: activeSubscribersCount,
-                recentList: recentSubscribers
             },
             recentVendors,
             systemHealth: 'Healthy'
