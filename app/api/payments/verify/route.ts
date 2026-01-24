@@ -1,24 +1,80 @@
+
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
 export async function POST(req: Request) {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planType } = await req.json();
 
+        // 1. Signature Verification
         const body = razorpay_order_id + "|" + razorpay_payment_id;
-
         const expectedSignature = crypto
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
             .update(body.toString())
             .digest("hex");
 
-        if (expectedSignature === razorpay_signature) {
-            // Payment is successful
-            // TODO: Update user subscription status in database here
-            return NextResponse.json({ status: 'success' });
-        } else {
+        if (expectedSignature !== razorpay_signature) {
             return NextResponse.json({ status: 'failure', message: 'Invalid signature' }, { status: 400 });
         }
+
+        // 2. Identify User from Header
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            // Payment valid but user unknown. Log this!
+            // In production, we might want to store payment info even if user unknown for reconciliation.
+            return NextResponse.json({ status: 'success', warning: 'User not authenticated' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        let decoded: any;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (err) {
+            return NextResponse.json({ status: 'success', warning: 'Invalid token' });
+        }
+
+        const vendorId = decoded.userId;
+
+        // 3. Update Database
+        // Determine plan details
+        // Default to MONTHLY if not specified or unknown
+        const isYearly = planType === 'professional_yearly' || planType?.includes('yearly');
+
+        // Calculate dates
+        const now = new Date();
+        const endDate = new Date();
+        if (isYearly) {
+            endDate.setFullYear(endDate.getFullYear() + 1);
+            // Add 2 months extra if that was the deal? Or just 1 year. 
+            // The deal "2 months free" usually means price is 10mo cost for 12mo duration.
+        } else {
+            endDate.setMonth(endDate.getMonth() + 1);
+        }
+
+        await prisma.subscription.upsert({
+            where: { vendorId: vendorId },
+            update: {
+                planType: isYearly ? 'YEARLY' : 'MONTHLY',
+                status: 'ACTIVE',
+                startDate: now,
+                endDate: endDate
+            },
+            create: {
+                vendorId: vendorId,
+                planType: isYearly ? 'YEARLY' : 'MONTHLY',
+                status: 'ACTIVE',
+                startDate: now,
+                endDate: endDate
+            }
+        });
+
+        return NextResponse.json({ status: 'success', message: 'Subscription activated' });
+
     } catch (error) {
         console.error('Payment Verification Error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -75,18 +75,23 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                     try {
                         const verifyRes = await fetch('/api/payments/verify', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
                             body: JSON.stringify({
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature
+                                razorpay_signature: response.razorpay_signature,
+                                planType: actualPlanName
                             }),
                         });
                         const verifyData = await verifyRes.json();
                         if (verifyData.status === 'success') {
                             toast.success('Payment Successful! Plan activated.');
                             onClose();
-                            window.location.reload();
+                            // Force redirect to dashboard to refresh state and escape onboarding if trapped
+                            window.location.href = '/dashboard';
                         } else {
                             toast.error('Payment verification failed.');
                         }

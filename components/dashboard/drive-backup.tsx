@@ -76,26 +76,16 @@ export default function DriveBackup() {
     };
 
     const fetchLocalData = async () => {
-        // Fetch all necessary data from your API to backup
-        // This is a placeholder. in a real app, you'd fetch from your API endpoints
-        // Example: /api/vendor/export-data
         const token = localStorage.getItem('token');
         if (!token) throw new Error('Not logged in');
 
-        // Simulating data gathering
-        // You should implement a dedicated export API route for this
-        const res = await fetch('/api/vendor/profile', {
+        const res = await fetch('/api/vendor/export-data', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const profile = await res.json();
 
-        // Return a structured object
-        return {
-            timestamp: new Date().toISOString(),
-            version: '1.0',
-            profile,
-            // Add customers, transactions etc here
-        };
+        if (!res.ok) throw new Error('Failed to fetch local data');
+
+        return await res.json();
     };
 
     const handleBackup = async () => {
@@ -107,10 +97,11 @@ export default function DriveBackup() {
             const data = await fetchLocalData();
             const fileContent = JSON.stringify(data, null, 2);
             const file = new Blob([fileContent], { type: 'application/json' });
+
+            const fileName = `kada_ledger_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
             const metadata = {
-                name: `kada_ledger_backup_${new Date().toISOString().split('T')[0]}.json`,
+                name: fileName,
                 mimeType: 'application/json',
-                // Parents: ['appDataFolder'] // Optional: Use appDataFolder to hide from user, or root to show
             };
 
             const accessToken = window.gapi.client.getToken().access_token;
@@ -129,9 +120,9 @@ export default function DriveBackup() {
             const result = await res.json();
             setLastBackup(new Date().toLocaleString());
             toast.success('Backup successful!', { id: toastId });
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error('Backup failed', { id: toastId });
+            toast.error(error.message || 'Backup failed', { id: toastId });
         } finally {
             setLoading(false);
         }
@@ -154,10 +145,8 @@ export default function DriveBackup() {
             const files = response.result.files;
 
             if (files && files.length > 0) {
-                // For simplicity, restore the latest one automatically, or show a modal to pick
-                // Here we'll restore the latest
                 const latestFile = files[0];
-                toast.loading(`Restoring ${latestFile.name || 'backup'}...`, { id: toastId });
+                toast.loading(`Restoring ${latestFile.name}...`, { id: toastId });
 
                 const fileRes = await window.gapi.client.drive.files.get({
                     fileId: latestFile.id,
@@ -165,19 +154,33 @@ export default function DriveBackup() {
                 });
 
                 const backupData = fileRes.result;
+                const token = localStorage.getItem('token');
 
-                // TODO: Send this data to your backend to restore
-                // await fetch('/api/vendor/import-data', { method: 'POST', body: JSON.stringify(backupData) ... })
+                if (!token) throw new Error("Not logged in");
 
-                console.log('Restured payload:', backupData);
-                toast.success('Restore successful!', { id: toastId });
-                // window.location.reload();
+                // Send to backend for restoration
+                const importRes = await fetch('/api/vendor/import-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(backupData)
+                });
+
+                if (!importRes.ok) {
+                    const errData = await importRes.json();
+                    throw new Error(errData.error || "Import failed on server");
+                }
+
+                toast.success('Restore successful! Reloading...', { id: toastId });
+                setTimeout(() => window.location.reload(), 2000);
             } else {
-                toast.error('No backup files found', { id: toastId });
+                toast.error('No backup files found in Drive', { id: toastId });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error('Restore failed', { id: toastId });
+            toast.error(error.message || 'Restore failed', { id: toastId });
         } finally {
             setLoading(false);
         }
