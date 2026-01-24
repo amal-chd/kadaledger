@@ -44,7 +44,7 @@ export default function HomeContent() {
         const order = await res.json();
 
         const options = {
-            key: "rzp_live_RS5k4uDUocwqK6",
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
             amount: order.amount,
             currency: "INR",
             name: "Kada Ledger",

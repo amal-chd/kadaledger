@@ -30,7 +30,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             const order = await res.json();
 
             const options = {
-                key: "rzp_live_RS5k4uDUocwqK6", // Using the same key as landing page
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!, // Using the same key as landing page
                 amount: order.amount,
                 currency: "INR",
                 name: "Kada Ledger",

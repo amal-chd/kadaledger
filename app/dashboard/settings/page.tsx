@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import toast from 'react-hot-toast';
+import DriveBackup from '@/components/dashboard/drive-backup';
 
 export default function SettingsPage() {
     const { theme, setTheme, resolvedTheme } = useTheme();
@@ -109,6 +110,9 @@ export default function SettingsPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Data Backup */}
+                <DriveBackup />
 
                 {/* Preferences */}
                 <div className="p-6 rounded-3xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none">

@@ -1,0 +1,246 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Cloud, Download, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const CLIENT_ID = '530019096016-vd82gqsnk5qog03okt9o9go0bsup1pse.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+
+declare global {
+    interface Window {
+        google: any;
+        gapi: any;
+    }
+}
+
+export default function DriveBackup() {
+    const [gapiLoaded, setGapiLoaded] = useState(false);
+    const [gisLoaded, setGisLoaded] = useState(false);
+    const [tokenClient, setTokenClient] = useState<any>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [lastBackup, setLastBackup] = useState<string | null>(null);
+
+    // Initialize Google Scripts
+    useEffect(() => {
+        const loadGapi = async () => {
+            if (typeof window === 'undefined') return;
+            // Load gapi script
+            const script = document.createElement('script');
+            script.src = 'https://apis.google.com/js/api.js';
+            script.onload = () => {
+                window.gapi.load('client', async () => {
+                    await window.gapi.client.init({});
+                    // Load Drive API discovery doc
+                    await window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+                    setGapiLoaded(true);
+                });
+            };
+            document.body.appendChild(script);
+
+            // Load GIS script
+            const gisScript = document.createElement('script');
+            gisScript.src = 'https://accounts.google.com/gsi/client';
+            gisScript.onload = () => {
+                setGisLoaded(true);
+            };
+            document.body.appendChild(gisScript);
+        };
+
+        loadGapi();
+    }, []);
+
+    // Initialize Token Client
+    useEffect(() => {
+        if (gisLoaded) {
+            const client = window.google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: (tokenResponse: any) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        setIsAuthenticated(true);
+                        toast.success('Connected to Google Drive');
+                    }
+                },
+            });
+            setTokenClient(client);
+        }
+    }, [gisLoaded]);
+
+    const handleAuth = () => {
+        if (tokenClient) {
+            tokenClient.requestAccessToken();
+        }
+    };
+
+    const fetchLocalData = async () => {
+        // Fetch all necessary data from your API to backup
+        // This is a placeholder. in a real app, you'd fetch from your API endpoints
+        // Example: /api/vendor/export-data
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Not logged in');
+
+        // Simulating data gathering
+        // You should implement a dedicated export API route for this
+        const res = await fetch('/api/vendor/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const profile = await res.json();
+
+        // Return a structured object
+        return {
+            timestamp: new Date().toISOString(),
+            version: '1.0',
+            profile,
+            // Add customers, transactions etc here
+        };
+    };
+
+    const handleBackup = async () => {
+        if (!isAuthenticated) return handleAuth();
+        setLoading(true);
+        const toastId = toast.loading('Backing up data...');
+
+        try {
+            const data = await fetchLocalData();
+            const fileContent = JSON.stringify(data, null, 2);
+            const file = new Blob([fileContent], { type: 'application/json' });
+            const metadata = {
+                name: `kada_ledger_backup_${new Date().toISOString().split('T')[0]}.json`,
+                mimeType: 'application/json',
+                // Parents: ['appDataFolder'] // Optional: Use appDataFolder to hide from user, or root to show
+            };
+
+            const accessToken = window.gapi.client.getToken().access_token;
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', file);
+
+            const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+                body: form,
+            });
+
+            if (!res.ok) throw new Error('Upload failed');
+
+            const result = await res.json();
+            setLastBackup(new Date().toLocaleString());
+            toast.success('Backup successful!', { id: toastId });
+        } catch (error) {
+            console.error(error);
+            toast.error('Backup failed', { id: toastId });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRestore = async () => {
+        if (!isAuthenticated) return handleAuth();
+        setLoading(true);
+        const toastId = toast.loading('Searching for backups...');
+
+        try {
+            // List files
+            const response = await window.gapi.client.drive.files.list({
+                q: "name contains 'kada_ledger_backup_' and trashed = false",
+                fields: 'files(id, name, createdTime)',
+                orderBy: 'createdTime desc',
+                pageSize: 10,
+            });
+
+            const files = response.result.files;
+
+            if (files && files.length > 0) {
+                // For simplicity, restore the latest one automatically, or show a modal to pick
+                // Here we'll restore the latest
+                const latestFile = files[0];
+                toast.loading(`Restoring ${latestFile.name || 'backup'}...`, { id: toastId });
+
+                const fileRes = await window.gapi.client.drive.files.get({
+                    fileId: latestFile.id,
+                    alt: 'media',
+                });
+
+                const backupData = fileRes.result;
+
+                // TODO: Send this data to your backend to restore
+                // await fetch('/api/vendor/import-data', { method: 'POST', body: JSON.stringify(backupData) ... })
+
+                console.log('Restured payload:', backupData);
+                toast.success('Restore successful!', { id: toastId });
+                // window.location.reload();
+            } else {
+                toast.error('No backup files found', { id: toastId });
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Restore failed', { id: toastId });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="p-6 rounded-3xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <Cloud size={24} />
+                </div>
+                <div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Google Drive Backup</h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Sync your ledger data safely to the cloud.</p>
+                </div>
+            </div>
+
+            {!gapiLoaded || !gisLoaded ? (
+                <div className="flex items-center gap-2 text-slate-500">
+                    <Loader2 size={16} className="animate-spin" /> Initializing Google services...
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {!isAuthenticated ? (
+                        <button
+                            onClick={handleAuth}
+                            className="w-full py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                        >
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+                            Connect Google Account
+                        </button>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button
+                                onClick={handleBackup}
+                                disabled={loading}
+                                className="py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50"
+                            >
+                                <Upload size={24} className="group-hover:-translate-y-1 transition-transform" />
+                                <span>Export to Drive</span>
+                            </button>
+
+                            <button
+                                onClick={handleRestore}
+                                disabled={loading}
+                                className="py-4 px-6 rounded-xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50"
+                            >
+                                <Download size={24} className="group-hover:translate-y-1 transition-transform" />
+                                <span>Import from Drive</span>
+                            </button>
+                        </div>
+                    )}
+
+                    {isAuthenticated && (
+                        <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mt-4 px-2">
+                            <span className="flex items-center gap-1.5 text-emerald-500 font-medium">
+                                <CheckCircle2 size={12} /> Account Connected
+                            </span>
+                            {lastBackup && <span>Last Sync: {lastBackup}</span>}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
