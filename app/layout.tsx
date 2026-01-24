@@ -115,7 +115,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${outfit.variable} antialiased bg-slate-50 text-slate-900`}
+        className={`${inter.variable} ${outfit.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider
           attribute="class"

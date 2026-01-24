@@ -115,9 +115,50 @@
 }
 
 :root {
-  /* DARK BLUE GLASS THEME */
+  /* LIGHT MODE DEFAULT */
+  --background: #f8fafc;
+  /* slate-50 */
+  --foreground: #0f172a;
+  /* slate-900 */
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --primary: #2563eb;
+  /* blue-600 */
+  --primary-foreground: #ffffff;
+
+  --secondary: #e2e8f0;
+  /* slate-200 */
+  --secondary-foreground: #0f172a;
+
+  --muted: #f1f5f9;
+  /* slate-100 */
+  --muted-foreground: #64748b;
+  /* slate-500 */
+
+  --accent: #eff6ff;
+  /* blue-50 */
+  --accent-foreground: #1e40af;
+  /* blue-800 */
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0;
+  /* slate-200 */
+  --input: #e2e8f0;
+  --ring: #3b82f6;
+
+  --radius: 1rem;
+}
+
+.dark {
+  /* DARK MODE OVERRIDES (Original :root values) */
   --background: #020617;
-  /* Very dark blue instead of black */
   --foreground: #f0f4f8;
 
   --card: #0f172a;
@@ -134,9 +175,8 @@
 
   --muted: #1e293b;
   --muted-foreground: #cbd5e1;
-  /* slate-300 - lighter than slate-400 for better visibility */
 
-  --accent: #60a5fa;
+  --accent: #1e293b;
   --accent-foreground: #ffffff;
 
   --destructive: #ef4444;
@@ -145,16 +185,6 @@
   --border: #1e293b;
   --input: #1e293b;
   --ring: #3b82f6;
-
-  --radius: 2rem;
-  /* Increased radius for floating look */
-}
-
-/* Force Dark Mode Appearance regardless of system preference for the landing page */
-.dark {
-  --background: 225 30% 7%;
-  --foreground: 210 40% 98%;
-  /* ... (same as root for consistency if toggled) */
 }
 
 @layer base {

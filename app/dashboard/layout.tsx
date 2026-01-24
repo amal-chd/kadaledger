@@ -10,6 +10,7 @@ import SubscriptionModal from '@/components/dashboard/subscription-modal';
 import { CustomerViewProvider } from '@/contexts/customer-view-context';
 import { DataRefreshProvider } from '@/contexts/data-refresh-context';
 import CustomerQuickViewModal from '@/components/dashboard/customer-quick-view-modal';
+import SubscriptionLockScreen from '@/components/dashboard/subscription-lock-screen';
 
 const API_URL = '/api';
 
@@ -92,7 +93,6 @@ export default function DashboardLayout({
                         />
                     )}
 
-                    {/* Sidebar */}
                     <aside className={`w-64 bg-white dark:bg-[#0f172a]/60 backdrop-blur-xl fixed h-full z-40 transition-all duration-300 ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
                         } md:block`}>
                         <div className="h-24 flex items-center justify-between px-8 border-b border-slate-100 dark:border-white/5">
@@ -132,8 +132,17 @@ export default function DashboardLayout({
                             {!isPro ? (
                                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-600/20 dark:to-indigo-600/20 border border-blue-100 dark:border-blue-500/20 p-5 rounded-2xl relative overflow-hidden group">
                                     <div className="absolute inset-0 bg-blue-500/10 blur-xl group-hover:bg-blue-500/20 transition-colors hidden dark:block"></div>
-                                    <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mb-1 relative z-10">PRO Plan</p>
-                                    <p className="text-xs text-blue-600 dark:text-blue-200/70 mb-4 relative z-10">Get unlimited reports and AI insights.</p>
+                                    <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mb-1 relative z-10 flex justify-between">
+                                        <span>{profile?.subscription?.planType || 'Free Plan'}</span>
+                                        <span className="text-blue-600 dark:text-blue-300">{profile?.subscription?.daysLeft} Days Left</span>
+                                    </p>
+                                    <div className="w-full bg-blue-200 dark:bg-white/10 h-1.5 rounded-full mb-3 relative z-10">
+                                        <div
+                                            className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
+                                            style={{ width: `${Math.min(100, Math.max(0, (profile?.subscription?.daysLeft / 14) * 100))}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-xs text-blue-600 dark:text-blue-200/70 mb-4 relative z-10">Upgrade to unlock all features.</p>
                                     <button onClick={() => setIsUpgradeModalOpen(true)} className="block w-full text-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-lg shadow-lg shadow-blue-600/20 transition-all relative z-10">
                                         Upgrade Now
                                     </button>
@@ -141,7 +150,10 @@ export default function DashboardLayout({
                             ) : (
                                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-600/20 dark:to-emerald-600/20 border border-green-100 dark:border-green-500/20 p-5 rounded-2xl relative text-center">
                                     <p className="text-xs font-bold text-green-800 dark:text-green-200 mb-1">PRO Active</p>
-                                    <p className="text-xs text-green-600 dark:text-green-200/70">Thanks for being a premium member!</p>
+                                    <p className="text-xs text-green-600 dark:text-green-200/70 mb-2">Thanks for being a premium member!</p>
+                                    <p className="text-[10px] text-green-700 dark:text-green-200/50 uppercase tracking-widest font-bold">
+                                        {profile?.subscription?.daysLeft} Days Left
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -149,33 +161,59 @@ export default function DashboardLayout({
 
                     {/* Main Content */}
                     <main className="flex-1 md:ml-64 p-4 md:p-8 relative z-10">
-                        {/* Top Header */}
-                        <header className="flex justify-between items-center mb-6 md:mb-10">
-                            {/* Mobile Menu Button */}
-                            <button
-                                onClick={() => setIsMobileSidebarOpen(true)}
-                                className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors border border-slate-200 dark:border-white/10"
-                            >
-                                <Menu size={24} className="text-slate-600 dark:text-slate-400" />
-                            </button>
-
-                            <div className="hidden md:block w-full max-w-md">
-                                <GlobalSearch />
-                            </div>
-
-                            <div className="flex items-center gap-6">
-                                <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                    🔔
-                                </button>
-                                <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 overflow-hidden shadow-lg p-0.5">
-                                    <div className="w-full h-full bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-400">
-                                        {profile?.businessName?.substring(0, 2).toUpperCase() || 'US'}
+                        {/* Lock Screen if Expired */}
+                        {profile?.subscription?.daysLeft <= 0 ? (
+                            <SubscriptionLockScreen onRenew={() => setIsUpgradeModalOpen(true)} />
+                        ) : (
+                            <>
+                                {/* Subscription Warning Banner */}
+                                {profile?.subscription?.daysLeft <= 7 && profile?.subscription?.daysLeft > 0 && (
+                                    <div className="mb-6 p-4 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-between animate-fade-in-up">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-orange-500">⚠️</span>
+                                            <div>
+                                                <p className="text-sm font-bold text-orange-800 dark:text-orange-200">Subscription Expiring Soon</p>
+                                                <p className="text-xs text-orange-600 dark:text-orange-300">Your plan expires in {profile?.subscription?.daysLeft} days. Renew now to avoid interruption.</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsUpgradeModalOpen(true)}
+                                            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-orange-500/20"
+                                        >
+                                            Renew Now
+                                        </button>
                                     </div>
-                                </div>
-                            </div>
-                        </header>
+                                )}
 
-                        {children}
+                                {/* Top Header */}
+                                <header className="flex justify-between items-center mb-6 md:mb-10">
+                                    {/* Mobile Menu Button */}
+                                    <button
+                                        onClick={() => setIsMobileSidebarOpen(true)}
+                                        className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors border border-slate-200 dark:border-white/10"
+                                    >
+                                        <Menu size={24} className="text-slate-600 dark:text-slate-400" />
+                                    </button>
+
+                                    <div className="hidden md:block w-full max-w-md">
+                                        <GlobalSearch />
+                                    </div>
+
+                                    <div className="flex items-center gap-6">
+                                        <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                                            🔔
+                                        </button>
+                                        <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 overflow-hidden shadow-lg p-0.5">
+                                            <div className="w-full h-full bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-400">
+                                                {profile?.businessName?.substring(0, 2).toUpperCase() || 'US'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </header>
+
+                                {children}
+                            </>
+                        )}
                     </main>
                 </div>
             </CustomerViewProvider>

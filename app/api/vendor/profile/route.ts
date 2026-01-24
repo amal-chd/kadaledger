@@ -32,15 +32,32 @@ export async function GET(req: Request) {
 
         const totalPending = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
 
+        // Calculate Days Left
+        let daysLeft = 0;
+        let subscriptionStatus = vendor.subscription?.status || 'EXPIRED';
+        if (vendor.subscription?.endDate) {
+            const end = new Date(vendor.subscription.endDate).getTime();
+            const now = new Date().getTime();
+            const diff = end - now;
+            daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+            if (daysLeft <= 0) {
+                subscriptionStatus = 'EXPIRED';
+                daysLeft = 0;
+            }
+        }
+
         return NextResponse.json({
             id: vendor.id,
-            // name: vendor.ownerName || '', // Removed: Field does not exist in schema
             businessName: vendor.businessName,
             phoneNumber: vendor.phoneNumber,
-            // businessCategory: vendor.businessCategory || 'Retail', // Removed
-            // city: vendor.city || '', // Removed
             language: vendor.language || 'English',
-            subscription: vendor.subscription,
+            subscription: {
+                ...(vendor.subscription || {}),
+                planType: vendor.subscription?.planType || 'FREE', // Default for legacy
+                status: subscriptionStatus,
+                daysLeft: daysLeft
+            },
             totalPending: totalPending
         });
 

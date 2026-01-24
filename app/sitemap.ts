@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { getAllPosts } from '@/lib/blog-api';
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = 'https://thekada.in';
@@ -23,5 +24,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: route === '' ? 1 : 0.8,
     }));
 
-    return routes;
+    const blogPosts = getAllPosts();
+    const blogRoutes = blogPosts.map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: new Date(post.date),
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+    }));
+
+    return [...routes, ...blogRoutes];
 }

@@ -87,50 +87,50 @@ export default function Dashboard() {
         }
     };
 
-    if (loading) return <div className="p-10 text-center">Loading...</div>;
+    if (loading) return <div className="p-10 text-center text-slate-600 dark:text-slate-400">Loading...</div>;
 
     return (
         <div className="min-h-screen p-8 max-w-7xl mx-auto">
             <header className="flex justify-between items-center mb-10">
                 <div>
-                    <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
-                    <p className="text-slate-400">Welcome, {vendor?.businessName || vendor?.phoneNumber}</p>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+                    <p className="text-slate-500 dark:text-slate-400">Welcome, {vendor?.businessName || vendor?.phoneNumber}</p>
                 </div>
                 <div className="flex gap-4">
-                    <div className={`px-4 py-2 rounded-lg border ${vendor?.subscription?.status === 'ACTIVE' ? 'border-green-500 text-green-500' : 'border-red-500 text-red-500'}`}>
+                    <div className={`px-4 py-2 rounded-lg border font-medium ${vendor?.subscription?.status === 'ACTIVE' ? 'border-green-500 text-green-600 dark:text-green-500' : 'border-red-500 text-red-600 dark:text-red-500'}`}>
                         {vendor?.subscription?.planType} ({vendor?.subscription?.status})
                     </div>
-                    <button onClick={() => { localStorage.removeItem('token'); router.push('/login'); }} className="text-sm text-slate-400 hover:text-white">Logout</button>
+                    <button onClick={() => { localStorage.removeItem('token'); router.push('/login'); }} className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Logout</button>
                 </div>
             </header>
 
             <div className="grid md:grid-cols-3 gap-8 mb-10">
-                <div className="p-6 rounded-2xl glass-card">
-                    <div className="text-slate-400 text-sm mb-1">Total Pending</div>
-                    <div className="text-3xl font-bold text-red-400">₹{vendor?.totalPending || 0}</div>
+                <div className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-xl">
+                    <div className="text-slate-500 dark:text-slate-400 text-sm mb-1">Total Pending</div>
+                    <div className="text-3xl font-bold text-red-500 dark:text-red-400">₹{vendor?.totalPending || 0}</div>
                 </div>
-                <div className="p-6 rounded-2xl glass-card">
-                    <div className="text-slate-400 text-sm mb-1">Customers</div>
-                    <div className="text-3xl font-bold text-white">{customers.length}</div>
+                <div className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-xl">
+                    <div className="text-slate-500 dark:text-slate-400 text-sm mb-1">Customers</div>
+                    <div className="text-3xl font-bold text-slate-900 dark:text-white">{customers.length}</div>
                 </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-4">
-                    <h2 className="text-xl font-bold mb-4 text-white">Customers</h2>
+                    <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Customers</h2>
                     {customers.map(c => (
                         <div
                             key={c.id}
                             onClick={() => openCustomer(c.id)}
-                            className="p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center hover:bg-white/10 transition-colors cursor-pointer"
+                            className="p-4 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-white/10 transition-colors cursor-pointer shadow-sm dark:shadow-none"
                         >
                             <div>
-                                <div className="font-bold text-white">{c.name}</div>
-                                <div className="text-sm text-slate-400">{c.phoneNumber}</div>
+                                <div className="font-bold text-slate-900 dark:text-white">{c.name}</div>
+                                <div className="text-sm text-slate-500 dark:text-slate-400">{c.phoneNumber}</div>
                             </div>
                             <div className="text-right">
-                                <div className={`font-mono font-bold ${Number(c.balance) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>₹{c.balance}</div>
-                                <div className="text-xs text-slate-400">Balance</div>
+                                <div className={`font-mono font-bold ${Number(c.balance) > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400'}`}>₹{c.balance}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400">Balance</div>
                             </div>
                         </div>
                     ))}
@@ -138,15 +138,15 @@ export default function Dashboard() {
                 </div>
 
                 <div>
-                    <div className="p-6 rounded-2xl glass-card sticky top-10">
-                        <h3 className="font-bold mb-4">Add Customer</h3>
+                    <div className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-xl sticky top-10">
+                        <h3 className="font-bold mb-4 text-slate-900 dark:text-white">Add Customer</h3>
                         <form onSubmit={addCustomer} className="space-y-4">
                             <input
                                 type="text"
                                 placeholder="Name"
                                 value={newCustomerName}
                                 onChange={e => setNewCustomerName(e.target.value)}
-                                className="w-full bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             />
                             <input
@@ -154,7 +154,7 @@ export default function Dashboard() {
                                 placeholder="Phone"
                                 value={newCustomerPhone}
                                 onChange={e => setNewCustomerPhone(e.target.value)}
-                                className="w-full bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             />
                             <button className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-white shadow-lg shadow-blue-600/20 transition-all">Add Customer</button>

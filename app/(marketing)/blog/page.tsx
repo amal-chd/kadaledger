@@ -1,6 +1,7 @@
 import { Newspaper, ArrowRight, Calendar, User, Clock, Star } from 'lucide-react';
 import Link from 'next/link';
 import Aurora from '@/components/marketing/Aurora';
+import { getAllPosts } from '@/lib/blog-api';
 
 export const metadata = {
     title: "Blog & Updates - Financial Insights for Bharat's Merchants",
@@ -25,6 +26,8 @@ const blogJsonLd = {
 };
 
 export default function BlogPage() {
+    const blogPosts = getAllPosts();
+
     return (
         <main className="min-h-screen bg-[#050810] selection:bg-blue-500/30 overflow-hidden">
             <script
@@ -60,63 +63,46 @@ export default function BlogPage() {
 
             <section className="container-mobile relative z-10 px-6 pb-32">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {[
-                        {
-                            title: "How to Collect Payments 3x Faster with WhatsApp",
-                            excerpt: "Discover the psychology behind automated reminders and how digital khata reduces follow-up stress.",
-                            date: "Jan 15, 2024",
-                            author: "Rahul S.",
-                            readTime: "5 min read",
-                            image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1974&auto=format&fit=crop"
-                        },
-                        {
-                            title: "The Future of Digital Ledger in Tier 2 Indian Cities",
-                            excerpt: "Why thousands of merchants in smaller towns are ditching paper books for digital ledger apps.",
-                            date: "Jan 12, 2024",
-                            author: "Priya M.",
-                            readTime: "8 min read",
-                            image: "https://images.unsplash.com/photo-1542382257-80dee2700bd2?q=80&w=2070&auto=format&fit=crop"
-                        },
-                        {
-                            title: "Managing Multiple Branches: A Super Admin's Guide",
-                            excerpt: "Learn how to use multi-store sync to keep track of sales across all your locations effortlessly.",
-                            date: "Jan 10, 2024",
-                            author: "Arun K.",
-                            readTime: "6 min read",
-                            image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop"
-                        }
-                    ].map((post, i) => (
-                        <div key={i} className="group glass-card rounded-[2.5rem] border border-white/5 overflow-hidden hover:border-blue-500/20 transition-all flex flex-col">
-                            <div className="aspect-video relative overflow-hidden">
+                    {blogPosts.map((post, i) => (
+                        <Link href={`/blog/${post.slug}`} key={i} className="group glass-card rounded-[2rem] border border-white/10 overflow-hidden hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-900/20 transition-all flex flex-col cursor-pointer bg-[#0a0f1e]">
+                            <div className="aspect-[16/9] relative overflow-hidden">
                                 <img
                                     src={post.image}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-80"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80 group-hover:opacity-100"
                                     alt={post.title}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#050810] to-transparent"></div>
-                                <div className="absolute bottom-6 left-6 flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white">
-                                        {post.author[0]}
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e] via-transparent to-transparent opacity-90"></div>
+                                <div className="absolute bottom-5 left-6 right-6 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white border border-white/20">
+                                            {post.author[0]}
+                                        </div>
+                                        <span className="text-white text-xs font-semibold drop-shadow-md">{post.author}</span>
                                     </div>
-                                    <span className="text-white text-xs font-bold">{post.author}</span>
+                                    <span className="bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white border border-white/10 uppercase tracking-wider">
+                                        {post.readTime}
+                                    </span>
                                 </div>
                             </div>
-                            <div className="p-8 flex-1 flex flex-col">
-                                <div className="flex items-center gap-4 text-blue-200/40 text-[10px] uppercase tracking-widest font-bold mb-4">
-                                    <span className="flex items-center gap-1"><Calendar size={12} /> {post.date}</span>
-                                    <span className="flex items-center gap-1"><Clock size={12} /> {post.readTime}</span>
+                            <div className="p-8 flex-1 flex flex-col relative z-20">
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    {post.tags.slice(0, 2).map(tag => (
+                                        <span key={tag} className="text-blue-400 text-xs font-bold uppercase tracking-wider bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/10">
+                                            {tag}
+                                        </span>
+                                    ))}
                                 </div>
-                                <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors leading-tight">
+                                <h3 className="text-xl md:text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors leading-tight line-clamp-2">
                                     {post.title}
                                 </h3>
-                                <p className="text-blue-200/60 text-sm leading-relaxed mb-8 line-clamp-2">
+                                <p className="text-gray-400 text-sm leading-relaxed mb-6 line-clamp-3 font-light">
                                     {post.excerpt}
                                 </p>
-                                <div className="mt-auto flex items-center gap-2 text-blue-400 font-bold text-sm">
-                                    Read Article <ArrowRight size={14} />
+                                <div className="mt-auto flex items-center gap-2 text-blue-400 font-bold text-sm group-hover:translate-x-1 transition-transform">
+                                    Read Article <ArrowRight size={16} />
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
 
