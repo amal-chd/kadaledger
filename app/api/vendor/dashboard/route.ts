@@ -53,8 +53,19 @@ export async function GET(req: Request) {
             select: { id: true, name: true, balance: true }
         });
 
+        // 4. Total Collected (Sum of all PAYMENT transactions)
+        const totalCollectedAgg = await prisma.transaction.aggregate({
+            _sum: { amount: true },
+            where: {
+                vendorId,
+                type: 'PAYMENT'
+            }
+        });
+        const totalCollected = totalCollectedAgg._sum.amount || 0;
+
         return NextResponse.json({
             totalOutstanding,
+            totalCollected,
             todaysActivity: {
                 credits,
                 payments,
