@@ -43,28 +43,40 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { customerId, type, amount, description, date } = await req.json();
+        const body = await req.json();
+        console.log('Transaction Request Body:', body);
+        const { customerId, type, amount, description, date } = body;
 
         if (!customerId || !type || !amount) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
         // 1. Create Transaction
+        const transactionDate = date ? new Date(date) : new Date();
+        if (isNaN(transactionDate.getTime())) {
+            return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+        }
+
+        const transactionAmount = Number(amount);
+        if (isNaN(transactionAmount)) {
+            return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+        }
+
         const transaction = await prisma.transaction.create({
             data: {
                 vendorId: user.sub,
                 customerId,
                 type, // 'CREDIT' or 'PAYMENT'
-                amount: parseFloat(amount),
-                description,
-                date: date ? new Date(date) : new Date(),
+                amount: transactionAmount,
+                description: description || undefined,
+                date: transactionDate,
             },
         });
 
         // 2. Update Customer Balance
         // If CREDIT, balance increases (customer owes more)
         // If PAYMENT, balance decreases (customer owes less)
-        const balanceChange = type === 'CREDIT' ? parseFloat(amount) : -parseFloat(amount);
+        const balanceChange = type === 'CREDIT' ? transactionAmount : -transactionAmount;
 
         await prisma.customer.update({
             where: { id: customerId },
@@ -75,7 +87,12 @@ export async function POST(req: Request) {
 
         return NextResponse.json(transaction);
     } catch (error) {
-        console.error('Add transaction error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        console.error('Add transaction error details:', error);
+        // @ts-ignore
+        if (error.code) console.error('Error code:', error.code);
+        // @ts-ignore
+        if (error.meta) console.error('Error meta:', error.meta);
+
+        return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });
     }
 }

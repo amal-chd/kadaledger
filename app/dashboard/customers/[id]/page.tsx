@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Phone, Plus, Minus, Calendar, Download } from 'lucide-react';
+import { ArrowLeft, Phone, Plus, Minus, Calendar, Download, MessageSquare, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -138,15 +138,43 @@ export default function CustomerDetailsPage() {
             <Toaster position="bottom-right" />
 
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <Link href="/dashboard/customers" className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors">
-                    <ArrowLeft className="text-slate-500 dark:text-slate-400" />
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{customer.name}</h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2">
-                        <Phone size={14} /> {customer.phoneNumber}
-                    </p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard/customers" className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors">
+                        <ArrowLeft className="text-slate-500 dark:text-slate-400" />
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{customer.name}</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2">
+                            <Phone size={14} /> {customer.phoneNumber}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <a
+                        href={`tel:${customer.phoneNumber}`}
+                        className="bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 p-3 rounded-xl text-slate-600 dark:text-slate-300 transition-colors"
+                        title="Call"
+                    >
+                        <Phone size={20} />
+                    </a>
+                    <a
+                        href={`sms:${customer.phoneNumber}?body=${encodeURIComponent(`Hello ${customer.name}, your current balance is ₹${Math.abs(customer.balance)} ${customer.balance < 0 ? 'pending' : 'advance'}. Please check details.`)}`}
+                        className="bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 p-3 rounded-xl text-blue-600 dark:text-blue-400 transition-colors"
+                        title="SMS Reminder"
+                    >
+                        <MessageSquare size={20} />
+                    </a>
+                    <a
+                        href={`https://wa.me/${customer.phoneNumber}?text=${encodeURIComponent(`Hello ${customer.name}, your current balance with us is ₹${Math.abs(customer.balance)} ${customer.balance < 0 ? 'pending' : 'advance'}. Please pay the pending amount at your earliest convenience.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-green-50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20 p-3 rounded-xl text-green-600 dark:text-green-400 transition-colors"
+                        title="WhatsApp Reminder"
+                    >
+                        <MessageCircle size={20} />
+                    </a>
                 </div>
             </div>
 

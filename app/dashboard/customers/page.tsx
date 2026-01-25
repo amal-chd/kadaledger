@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, Phone, ChevronRight, User } from 'lucide-react';
+import { Search, Plus, Phone, ChevronRight, User, MessageSquare, MessageCircle, Edit, Trash2 } from 'lucide-react';
 import { useCustomerView } from '@/contexts/customer-view-context';
 import AddCustomerModal from '@/components/dashboard/add-customer-modal';
 
@@ -10,11 +10,27 @@ export default function CustomersPage() {
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingCustomer, setEditingCustomer] = useState<any>(null);
     const { openCustomer } = useCustomerView();
 
     useEffect(() => {
         fetchCustomers();
     }, []);
+
+    const deleteCustomer = async (id: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/customers/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                fetchCustomers();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const fetchCustomers = async () => {
         try {
@@ -42,8 +58,12 @@ export default function CustomersPage() {
         <div className="space-y-8">
             <AddCustomerModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
+                onClose={() => {
+                    setIsAddModalOpen(false);
+                    setEditingCustomer(null);
+                }}
                 onSuccess={fetchCustomers}
+                customer={editingCustomer}
             />
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -109,6 +129,62 @@ export default function CustomersPage() {
                                 <span className={`text-lg font-bold ${customer.balance > 0 ? 'text-emerald-500' : customer.balance < 0 ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>
                                     ₹{Math.abs(customer.balance).toLocaleString()} {customer.balance < 0 ? 'Due' : customer.balance > 0 ? 'Adv' : ''}
                                 </span>
+                            </div>
+
+                            {/* Action Buttons */}
+                            {/* Action Buttons */}
+                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex flex-col gap-3">
+                                {/* Communication Actions */}
+                                <div className="flex gap-2">
+                                    <a
+                                        href={`tel:${customer.phoneNumber}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors"
+                                    >
+                                        <Phone size={16} /> Call
+                                    </a>
+                                    <a
+                                        href={`sms:${customer.phoneNumber}?body=${encodeURIComponent(`Hello ${customer.name}, your current balance is ₹${Math.abs(customer.balance)} ${customer.balance < 0 ? 'pending' : 'advance'}. Please check details.`)}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-blue-600 dark:text-blue-400 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors"
+                                    >
+                                        <MessageSquare size={16} /> SMS
+                                    </a>
+                                    <a
+                                        href={`https://wa.me/${customer.phoneNumber}?text=${encodeURIComponent(`Hello ${customer.name}, your current balance with us is ₹${Math.abs(customer.balance)} ${customer.balance < 0 ? 'pending' : 'advance'}. Please pay the pending amount at your earliest convenience.`)}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 bg-green-50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors"
+                                    >
+                                        <MessageCircle size={16} /> WA
+                                    </a>
+                                </div>
+
+                                {/* Management Actions */}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingCustomer(customer);
+                                            setIsAddModalOpen(true);
+                                        }}
+                                        className="flex-1 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors"
+                                    >
+                                        <Edit size={16} /> Edit
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (confirm(`Are you sure you want to delete ${customer.name}?`)) {
+                                                deleteCustomer(customer.id);
+                                            }
+                                        }}
+                                        className="flex-1 border border-red-200 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors"
+                                    >
+                                        <Trash2 size={16} /> Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}

@@ -31,11 +31,16 @@ export async function GET(req: Request) {
                 vendorId,
                 date: { gte: today },
             },
-            select: { type: true },
+            select: { type: true, amount: true },
         });
 
-        const credits = todaysTransactions.filter((t: { type: string }) => t.type === 'CREDIT').length;
-        const payments = todaysTransactions.filter((t: { type: string }) => t.type === 'PAYMENT').length;
+        const credits = todaysTransactions
+            .filter((t: { type: string, amount: number }) => t.type === 'CREDIT')
+            .reduce((sum: number, t: { amount: number }) => sum + (t.amount || 0), 0);
+
+        const payments = todaysTransactions
+            .filter((t: { type: string, amount: number }) => t.type === 'PAYMENT')
+            .reduce((sum: number, t: { amount: number }) => sum + (t.amount || 0), 0);
 
         // 3. High Risk Customers (Mock logic: balance > 5000)
         const highRiskCustomers = await prisma.customer.findMany({

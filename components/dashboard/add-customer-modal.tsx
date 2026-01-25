@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Loader2, User, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -8,12 +8,20 @@ interface AddCustomerModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    customer?: any;
 }
 
-export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModalProps) {
+export default function AddCustomerModal({ isOpen, onClose, onSuccess, customer }: AddCustomerModalProps) {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setName(customer?.name || '');
+            setPhone(customer?.phoneNumber || '');
+        }
+    }, [isOpen, customer]);
 
     if (!isOpen) return null;
 
@@ -23,8 +31,11 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('/api/customers', {
-                method: 'POST',
+            const url = customer ? `/api/customers/${customer.id}` : '/api/customers';
+            const method = customer ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -33,14 +44,14 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             });
 
             if (res.ok) {
-                toast.success('Customer added successfully!');
+                toast.success(customer ? 'Customer updated successfully!' : 'Customer added successfully!');
                 setName('');
                 setPhone('');
                 onSuccess();
                 onClose();
             } else {
                 const data = await res.json();
-                toast.error(data.error || 'Failed to add customer');
+                toast.error(data.error || 'Failed to save customer');
             }
         } catch (error) {
             toast.error('Something went wrong');
@@ -54,7 +65,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div className="bg-white dark:bg-[#0f172a] rounded-3xl w-full max-w-md p-6 relative shadow-2xl border border-slate-200 dark:border-white/10">
 
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add New Customer</h2>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{customer ? 'Edit Customer' : 'Add New Customer'}</h2>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-colors">
                         <X size={20} />
                     </button>
@@ -101,7 +112,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                         className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
                     >
                         {loading && <Loader2 className="animate-spin" size={18} />}
-                        {loading ? 'Adding...' : 'Add Customer'}
+                        {loading ? 'Saving...' : (customer ? 'Update Customer' : 'Add Customer')}
                     </button>
                 </form>
 
