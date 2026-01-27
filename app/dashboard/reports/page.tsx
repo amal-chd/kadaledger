@@ -293,8 +293,8 @@ export default function ReportsPage() {
                                     <tr>
                                         <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Date</th>
                                         <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Customer</th>
-                                        <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Type</th>
-                                        <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Description</th>
+                                        <th className="hidden md:table-cell px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Type</th>
+                                        <th className="hidden lg:table-cell px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Description</th>
                                         <th className="px-4 py-3 md:px-6 md:py-4 font-medium text-right whitespace-nowrap">Amount</th>
                                     </tr>
                                 </thead>
@@ -303,14 +303,27 @@ export default function ReportsPage() {
                                         data.transactions.map((tx: any) => (
                                             <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-slate-600 dark:text-slate-300 text-sm whitespace-nowrap">
-                                                    {new Date(tx.date).toLocaleDateString('en-IN', {
-                                                        day: 'numeric', month: 'short', year: 'numeric'
-                                                    })}
+                                                    <div className="flex flex-col">
+                                                        <span>
+                                                            {new Date(tx.date).toLocaleDateString('en-IN', {
+                                                                day: 'numeric', month: 'short'
+                                                            })}
+                                                        </span>
+                                                        <span className="text-xs text-slate-400 md:hidden">
+                                                            {new Date(tx.date).getFullYear()}
+                                                        </span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-slate-900 dark:text-white text-sm whitespace-nowrap">
-                                                    {tx.customer?.name || 'Unknown'}
+                                                    <div className="flex flex-col">
+                                                        <span>{tx.customer?.name || 'Unknown'}</span>
+                                                        {/* Show type as subtitle on mobile */}
+                                                        <span className={`text-xs md:hidden ${tx.type === 'CREDIT' ? 'text-red-500' : 'text-emerald-500'}`}>
+                                                            {tx.type}
+                                                        </span>
+                                                    </div>
                                                 </td>
-                                                <td className="px-4 py-3 md:px-6 md:py-4 text-sm">
+                                                <td className="hidden md:table-cell px-4 py-3 md:px-6 md:py-4 text-sm">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${tx.type === 'CREDIT'
                                                         ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
                                                         : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
@@ -318,7 +331,7 @@ export default function ReportsPage() {
                                                         {tx.type}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 md:px-6 md:py-4 text-slate-500 dark:text-slate-400 text-sm max-w-[150px] md:max-w-xs truncate">
+                                                <td className="hidden lg:table-cell px-4 py-3 md:px-6 md:py-4 text-slate-500 dark:text-slate-400 text-sm max-w-[150px] md:max-w-xs truncate">
                                                     {tx.description || '-'}
                                                 </td>
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-right font-mono font-bold text-slate-900 dark:text-white text-sm whitespace-nowrap">

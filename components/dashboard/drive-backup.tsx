@@ -59,6 +59,8 @@ export default function DriveBackup() {
                 scope: SCOPES,
                 callback: (tokenResponse: any) => {
                     if (tokenResponse && tokenResponse.access_token) {
+                        // CRITICAL: Set the token for the GAPI client
+                        window.gapi.client.setToken(tokenResponse);
                         setIsAuthenticated(true);
                         toast.success('Connected to Google Drive');
                     }

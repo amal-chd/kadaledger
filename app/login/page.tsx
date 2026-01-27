@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import Link from 'next/link';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import Image from 'next/image';
 import { Home, Eye, EyeOff, Shield, Zap, Users, ArrowRight } from 'lucide-react';
 
@@ -69,30 +69,7 @@ export default function LoginPage() {
 
     return (
         <div className="h-screen bg-[#020617] flex relative overflow-hidden">
-            {/* Toast Notifications */}
-            <Toaster
-                position="top-center"
-                toastOptions={{
-                    duration: 4000,
-                    style: {
-                        background: '#1e293b',
-                        color: '#fff',
-                        border: '1px solid rgba(59, 130, 246, 0.3)',
-                    },
-                    success: {
-                        iconTheme: {
-                            primary: '#10b981',
-                            secondary: '#fff',
-                        },
-                    },
-                    error: {
-                        iconTheme: {
-                            primary: '#ef4444',
-                            secondary: '#fff',
-                        },
-                    },
-                }}
-            />
+            {/* Toaster removed - using global toaster from layout */}
 
             {/* Background Effects */}
             <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[150px] animate-pulse pointer-events-none"></div>
