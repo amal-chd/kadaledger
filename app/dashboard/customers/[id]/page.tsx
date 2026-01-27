@@ -140,8 +140,8 @@ export default function CustomerDetailsPage() {
                 head: headers,
                 body: data,
                 theme: 'grid' as any,
-                headStyles: { fillColor: [37, 99, 235] },
-                alternateRowStyles: { fillColor: [240, 250, 255] },
+                headStyles: { fillColor: [37, 99, 235] as [number, number, number] },
+                alternateRowStyles: { fillColor: [240, 250, 255] as [number, number, number] },
                 styles: { fontSize: 9 }
             });
 
