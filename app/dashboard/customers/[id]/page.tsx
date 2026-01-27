@@ -78,7 +78,32 @@ export default function CustomerDetailsPage() {
     };
 
     const downloadCustomerPDF = async () => {
+        const toastId = toast.loading('Generating report...');
         try {
+            // Fetch full transaction history
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/transactions/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    customerId: customer.id,
+                    startDate: '2000-01-01', // Start from beginning
+                    endDate: new Date().toISOString().split('T')[0] // Until today
+                })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Failed to fetch full report data');
+            }
+
+            const reportData = await res.json();
+            const allTransactions = reportData.transactions || [];
+
+            // Dynamic import for jspdf
             const jsPDF = (await import('jspdf')).default;
             await import('jspdf-autotable');
 
@@ -98,12 +123,17 @@ export default function CustomerDetailsPage() {
 
             // Prepare table data
             const headers = [['Date', 'Description', 'Type', 'Amount']];
-            const data = customer.transactions?.map((tx: any) => [
+            const data = allTransactions.map((tx: any) => [
                 new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
                 tx.description || (tx.type === 'PAYMENT' ? 'Payment Received' : 'Credit Given'),
                 tx.type,
                 `₹${tx.amount.toLocaleString()}`
-            ]) || [];
+            ]);
+
+            // Ensure autoTable is available
+            if (typeof doc.autoTable !== 'function') {
+                throw new Error('PDF plugin not loaded. Please try again.');
+            }
 
             doc.autoTable({
                 startY: 65,
@@ -116,10 +146,10 @@ export default function CustomerDetailsPage() {
             });
 
             doc.save(`${customer.name}_Report_${new Date().toISOString().split('T')[0]}.pdf`);
-            toast.success('Report downloaded successfully');
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to generate report');
+            toast.success('Report downloaded successfully', { id: toastId });
+        } catch (error: any) {
+            console.error('PDF Generation Error:', error);
+            toast.error(`Failed: ${error.message || 'Unknown error'}`, { id: toastId });
         }
     };
 

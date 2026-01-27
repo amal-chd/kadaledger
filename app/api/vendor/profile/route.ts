@@ -24,13 +24,17 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
         }
 
-        // Calculate total pending from all customers
-        const customers = await prisma.customer.findMany({
-            where: { vendorId: vendor.id },
-            select: { balance: true },
+        // Calculate total pending from all customers using database aggregation
+        const aggregation = await prisma.customer.aggregate({
+            _sum: {
+                balance: true
+            },
+            where: {
+                vendorId: vendor.id
+            }
         });
 
-        const totalPending = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
+        const totalPending = aggregation._sum.balance || 0;
 
         // Calculate Days Left
         let daysLeft = 0;

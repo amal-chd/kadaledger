@@ -11,6 +11,7 @@ import { CustomerViewProvider } from '@/contexts/customer-view-context';
 import { DataRefreshProvider } from '@/contexts/data-refresh-context';
 import CustomerQuickViewModal from '@/components/dashboard/customer-quick-view-modal';
 import SubscriptionLockScreen from '@/components/dashboard/subscription-lock-screen';
+import { ModeToggle } from '@/components/dashboard/mode-toggle';
 
 const API_URL = '/api';
 
@@ -186,29 +187,24 @@ export default function DashboardLayout({
                                 )}
 
                                 {/* Top Header */}
-                                <header className="flex justify-between items-center mb-6 md:mb-10">
-                                    {/* Mobile Menu Button */}
-                                    <button
-                                        onClick={() => setIsMobileSidebarOpen(true)}
-                                        className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors border border-slate-200 dark:border-white/10"
-                                    >
-                                        <Menu size={24} className="text-slate-600 dark:text-slate-400" />
-                                    </button>
+                                <header className="flex md:justify-center justify-between items-center mb-6 md:mb-10 relative">
+                                    {/* Mobile Menu Button - Absolute on Desktop/Centered layout? No, keep it simple. */}
+                                    <div className="md:hidden">
+                                        <button
+                                            onClick={() => setIsMobileSidebarOpen(true)}
+                                            className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors border border-slate-200 dark:border-white/10"
+                                        >
+                                            <Menu size={24} className="text-slate-600 dark:text-slate-400" />
+                                        </button>
+                                    </div>
 
-                                    <div className="hidden md:block w-full max-w-md">
+                                    {/* Search - Centered */}
+                                    <div className="w-full max-w-2xl px-4">
                                         <GlobalSearch />
                                     </div>
 
-                                    <div className="flex items-center gap-6">
-                                        <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                            🔔
-                                        </button>
-                                        <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 overflow-hidden shadow-lg p-0.5">
-                                            <div className="w-full h-full bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-400">
-                                                {profile?.businessName?.substring(0, 2).toUpperCase() || 'US'}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {/* Spacer/Empty div for balance on mobile if needed, or just let Search take width */}
+                                    <div className="w-10 md:hidden"></div>
                                 </header>
 
                                 {children}

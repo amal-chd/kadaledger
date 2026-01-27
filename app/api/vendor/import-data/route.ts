@@ -1,27 +1,16 @@
 
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
-
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
+import { getJwtPayload } from '@/lib/auth';
 
 export async function POST(req: Request) {
     try {
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        const user = await getJwtPayload();
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const token = authHeader.split(' ')[1];
-        let decoded: any;
-        try {
-            decoded = jwt.verify(token, JWT_SECRET);
-        } catch (err) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-        }
-
-        const vendorId = decoded.userId;
+        const vendorId = user.sub;
         const backupData = await req.json();
 
         if (!backupData || !backupData.customers || !backupData.transactions) {

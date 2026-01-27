@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
+
 import toast from 'react-hot-toast';
 import DriveBackup from '@/components/dashboard/drive-backup';
 
 export default function SettingsPage() {
-    const { theme, setTheme, resolvedTheme } = useTheme();
+
     const [mounted, setMounted] = useState(false);
     const [profile, setProfile] = useState({
         businessName: '',
@@ -21,9 +21,7 @@ export default function SettingsPage() {
         fetchProfile();
     }, []);
 
-    const toggleTheme = () => {
-        setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-    };
+
 
     const fetchProfile = async () => {
         try {
@@ -119,23 +117,9 @@ export default function SettingsPage() {
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Preferences</h2>
 
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-medium text-slate-900 dark:text-white">Dark Mode</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">Switch between light and dark themes.</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={toggleTheme}
-                                className={`w-14 h-8 rounded-full transition-colors flex items-center px-1 ${resolvedTheme === 'dark' ? 'bg-blue-600' : 'bg-slate-300'
-                                    }`}
-                            >
-                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${resolvedTheme === 'dark' ? 'translate-x-6' : 'translate-x-0'
-                                    }`} />
-                            </button>
-                        </div>
 
                         <div>
+
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Language</label>
                             <select
                                 value={profile.language}

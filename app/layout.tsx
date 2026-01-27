@@ -128,7 +128,7 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
           {children}
-          <Toaster position="top-right" />
+          <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
         </ThemeProvider>
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       </body>

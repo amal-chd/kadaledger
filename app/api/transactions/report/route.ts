@@ -1,22 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
-
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
+import { getJwtPayload } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
     try {
-        const token = req.headers.get('authorization')?.replace('Bearer ', '');
-        if (!token) {
+        const user = await getJwtPayload();
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        let decoded: any;
-        try {
-            decoded = jwt.verify(token, JWT_SECRET);
-        } catch (e) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
         }
 
         const body = await req.json();
@@ -26,7 +16,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Start date and end date are required' }, { status: 400 });
         }
 
-        const vendorId = decoded.sub;
+        const vendorId = user.sub;
 
         // Build query filters
         const where: any = {

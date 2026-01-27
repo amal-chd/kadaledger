@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Cloud, Download, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Cloud, Download, Upload, Loader2, CheckCircle2, AlertCircle, Trash2, Unplug } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CLIENT_ID = '530019096016-vd82gqsnk5qog03okt9o9go0bsup1pse.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-
 
 declare global {
     interface Window {
@@ -72,6 +71,30 @@ export default function DriveBackup() {
     const handleAuth = () => {
         if (tokenClient) {
             tokenClient.requestAccessToken();
+        }
+    };
+
+    const handleDisconnect = () => {
+        if (!isAuthenticated) return;
+
+        const tokenCallback = (response: any) => {
+            setIsAuthenticated(false);
+            setLastBackup(null);
+            toast.success('Disconnected from Google Drive');
+        };
+
+        try {
+            // Try explicit revocation if we have a token
+            const token = window.gapi?.client?.getToken()?.access_token;
+            if (token && window.google?.accounts?.oauth2) {
+                window.google.accounts.oauth2.revoke(token, tokenCallback);
+            } else {
+                // Fallback if no token present but state says authenticated
+                tokenCallback(null);
+            }
+        } catch (e) {
+            console.error(e);
+            tokenCallback(null);
         }
     };
 
@@ -187,19 +210,30 @@ export default function DriveBackup() {
     };
 
     return (
-        <div className="p-6 rounded-3xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                    <Cloud size={24} />
+        <div className="p-6 rounded-3xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none transition-all hover:border-blue-200 dark:hover:border-blue-500/20">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <Cloud size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Google Drive Backup</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Sync your ledger data safely to the cloud.</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Google Drive Backup</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Sync your ledger data safely to the cloud.</p>
-                </div>
+                {isAuthenticated && (
+                    <button
+                        onClick={handleDisconnect}
+                        title="Disconnect from Google Drive"
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                    >
+                        <Unplug size={20} />
+                    </button>
+                )}
             </div>
 
             {!gapiLoaded || !gisLoaded ? (
-                <div className="flex items-center gap-2 text-slate-500">
+                <div className="flex items-center gap-2 text-slate-500 py-4">
                     <Loader2 size={16} className="animate-spin" /> Initializing Google services...
                 </div>
             ) : (
@@ -207,7 +241,7 @@ export default function DriveBackup() {
                     {!isAuthenticated ? (
                         <button
                             onClick={handleAuth}
-                            className="w-full py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                            className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 dark:shadow-white/20"
                         >
                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
                             Connect Google Account
@@ -217,7 +251,7 @@ export default function DriveBackup() {
                             <button
                                 onClick={handleBackup}
                                 disabled={loading}
-                                className="py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50"
+                                className="py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50 shadow-lg shadow-blue-600/20"
                             >
                                 <Upload size={24} className="group-hover:-translate-y-1 transition-transform" />
                                 <span>Export to Drive</span>
@@ -235,11 +269,12 @@ export default function DriveBackup() {
                     )}
 
                     {isAuthenticated && (
-                        <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mt-4 px-2">
+                        <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mt-4 px-2 bg-slate-50 dark:bg-white/5 p-3 rounded-lg border border-slate-100 dark:border-white/5">
                             <span className="flex items-center gap-1.5 text-emerald-500 font-medium">
                                 <CheckCircle2 size={12} /> Account Connected
                             </span>
                             {lastBackup && <span>Last Sync: {lastBackup}</span>}
+                            {!lastBackup && <span>Ready to sync</span>}
                         </div>
                     )}
                 </div>
