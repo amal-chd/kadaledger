@@ -168,7 +168,7 @@ export default function ReportsPage() {
     };
 
     return (
-        <div className="space-y-8 animate-fade-in pb-10">
+        <div className="space-y-6 md:space-y-8 animate-fade-in p-4 md:p-0 pb-20 md:pb-10">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Financial Reports</h1>
@@ -183,9 +183,9 @@ export default function ReportsPage() {
             </header>
 
             {/* Controls */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
+            <div className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
                 <div className="flex flex-col md:flex-row gap-6 items-end">
-                    <div className="grid grid-cols-2 gap-4 flex-1 w-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 w-full">
                         <div>
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Start Date</label>
                             <input
@@ -206,57 +206,57 @@ export default function ReportsPage() {
                         </div>
                     </div>
 
-                    <div className="flex gap-2 min-w-max overflow-x-auto pb-1 md:pb-0">
-                        <button onClick={() => setDateRange('today')} className="px-3 py-2 text-sm bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-slate-300 transition-colors">Today</button>
-                        <button onClick={() => setDateRange('week')} className="px-3 py-2 text-sm bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-slate-300 transition-colors">This Week</button>
-                        <button onClick={() => setDateRange('month')} className="px-3 py-2 text-sm bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-slate-300 transition-colors">This Month</button>
-                        <button onClick={() => setDateRange('lastMonth')} className="px-3 py-2 text-sm bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-slate-300 transition-colors">Last Month</button>
+                    <div className="flex gap-2 min-w-max overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+                        <button onClick={() => setDateRange('today')} className="px-3 py-2 text-sm bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-slate-300 transition-colors whitespace-nowrap">Today</button>
+                        <button onClick={() => setDateRange('week')} className="px-3 py-2 text-sm bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-slate-300 transition-colors whitespace-nowrap">This Week</button>
+                        <button onClick={() => setDateRange('month')} className="px-3 py-2 text-sm bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-slate-300 transition-colors whitespace-nowrap">This Month</button>
+                        <button onClick={() => setDateRange('lastMonth')} className="px-3 py-2 text-sm bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-slate-300 transition-colors whitespace-nowrap">Last Month</button>
                     </div>
 
                     <button
                         onClick={fetchReport}
                         disabled={loading}
-                        className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-70 flex items-center gap-2"
+                        className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-70 flex items-center justify-center gap-2"
                     >
                         {loading && <Loader2 size={18} className="animate-spin" />}
-                        Generate Report
+                        Generate
                     </button>
                 </div>
             </div>
 
             {/* Results */}
             {data ? (
-                <div className="space-y-8">
+                <div className="space-y-6 md:space-y-8">
                     {/* Summary Cards */}
-                    <div className="grid md:grid-cols-3 gap-6">
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
                             <div className="flex items-center gap-4 mb-2">
                                 <div className="p-3 rounded-full bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400">
                                     <TrendingDown size={24} />
                                 </div>
                                 <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Credit Given</span>
                             </div>
-                            <div className="text-3xl font-bold text-slate-900 dark:text-white">₹{data.summary.totalCredit.toLocaleString()}</div>
+                            <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">₹{data.summary.totalCredit.toLocaleString()}</div>
                         </motion.div>
 
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
                             <div className="flex items-center gap-4 mb-2">
                                 <div className="p-3 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                     <TrendingUp size={24} />
                                 </div>
                                 <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Payment Received</span>
                             </div>
-                            <div className="text-3xl font-bold text-slate-900 dark:text-white">₹{data.summary.totalPayment.toLocaleString()}</div>
+                            <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">₹{data.summary.totalPayment.toLocaleString()}</div>
                         </motion.div>
 
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
                             <div className="flex items-center gap-4 mb-2">
                                 <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
                                     <IndianRupee size={24} />
                                 </div>
                                 <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Net Balance Change</span>
                             </div>
-                            <div className={`text-3xl font-bold ${data.summary.netBalance > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                            <div className={`text-2xl md:text-3xl font-bold ${data.summary.netBalance > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                                 {data.summary.netBalance > 0 ? '+' : ''}₹{data.summary.netBalance.toLocaleString()}
                             </div>
                             <p className="text-xs text-slate-500 mt-1">Positive means more credit given than received.</p>
@@ -264,18 +264,18 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Chart */}
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }} className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm h-[400px]">
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }} className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm h-[300px] md:h-[400px]">
                         <h3 className="text-lg font-bold mb-6 text-slate-900 dark:text-white">Transaction Trends</h3>
-                        <ResponsiveContainer width="100%" height="90%">
-                            <BarChart data={data.chartData}>
-                                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                                <XAxis dataKey="date" fontSize={12} tickMargin={10} />
-                                <YAxis fontSize={12} />
+                        <ResponsiveContainer width="100%" height="85%">
+                            <BarChart data={data.chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
+                                <XAxis dataKey="date" fontSize={10} tickMargin={5} minTickGap={30} />
+                                <YAxis fontSize={10} tickFormatter={(value) => `₹${value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}`} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                     cursor={{ fill: 'transparent' }}
                                 />
-                                <Legend />
+                                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                                 <Bar dataKey="credit" name="Credit Given" fill="#ef4444" radius={[4, 4, 0, 0]} />
                                 <Bar dataKey="payment" name="Payment Received" fill="#10b981" radius={[4, 4, 0, 0]} />
                             </BarChart>
@@ -284,44 +284,44 @@ export default function ReportsPage() {
 
                     {/* Transactions Table */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
-                        <div className="p-6 border-b border-slate-100 dark:border-white/10">
+                        <div className="p-4 md:p-6 border-b border-slate-100 dark:border-white/10">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Detailed Transactions</h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-sm uppercase">
                                     <tr>
-                                        <th className="px-6 py-4 font-medium">Date</th>
-                                        <th className="px-6 py-4 font-medium">Customer</th>
-                                        <th className="px-6 py-4 font-medium">Type</th>
-                                        <th className="px-6 py-4 font-medium">Description</th>
-                                        <th className="px-6 py-4 font-medium text-right">Amount</th>
+                                        <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Date</th>
+                                        <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Customer</th>
+                                        <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Type</th>
+                                        <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Description</th>
+                                        <th className="px-4 py-3 md:px-6 md:py-4 font-medium text-right whitespace-nowrap">Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                                     {data.transactions.length > 0 ? (
                                         data.transactions.map((tx: any) => (
                                             <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                                                <td className="px-4 py-3 md:px-6 md:py-4 text-slate-600 dark:text-slate-300 text-sm whitespace-nowrap">
                                                     {new Date(tx.date).toLocaleDateString('en-IN', {
                                                         day: 'numeric', month: 'short', year: 'numeric'
                                                     })}
                                                 </td>
-                                                <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
+                                                <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-slate-900 dark:text-white text-sm whitespace-nowrap">
                                                     {tx.customer?.name || 'Unknown'}
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${tx.type === 'CREDIT'
+                                                <td className="px-4 py-3 md:px-6 md:py-4 text-sm">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${tx.type === 'CREDIT'
                                                         ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
                                                         : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
                                                         }`}>
                                                         {tx.type}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-sm max-w-xs truncate">
+                                                <td className="px-4 py-3 md:px-6 md:py-4 text-slate-500 dark:text-slate-400 text-sm max-w-[150px] md:max-w-xs truncate">
                                                     {tx.description || '-'}
                                                 </td>
-                                                <td className="px-6 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">
+                                                <td className="px-4 py-3 md:px-6 md:py-4 text-right font-mono font-bold text-slate-900 dark:text-white text-sm whitespace-nowrap">
                                                     ₹{tx.amount.toLocaleString()}
                                                 </td>
                                             </tr>
