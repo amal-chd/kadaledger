@@ -199,7 +199,7 @@ export default function AnalyticsPage() {
                                         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
                                     }}
                                     itemStyle={{ fontSize: '12px', fontWeight: 500 }}
-                                    formatter={(value: number) => [`₹${value.toLocaleString()}`, undefined]}
+                                    formatter={(value: any) => [`₹${(value as number).toLocaleString()}`, undefined]}
                                 />
                                 <Area
                                     type="monotone"
@@ -275,8 +275,8 @@ export default function AnalyticsPage() {
                                     <div key={tx.id} className="flex items-start justify-between p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.type === 'DEBIT' || tx.type === 'PAYMENT'
-                                                    ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                                    : 'bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                : 'bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                                 }`}>
                                                 {tx.type === 'DEBIT' || tx.type === 'PAYMENT' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
                                             </div>
@@ -286,8 +286,8 @@ export default function AnalyticsPage() {
                                             </div>
                                         </div>
                                         <div className={`text-sm font-bold ${tx.type === 'DEBIT' || tx.type === 'PAYMENT'
-                                                ? 'text-emerald-600 dark:text-emerald-400'
-                                                : 'text-amber-600 dark:text-amber-400'
+                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                            : 'text-amber-600 dark:text-amber-400'
                                             }`}>
                                             {tx.type === 'DEBIT' || tx.type === 'PAYMENT' ? '+' : '-'} ₹{tx.amount.toLocaleString()}
                                         </div>
