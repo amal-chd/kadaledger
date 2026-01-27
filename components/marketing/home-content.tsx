@@ -313,7 +313,7 @@ export default function HomeContent() {
                         <div className="flex w-max animate-marquee gap-12 md:gap-24 opacity-50 hover:opacity-100 transition-opacity duration-500">
                             {[...Array(2)].map((_, widthIndex) => (
                                 <div key={widthIndex} className="flex gap-12 md:gap-24 items-center shrink-0">
-                                    {['Sharma General Store', 'Kerala Mart', 'Gupta Traders', 'Lakshmi Textiles', 'Deccan Spices', 'Mumbai Fashions', 'Sai Electronics'].map((logo, i) => (
+                                    {['Sharma General Store', 'Kerala Mart', 'Gupta Traders', 'Lakshmi Textiles', 'Deccan Spices', 'Yummy Resturant', 'Sai Electronics'].map((logo, i) => (
                                         <div key={i} className="text-xl md:text-2xl font-bold text-white flex items-center gap-2 font-serif tracking-widest whitespace-nowrap">
                                             {logo}
                                         </div>

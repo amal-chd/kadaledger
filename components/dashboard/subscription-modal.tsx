@@ -42,6 +42,13 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
     };
 
     const handlePayment = async (planName: 'starter' | 'professional') => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast.error("You are not logged in. Please login to continue.");
+            window.location.href = '/login';
+            return;
+        }
+
         const price = getPlanPrice(planName, billingCycle);
 
         if (planName === 'starter') {
@@ -56,7 +63,10 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         try {
             const res = await fetch('/api/payments/create-order', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ amount: price }),
             });
 
@@ -77,7 +87,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                'Authorization': `Bearer ${token}`
                             },
                             body: JSON.stringify({
                                 razorpay_order_id: response.razorpay_order_id,
@@ -86,6 +96,12 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                 planType: actualPlanName
                             }),
                         });
+
+                        if (!verifyRes.ok) {
+                            const errorData = await verifyRes.json();
+                            throw new Error(errorData.error || 'Verification failed');
+                        }
+
                         const verifyData = await verifyRes.json();
                         if (verifyData.status === 'success') {
                             toast.success('Payment Successful! Plan activated.');
@@ -93,10 +109,11 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                             // Force redirect to dashboard to refresh state and escape onboarding if trapped
                             window.location.href = '/dashboard';
                         } else {
-                            toast.error('Payment verification failed.');
+                            toast.error(verifyData.message || 'Payment verification failed.');
                         }
-                    } catch (err) {
-                        toast.error('Verification error');
+                    } catch (err: any) {
+                        toast.error(err.message || 'Verification error');
+                        console.error("Verification failed", err);
                     }
                 },
                 theme: {

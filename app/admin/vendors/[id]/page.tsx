@@ -311,7 +311,7 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                {['TRIAL', 'PROFESSIONAL', 'BUSINESS', 'ENTERPRISE'].map((plan) => (
+                                {['TRIAL', 'MONTHLY', 'YEARLY', 'PROFESSIONAL', 'BUSINESS'].map((plan) => (
                                     <button
                                         key={plan}
                                         onClick={() => handleUpdatePlan(plan)}
@@ -322,7 +322,8 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
                                     >
                                         {plan}
                                     </button>
-                                ))}
+                                ))
+                                }
                             </div>
                         )}
                     </div>
@@ -342,6 +343,6 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

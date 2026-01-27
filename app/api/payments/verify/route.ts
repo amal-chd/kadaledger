@@ -25,9 +25,7 @@ export async function POST(req: Request) {
         // 2. Identify User from Header
         const authHeader = req.headers.get('Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            // Payment valid but user unknown. Log this!
-            // In production, we might want to store payment info even if user unknown for reconciliation.
-            return NextResponse.json({ status: 'success', warning: 'User not authenticated' });
+            return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
         }
 
         const token = authHeader.split(' ')[1];
@@ -35,10 +33,10 @@ export async function POST(req: Request) {
         try {
             decoded = jwt.verify(token, JWT_SECRET);
         } catch (err) {
-            return NextResponse.json({ status: 'success', warning: 'Invalid token' });
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
         }
 
-        const vendorId = decoded.userId;
+        const vendorId = decoded.userId || decoded.sub; // Handle both standard JWT claims
 
         // 3. Update Database
         // Determine plan details

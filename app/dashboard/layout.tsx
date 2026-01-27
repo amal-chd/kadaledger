@@ -72,7 +72,7 @@ export default function DashboardLayout({
         );
     }
 
-    const isPro = profile?.subscription?.planType === 'PROFESSIONAL' || profile?.subscription?.planType === 'BUSINESS';
+    const isPro = profile?.subscription?.planType === 'MONTHLY' || profile?.subscription?.planType === 'YEARLY' || profile?.subscription?.planType === 'PROFESSIONAL' || profile?.subscription?.planType === 'BUSINESS';
 
     return (
         <DataRefreshProvider>
