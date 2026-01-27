@@ -111,11 +111,11 @@ export default function TransactionsPage() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
-                                <th className="p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Date & Time</th>
-                                <th className="p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Customer</th>
-                                <th className="p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Type</th>
-                                <th className="p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Notes</th>
-                                <th className="p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Amount</th>
+                                <th className="p-3 md:p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Date & Time</th>
+                                <th className="p-3 md:p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Customer</th>
+                                <th className="p-3 md:p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Type</th>
+                                <th className="p-3 md:p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Notes</th>
+                                <th className="p-3 md:p-5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -148,17 +148,17 @@ export default function TransactionsPage() {
                                         transition={{ delay: i * 0.05 }}
                                         className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group"
                                     >
-                                        <td className="p-5 text-slate-600 dark:text-slate-300 text-sm">
+                                        <td className="p-3 md:p-5 text-slate-600 dark:text-slate-300 text-sm">
                                             <div className="font-medium">{new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                                             <div className="text-xs text-slate-400 mt-0.5">{new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                         </td>
-                                        <td className="p-5">
+                                        <td className="p-3 md:p-5">
                                             <div className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
                                                 {tx.customer?.name || 'Unknown'}
                                             </div>
                                             <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">{tx.customer?.phoneNumber}</div>
                                         </td>
-                                        <td className="p-5">
+                                        <td className="p-3 md:p-5">
                                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border ${tx.type === 'CREDIT'
                                                 ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
                                                 : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
@@ -167,10 +167,10 @@ export default function TransactionsPage() {
                                                 {tx.type === 'DEBIT' ? 'PAYMENT' : tx.type}
                                             </span>
                                         </td>
-                                        <td className="p-5 text-slate-600 dark:text-slate-400 text-sm max-w-xs truncate">
+                                        <td className="p-3 md:p-5 text-slate-600 dark:text-slate-400 text-sm max-w-xs truncate">
                                             <span title={tx.description}>{tx.description || '-'}</span>
                                         </td>
-                                        <td className={`p-5 text-right font-bold text-base ${tx.type === 'CREDIT' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+                                        <td className={`p-3 md:p-5 text-right font-bold text-base ${tx.type === 'CREDIT' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
                                             }`}>
                                             {tx.type === 'CREDIT' ? '+' : '-'}₹{tx.amount.toLocaleString()}
                                         </td>
