@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Users, TrendingUp, TrendingDown, alertCircle,
+    Users, TrendingUp, TrendingDown, AlertCircle,
     Plus, Search, ArrowRight, IndianRupee, AlertTriangle,
     Wallet, Calendar, ChevronRight
 } from 'lucide-react';
