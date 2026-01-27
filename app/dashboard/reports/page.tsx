@@ -116,7 +116,7 @@ export default function ReportsPage() {
                 startY: 70,
                 head: headers,
                 body: tableRows,
-                theme: 'grid',
+                theme: 'grid' as any,
                 headStyles: { fillColor: [37, 99, 235] },
                 alternateRowStyles: { fillColor: [240, 250, 255] },
                 styles: { fontSize: 9 }
