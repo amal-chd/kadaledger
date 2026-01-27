@@ -2,9 +2,9 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
+import { getJwtPayload } from '@/lib/auth'; // Optional: Use shared auth helper, but manual verify is fine too for custom logic
 
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
 export async function POST(req: Request) {
