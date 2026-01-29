@@ -14,6 +14,124 @@ declare global {
     }
 }
 
+// Helper to escape CSV fields
+const escapeCsv = (str: string | number | null | undefined): string => {
+    if (str === null || str === undefined) return '';
+    const stringValue = String(str);
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    return stringValue;
+};
+
+// Helper: Convert flattened CSV to JSON structure expected by API
+const csvToJson = (csvText: string): any => {
+    const lines = csvText.split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+
+    const customersMap = new Map<string, any>();
+    const transactions: any[] = [];
+
+    // Skip header
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Simple CSV parsing (handling quoted values)
+        const row: string[] = [];
+        let inQuotes = false;
+        let currentValue = '';
+
+        for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                row.push(currentValue);
+                currentValue = '';
+            } else {
+                currentValue += char;
+            }
+        }
+        row.push(currentValue);
+
+        // Clean up quotes
+        const cleanRow = row.map(val => val.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+
+        if (cleanRow.length < 6) continue;
+
+        const date = cleanRow[0];
+        const customerName = cleanRow[1];
+        const customerPhone = cleanRow[2];
+        const type = cleanRow[3];
+        const amount = cleanRow[4];
+        const description = cleanRow[5];
+
+        // Generate a temporary ID for the customer based on phone
+        // The API will use phone number to match/upsert
+        const tempCustomerId = `temp_${customerPhone.replace(/\D/g, '')}`;
+
+        if (!customersMap.has(tempCustomerId)) {
+            customersMap.set(tempCustomerId, {
+                id: tempCustomerId,
+                name: customerName,
+                phoneNumber: customerPhone,
+                balance: 0 // Balance will be recalculated by backend or isn't needed for import structure if transactions exist
+            });
+        }
+
+        transactions.push({
+            id: `tx_${i}`, // Temporary ID
+            date: date,
+            amount: parseFloat(amount),
+            type: type,
+            description: description,
+            customerId: tempCustomerId
+        });
+    }
+
+    return {
+        customers: Array.from(customersMap.values()),
+        transactions: transactions
+    };
+};
+
+// Helper: Convert API JSON to flattened CSV
+const jsonToCsv = (data: any): string => {
+    const header = 'Date,CustomerName,CustomerPhone,Type,Amount,Description';
+    const rows = [];
+
+    // Create quick lookup for customers
+    const customerLookup = new Map<string, any>();
+    if (data.customers && Array.isArray(data.customers)) {
+        data.customers.forEach((c: any) => customerLookup.set(c.id, c));
+    }
+
+    if (data.transactions && Array.isArray(data.transactions)) {
+        // Sort transactions by date (newest first)
+        const sortedTx = [...data.transactions].sort((a: any, b: any) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        for (const tx of sortedTx) {
+            const customer = customerLookup.get(tx.customerId);
+            const customerName = customer ? customer.name : 'Unknown';
+            const customerPhone = customer ? customer.phoneNumber : '';
+
+            rows.push([
+                escapeCsv(tx.date),
+                escapeCsv(customerName),
+                escapeCsv(customerPhone),
+                escapeCsv(tx.type),
+                escapeCsv(tx.amount),
+                escapeCsv(tx.description || '')
+            ].join(','));
+        }
+    }
+
+    return [header, ...rows].join('\n');
+};
+
 export default function DriveBackup() {
     const [gapiLoaded, setGapiLoaded] = useState(false);
     const [gisLoaded, setGisLoaded] = useState(false);
@@ -116,17 +234,20 @@ export default function DriveBackup() {
     const handleBackup = async () => {
         if (!isAuthenticated) return handleAuth();
         setLoading(true);
-        const toastId = toast.loading('Backing up data...');
+        const toastId = toast.loading('Exporting to CSV...');
 
         try {
             const data = await fetchLocalData();
-            const fileContent = JSON.stringify(data, null, 2);
-            const file = new Blob([fileContent], { type: 'application/json' });
 
-            const fileName = `kada_ledger_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+            // Convert to CSV
+            const csvContent = jsonToCsv(data);
+
+            const file = new Blob([csvContent], { type: 'text/csv' });
+
+            const fileName = `KadaLedger_Backup_${new Date().toISOString().split('T')[0]}.csv`;
             const metadata = {
                 name: fileName,
-                mimeType: 'application/json',
+                mimeType: 'text/csv',
             };
 
             const accessToken = window.gapi.client.getToken().access_token;
@@ -144,7 +265,7 @@ export default function DriveBackup() {
 
             const result = await res.json();
             setLastBackup(new Date().toLocaleString());
-            toast.success('Backup successful!', { id: toastId });
+            toast.success('Export Successful! CSV saved to Drive.', { id: toastId });
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || 'Backup failed', { id: toastId });
@@ -156,12 +277,12 @@ export default function DriveBackup() {
     const handleRestore = async () => {
         if (!isAuthenticated) return handleAuth();
         setLoading(true);
-        const toastId = toast.loading('Searching for backups...');
+        const toastId = toast.loading('Searching for backup CSVs...');
 
         try {
-            // List files
+            // List files - Look for CSVs
             const response = await window.gapi.client.drive.files.list({
-                q: "name contains 'kada_ledger_backup_' and trashed = false",
+                q: "name contains 'KadaLedger' and mimeType = 'text/csv' and trashed = false",
                 fields: 'files(id, name, createdTime)',
                 orderBy: 'createdTime desc',
                 pageSize: 10,
@@ -171,16 +292,19 @@ export default function DriveBackup() {
 
             if (files && files.length > 0) {
                 const latestFile = files[0];
-                toast.loading(`Restoring ${latestFile.name}...`, { id: toastId });
+                toast.loading(`Restoring from ${latestFile.name}...`, { id: toastId });
 
                 const fileRes = await window.gapi.client.drive.files.get({
                     fileId: latestFile.id,
                     alt: 'media',
                 });
 
-                const backupData = fileRes.result;
-                const token = localStorage.getItem('token');
+                const csvData = fileRes.body; // gapi returns body string for media text download
 
+                // Convert CSV back to JSON structure
+                const backupData = csvToJson(csvData);
+
+                const token = localStorage.getItem('token');
                 if (!token) throw new Error("Not logged in");
 
                 // Send to backend for restoration
@@ -198,10 +322,10 @@ export default function DriveBackup() {
                     throw new Error(errData.error || "Import failed on server");
                 }
 
-                toast.success('Restore successful! Reloading...', { id: toastId });
+                toast.success('Import Successful! Database synced.', { id: toastId });
                 setTimeout(() => window.location.reload(), 2000);
             } else {
-                toast.error('No backup files found in Drive', { id: toastId });
+                toast.error('No backup CSV files found in Drive', { id: toastId });
             }
         } catch (error: any) {
             console.error(error);
@@ -219,8 +343,8 @@ export default function DriveBackup() {
                         <Cloud size={24} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Google Drive Backup</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Sync your ledger data safely to the cloud.</p>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Google Drive Sync</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Sync data as CSV to Google Drive.</p>
                     </div>
                 </div>
                 {isAuthenticated && (
@@ -256,7 +380,7 @@ export default function DriveBackup() {
                                 className="py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50 shadow-lg shadow-blue-600/20"
                             >
                                 <Upload size={24} className="group-hover:-translate-y-1 transition-transform" />
-                                <span>Export to Drive</span>
+                                <span>Export CSV</span>
                             </button>
 
                             <button
@@ -265,7 +389,7 @@ export default function DriveBackup() {
                                 className="py-4 px-6 rounded-xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50"
                             >
                                 <Download size={24} className="group-hover:translate-y-1 transition-transform" />
-                                <span>Import from Drive</span>
+                                <span>Import CSV</span>
                             </button>
                         </div>
                     )}
