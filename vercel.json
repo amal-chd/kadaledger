@@ -1,0 +1,25 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_AUTH_ENABLED": "true"
+  },
+  "build": {
+    "env": {
+      "SKIP_ENV_VALIDATION": "1"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/daily-summary",
+      "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron/check-risks",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
