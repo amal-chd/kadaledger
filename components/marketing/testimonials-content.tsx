@@ -57,14 +57,14 @@ export default function TestimonialsContent() {
                 </div>
 
                 <div className="container-width relative z-10 px-4 text-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6 md:mb-8">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6 md:mb-8">
                         <MessageSquare size={14} className="fill-blue-400" /> Success Stories
                     </div>
                     <h1 className="text-3xl md:text-7xl font-bold text-white mb-6 md:mb-8 leading-[1.2] md:leading-[1.1]">
                         Trusted by Bharat's <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Leading Merchants</span>
                     </h1>
-                    <p className="text-blue-100/70 text-sm md:text-xl leading-relaxed max-w-2xl mx-auto font-medium">
+                    <p className="text-slate-200/70 text-sm md:text-xl leading-relaxed max-w-2xl mx-auto font-medium">
                         Join over 10,000+ businesses across India who have transformed
                         their financial management with Kada Ledger.
                     </p>
@@ -79,10 +79,10 @@ export default function TestimonialsContent() {
                             <div className="absolute top-0 right-0 p-6 md:p-8 opacity-5 -rotate-12 group-hover:opacity-10 transition-opacity">
                                 <Quote size={60} className="md:w-[80px] md:h-[80px]" />
                             </div>
-                            <div className="flex gap-1 text-blue-400 mb-4 md:mb-6">
+                            <div className="flex gap-1 text-primary mb-4 md:mb-6">
                                 {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-blue-400 md:w-[14px] md:h-[14px]" />)}
                             </div>
-                            <p className="text-blue-100/80 text-sm md:text-base leading-relaxed mb-6 md:mb-10 italic relative z-10">
+                            <p className="text-slate-200/80 text-sm md:text-base leading-relaxed mb-6 md:mb-10 italic relative z-10">
                                 "{item.content}"
                             </p>
                             <div className="flex items-center gap-3 md:gap-4 relative z-10">
@@ -91,7 +91,7 @@ export default function TestimonialsContent() {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-white text-base md:text-lg">{item.name}</h4>
-                                    <p className="text-xs md:text-sm text-blue-200/60 font-medium">{item.role}</p>
+                                    <p className="text-xs md:text-sm text-slate-300/60 font-medium">{item.role}</p>
                                     <div className="mt-1 flex items-center gap-1.5 opacity-40">
                                         <div className="w-1 h-1 rounded-full bg-blue-400"></div>
                                         <span className="text-[9px] md:text-[10px] text-blue-300 uppercase tracking-widest font-bold">{item.location}</span>
@@ -103,12 +103,12 @@ export default function TestimonialsContent() {
                 </div>
 
                 {/* Call to Action */}
-                <div className="mt-16 md:mt-32 glass-card p-8 md:p-20 rounded-[2.5rem] md:rounded-[3.5rem] border border-blue-500/20 text-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-blue-600/5 z-0"></div>
+                <div className="mt-16 md:mt-32 glass-card p-8 md:p-20 rounded-[2.5rem] md:rounded-[3.5rem] border border-primary/20 text-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-accent/5 z-0"></div>
                     <div className="relative z-10">
                         <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 md:mb-8">Ready to be our next success story?</h2>
                         <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center">
-                            <Link href="/register" className="bg-blue-600 text-white px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/30">
+                            <Link href="/register" className="bg-accent text-white px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl hover:bg-accent/90 transition-all shadow-xl shadow-accent/30">
                                 Start Free Trial
                             </Link>
                             <Link href="/pricing" className="bg-white/5 border border-white/10 text-white px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl hover:bg-white/10 transition-all backdrop-blur-md">

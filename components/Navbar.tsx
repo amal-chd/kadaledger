@@ -42,7 +42,7 @@ const Navbar = () => {
               <Image src="/brand-logo-final.png" alt="Kada Ledger" fill className="object-cover" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white">
-              Kada<span className="text-blue-400">Ledger</span>
+              Kada<span className="text-primary">Ledger</span>
             </span>
           </Link>
 
@@ -52,7 +52,7 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 href={item.href}
-                className="px-4 py-2 text-[13px] font-bold text-blue-100/50 hover:text-white transition-all relative group"
+                className="px-4 py-2 text-[13px] font-bold text-slate-200/50 hover:text-white transition-all relative group"
               >
                 {item.name}
                 <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-blue-500 rounded-full transition-all scale-x-0 group-hover:scale-x-100 opacity-100 shadow-[0_0_15px_rgba(59,130,246,0.8)]"></span>
@@ -62,10 +62,10 @@ const Navbar = () => {
 
           {/* Right: Actions */}
           <div className="hidden md:flex items-center gap-6 shrink-0">
-            <Link href="/login" className="text-[13px] font-bold text-blue-100/60 hover:text-white transition-colors">
+            <Link href="/login" className="text-[13px] font-bold text-slate-200/60 hover:text-white transition-colors">
               Login
             </Link>
-            <Link href="/register?plan=trial" className="relative group overflow-hidden bg-blue-600 px-6 py-2.5 rounded-full font-bold text-[13px] text-white hover:bg-blue-500 transition-all shadow-[0_10px_20px_rgba(37,99,235,0.3)] active:scale-95">
+            <Link href="/register?plan=trial" className="relative group overflow-hidden bg-accent px-6 py-2.5 rounded-full font-bold text-[13px] text-white hover:bg-accent/90 transition-all shadow-[0_10px_20px_rgba(37,99,235,0.3)] active:scale-95">
               <div className="flex items-center gap-2 relative z-10">
                 Get Started <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -92,7 +92,7 @@ const Navbar = () => {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-xl sm:text-2xl font-bold text-white/90 hover:text-blue-400 transition-colors py-2"
+                  className="text-xl sm:text-2xl font-bold text-white/90 hover:text-primary transition-colors py-2"
                   style={{ animationDelay: `${idx * 100}ms` }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -104,14 +104,14 @@ const Navbar = () => {
             <div className="flex flex-col gap-4">
               <Link
                 href="/login"
-                className="w-full text-center py-4 font-bold text-blue-100 border border-white/20 rounded-2xl bg-white/10 backdrop-blur-md active:scale-95 transition-all hover:bg-white/20"
+                className="w-full text-center py-4 font-bold text-slate-200 border border-white/20 rounded-2xl bg-white/10 backdrop-blur-md active:scale-95 transition-all hover:bg-white/20"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Login
               </Link>
               <Link
                 href="/register?plan=trial"
-                className="w-full text-center py-4 font-bold bg-blue-600 text-white rounded-2xl shadow-2xl shadow-blue-600/30 active:scale-95 transition-all text-lg"
+                className="w-full text-center py-4 font-bold bg-accent text-white rounded-2xl shadow-2xl shadow-accent/30 active:scale-95 transition-all text-lg"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Start Free Trial
@@ -120,7 +120,7 @@ const Navbar = () => {
 
             {/* Subtle Brand Info in Menu */}
             <div className="mt-8 pt-8 border-t border-white/5">
-              <p className="text-[10px] text-blue-200/30 uppercase tracking-[0.3em] font-black">
+              <p className="text-[10px] text-slate-300/30 uppercase tracking-[0.3em] font-black">
                 Thekada Digital Ventures
               </p>
             </div>

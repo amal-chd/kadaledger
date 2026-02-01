@@ -6,15 +6,15 @@ const Footer = () => {
     return (
         <footer className="bg-[#050810] pt-12 md:pt-20 pb-8 md:pb-10 border-t border-white/5 relative overflow-hidden">
             {/* Ambient Glow */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] -translate-y-1/2 pointer-events-none"></div>
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[100px] -translate-y-1/2 pointer-events-none"></div>
 
             <div className="container-mobile relative z-10">
 
                 {/* Subscribe Banner */}
-                <div className="bg-blue-600 rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 mb-16 md:mb-24 shadow-2xl shadow-blue-900/20 text-white relative overflow-hidden">
+                <div className="bg-accent rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 mb-16 md:mb-24 shadow-2xl shadow-accent/20 text-white relative overflow-hidden">
                     <div className="relative z-10 max-w-lg text-center md:text-left">
                         <h3 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4">Stay ahead of the curve</h3>
-                        <p className="text-blue-100 text-sm md:text-lg">
+                        <p className="text-slate-200 text-sm md:text-lg">
                             Join 5,000+ merchants receiving insights.
                         </p>
                     </div>
@@ -44,7 +44,7 @@ const Footer = () => {
                             </div>
                             <span className="text-xl md:text-2xl font-bold text-white tracking-tight">Kada Ledger</span>
                         </div>
-                        <p className="text-blue-200/60 text-sm leading-relaxed mb-6 md:mb-8 font-medium italic">
+                        <p className="text-slate-300/60 text-sm leading-relaxed mb-6 md:mb-8 font-medium italic">
                             "Transforming Bharat's traditional businesses into digital powerhouses."
                         </p>
                         <div className="flex gap-3">
@@ -57,7 +57,7 @@ const Footer = () => {
                                 <Link
                                     key={i}
                                     href={Social.href}
-                                    className="w-10 h-10 md:w-11 md:h-11 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-200/40 hover:bg-blue-600 hover:text-white transition-all hover:-translate-y-1 hover:border-blue-500"
+                                    className="w-10 h-10 md:w-11 md:h-11 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300/40 hover:bg-accent hover:text-white transition-all hover:-translate-y-1 hover:border-primary"
                                 >
                                     <Social.icon size={16} />
                                 </Link>
@@ -68,7 +68,7 @@ const Footer = () => {
                     {/* Company Links */}
                     <div>
                         <h4 className="font-bold text-white mb-6 md:mb-8 uppercase text-[10px] md:text-xs tracking-[0.2em] opacity-40">Company</h4>
-                        <ul className="space-y-3 md:space-y-4 text-xs md:text-sm text-blue-200/60 transition-colors">
+                        <ul className="space-y-3 md:space-y-4 text-xs md:text-sm text-slate-300/60 transition-colors">
                             {[
                                 { label: 'Our Mission', href: '/about' },
                                 { label: 'Get in Touch', href: '/contact' },
@@ -76,7 +76,7 @@ const Footer = () => {
                                 { label: 'Terms of Service', href: '/legal/terms' }
                             ].map(item => (
                                 <li key={item.label}>
-                                    <Link href={item.href} className="hover:text-blue-400 transition-colors flex items-center gap-2 group">
+                                    <Link href={item.href} className="hover:text-primary transition-colors flex items-center gap-2 group">
                                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                         {item.label}
                                     </Link>
@@ -88,7 +88,7 @@ const Footer = () => {
                     {/* Product Links */}
                     <div>
                         <h4 className="font-bold text-white mb-6 md:mb-8 uppercase text-[10px] md:text-xs tracking-[0.2em] opacity-40">Product</h4>
-                        <ul className="space-y-3 md:space-y-4 text-xs md:text-sm text-blue-200/60 font-medium">
+                        <ul className="space-y-3 md:space-y-4 text-xs md:text-sm text-slate-300/60 font-medium">
                             {[
                                 { label: 'Core Features', href: '/features' },
                                 { label: 'Pricing Plans', href: '/pricing' },
@@ -96,7 +96,7 @@ const Footer = () => {
                                 { label: 'Merchant Blog', href: '/blog' }
                             ].map(item => (
                                 <li key={item.label}>
-                                    <Link href={item.href} className="hover:text-blue-400 transition-colors flex items-center gap-2 group">
+                                    <Link href={item.href} className="hover:text-primary transition-colors flex items-center gap-2 group">
                                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                         {item.label}
                                     </Link>
@@ -110,18 +110,18 @@ const Footer = () => {
                         <h4 className="font-bold text-white mb-6 md:mb-8 uppercase text-[10px] md:text-xs tracking-[0.2em] opacity-40">Support</h4>
                         <ul className="space-y-4 md:space-y-6 text-xs md:text-sm">
                             <li className="glass-card p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/5">
-                                <p className="text-[9px] md:text-[10px] text-blue-400 uppercase font-bold tracking-widest mb-1">Email us</p>
-                                <a href="mailto:support@thekada.in" className="text-white hover:text-blue-400 transition-colors font-medium">support@thekada.in</a>
+                                <p className="text-[9px] md:text-[10px] text-primary uppercase font-bold tracking-widest mb-1">Email us</p>
+                                <a href="mailto:support@thekada.in" className="text-white hover:text-primary transition-colors font-medium">support@thekada.in</a>
                             </li>
                             <li className="glass-card p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/5">
-                                <p className="text-[9px] md:text-[10px] text-blue-400 uppercase font-bold tracking-widest mb-1">Call Support</p>
-                                <a href="tel:+919496491654" className="text-white hover:text-blue-400 transition-colors font-medium">+91 9496 491 654</a>
+                                <p className="text-[9px] md:text-[10px] text-primary uppercase font-bold tracking-widest mb-1">Call Support</p>
+                                <a href="tel:+919496491654" className="text-white hover:text-primary transition-colors font-medium">+91 9496 491 654</a>
                             </li>
                         </ul>
                     </div>
                 </div>
 
-                <div className="border-t border-white/5 pt-8 md:pt-10 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] md:text-xs text-blue-200/30 font-medium">
+                <div className="border-t border-white/5 pt-8 md:pt-10 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] md:text-xs text-slate-300/30 font-medium">
                     <p>© 2026 Thekada Digital Ventures Pvt Ltd. All rights reserved.</p>
                     <div className="flex gap-8">
                         <span>Made with ❤️ in Bharat</span>

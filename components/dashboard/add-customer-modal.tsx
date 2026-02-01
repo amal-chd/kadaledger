@@ -109,7 +109,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, customer 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+                        className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
                     >
                         {loading && <Loader2 className="animate-spin" size={18} />}
                         {loading ? 'Saving...' : (customer ? 'Update Customer' : 'Add Customer')}

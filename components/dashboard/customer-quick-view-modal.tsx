@@ -119,7 +119,7 @@ export default function CustomerQuickViewModal() {
                         </div>
                     ) : customer ? (
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xl">
+                            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-primary flex items-center justify-center font-bold text-xl">
                                 {customer.name?.charAt(0).toUpperCase()}
                             </div>
                             <div>
@@ -253,7 +253,7 @@ export default function CustomerQuickViewModal() {
                     <Link
                         href={`/dashboard/customers/${customer?.id}`}
                         onClick={closeCustomer}
-                        className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold hover:underline"
+                        className="flex items-center gap-2 text-blue-600 dark:text-primary font-bold hover:underline"
                     >
                         View Full History <ExternalLink size={16} />
                     </Link>

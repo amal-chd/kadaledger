@@ -100,11 +100,11 @@ export default function GlobalSearch() {
                                     className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-primary flex items-center justify-center font-bold text-xs">
                                             {customer.name.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                            <p className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-primary transition-colors">
                                                 {customer.name}
                                             </p>
                                             <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
@@ -112,14 +112,14 @@ export default function GlobalSearch() {
                                             </p>
                                         </div>
                                     </div>
-                                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors" />
+                                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors" />
                                 </button>
                             ))}
                         </div>
                     ) : (
                         <div className="p-8 text-center">
                             <p className="text-slate-500 dark:text-slate-400 text-sm">No customers found.</p>
-                            <Link href="/dashboard/customers" className="text-blue-500 hover:text-blue-400 text-sm font-medium mt-2 block">
+                            <Link href="/dashboard/customers" className="text-primary hover:text-primary text-sm font-medium mt-2 block">
                                 Add new customer
                             </Link>
                         </div>

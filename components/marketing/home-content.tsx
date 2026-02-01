@@ -65,7 +65,7 @@ export default function HomeContent() {
             {/* View Report Modal */}
             {isReportModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in text-white">
-                    <div className="bg-[#0B0F19] border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden relative shadow-2xl shadow-blue-900/20 animate-scale-in">
+                    <div className="bg-[#0B0F19] border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden relative shadow-2xl shadow-accent/20 animate-scale-in">
                         <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
                             <h3 className="font-bold text-xl text-white">Monthly Financial Report</h3>
                             <button onClick={() => setIsReportModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white">
@@ -74,9 +74,9 @@ export default function HomeContent() {
                         </div>
                         <div className="p-6 space-y-6">
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
-                                    <p className="text-sm text-blue-200/70 mb-1">Total Sales</p>
-                                    <p className="text-2xl font-bold text-blue-400">₹1,24,500</p>
+                                <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20">
+                                    <p className="text-sm text-slate-300/70 mb-1">Total Sales</p>
+                                    <p className="text-2xl font-bold text-primary">₹1,24,500</p>
                                 </div>
                                 <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                                     <p className="text-sm text-emerald-200/70 mb-1">Net Profit</p>
@@ -99,7 +99,7 @@ export default function HomeContent() {
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-sm text-white">{tx.name}</p>
-                                                    <p className="text-xs text-blue-200/60">{tx.type}</p>
+                                                    <p className="text-xs text-slate-300/60">{tx.type}</p>
                                                 </div>
                                             </div>
                                             <span className={`font-bold ${tx.amount.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>{tx.amount}</span>
@@ -108,7 +108,7 @@ export default function HomeContent() {
                                 </div>
                             </div>
 
-                            <button onClick={() => setIsReportModalOpen(false)} className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/20">
+                            <button onClick={() => setIsReportModalOpen(false)} className="w-full py-3 rounded-xl bg-accent text-white font-bold hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20">
                                 Close Preview
                             </button>
                         </div>
@@ -130,7 +130,7 @@ export default function HomeContent() {
 
                 {/* Ambient Background Overlays */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                    <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
+                    <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
                     <div className="absolute bottom-[10%] right-[20%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] mix-blend-screen animate-float"></div>
                 </div>
 
@@ -143,13 +143,13 @@ export default function HomeContent() {
                             </span>
                         </h1>
 
-                        <p className="text-blue-100/70 text-sm md:text-xl leading-relaxed mb-8 md:mb-10 max-w-2xl mx-auto font-medium">
+                        <p className="text-slate-200/70 text-sm md:text-xl leading-relaxed mb-8 md:mb-10 max-w-2xl mx-auto font-medium">
                             The most premium and secure online ledger book designed
                             for Indian businesses to track customer credits and collect payments faster.
                         </p>
 
                         <div className="flex flex-row items-center justify-center gap-3 md:gap-4">
-                            <Link href="/register" className="bg-blue-600 text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-bold text-sm md:text-lg hover:bg-blue-700 transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] flex items-center gap-2 group whitespace-nowrap">
+                            <Link href="/register" className="bg-accent text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-bold text-sm md:text-lg hover:bg-accent/90 transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] flex items-center gap-2 group whitespace-nowrap">
                                 Get Started Free <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                             </Link>
                             <button onClick={scrollToFeatures} className="bg-white/5 border border-white/10 text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-bold text-sm md:text-lg hover:bg-white/10 transition-all backdrop-blur-md flex items-center gap-2 group whitespace-nowrap">
@@ -170,7 +170,7 @@ export default function HomeContent() {
                                 <div className="flex">
                                     {[1, 2, 3, 4, 5].map(i => <Star key={i} size={14} className="fill-yellow-500 text-yellow-500" />)}
                                 </div>
-                                <p className="text-blue-200/60 text-sm">Trusted by <span className="text-white font-bold">10,000+</span> vendors across India</p>
+                                <p className="text-slate-300/60 text-sm">Trusted by <span className="text-white font-bold">10,000+</span> vendors across India</p>
                             </div>
                         </div>
                     </div>
@@ -182,7 +182,7 @@ export default function HomeContent() {
                             {/* Dashboard Preview Cards - Integrated within the "mockup" effect */}
                             <div className="hidden md:flex flex-col gap-4">
                                 <div className="glass-card p-4 rounded-2xl border border-white/5 bg-gradient-to-br from-blue-600/5 to-transparent">
-                                    <p className="text-[10px] text-blue-200/50 uppercase font-bold tracking-widest mb-1">Daily Collections</p>
+                                    <p className="text-[10px] text-slate-300/50 uppercase font-bold tracking-widest mb-1">Daily Collections</p>
                                     <div className="flex items-center gap-2 mb-2">
                                         <p className="text-xl font-bold text-white">₹14,240</p>
                                         <span className="text-[8px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded-full">+12%</span>
@@ -192,7 +192,7 @@ export default function HomeContent() {
                                     </div>
                                 </div>
                                 <div className="glass-card p-4 rounded-2xl border border-white/5 flex-1 flex flex-col">
-                                    <p className="text-[10px] text-blue-200/50 uppercase font-bold tracking-widest mb-4">Customer Growth</p>
+                                    <p className="text-[10px] text-slate-300/50 uppercase font-bold tracking-widest mb-4">Customer Growth</p>
                                     <div className="flex-1 flex items-end gap-2">
                                         {[60, 40, 80, 50, 90, 60, 75].map((h, i) => (
                                             <div key={i} className="flex-1 bg-gradient-to-t from-blue-600/20 to-indigo-600/20 rounded-t-md hover:from-blue-500 hover:to-indigo-500 transition-all duration-500 cursor-pointer" style={{ height: `${h}%` }}></div>
@@ -223,7 +223,7 @@ export default function HomeContent() {
                                             <span className="text-[10px] font-bold text-white/60">Kada Ledger</span>
                                         </div>
                                         <div className="flex gap-2">
-                                            <div className="w-20 h-7 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-[10px] font-bold text-blue-400">Add Customer </div>
+                                            <div className="w-20 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">Add Customer </div>
                                             <div className="w-7 h-7 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
                                                 <Plus size={12} className="text-white/40" />
                                             </div>
@@ -246,7 +246,7 @@ export default function HomeContent() {
                                                         <h4 className="text-xs font-bold text-white group-hover/item:text-blue-300 transition-colors">{u.n}</h4>
                                                         <span className="text-[8px] text-white/30">{u.t}</span>
                                                     </div>
-                                                    <p className="text-[10px] text-blue-200/50">{u.r}</p>
+                                                    <p className="text-[10px] text-slate-300/50">{u.r}</p>
                                                 </div>
                                                 <span className={`text-xs font-bold ${u.a.includes('+') ? 'text-emerald-400' : 'text-slate-300'}`}>{u.a}</span>
                                             </div>
@@ -264,7 +264,7 @@ export default function HomeContent() {
 
                             {/* Card 3: Balance */}
                             <div className="glass-card p-8 md:row-span-2 flex flex-col animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                                <h3 className="text-sm font-medium text-blue-200/80 mb-2">Total Balance</h3>
+                                <h3 className="text-sm font-medium text-slate-300/80 mb-2">Total Balance</h3>
                                 <div className="flex items-end gap-3 mb-8">
                                     <span className="text-5xl font-bold text-white">₹78,500</span>
                                     <span className="bg-indigo-500/20 text-indigo-300 text-xs font-bold px-2 py-1 rounded-lg mb-2">▲ 16%</span>
@@ -278,7 +278,7 @@ export default function HomeContent() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="flex justify-between mt-6 text-[10px] text-blue-200/30 font-bold uppercase tracking-tighter">
+                                <div className="flex justify-between mt-6 text-[10px] text-slate-300/30 font-bold uppercase tracking-tighter">
                                     <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
                                 </div>
                             </div>
@@ -286,17 +286,17 @@ export default function HomeContent() {
                             {/* Card 4: Data Analysis */}
                             <div className="md:col-span-3 glass-card p-6 flex items-center justify-between animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                                        <TrendingUp className="text-blue-400" size={24} />
+                                    <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                                        <TrendingUp className="text-primary" size={24} />
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-white">Advanced Recovery & Growth Analysis</h3>
-                                        <p className="text-sm text-blue-200/40">Real-time financial insights for your business</p>
+                                        <p className="text-sm text-slate-300/40">Real-time financial insights for your business</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setIsReportModalOpen(true)}
-                                    className="font-bold text-white bg-blue-600 px-6 py-2.5 rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20"
+                                    className="font-bold text-white bg-accent px-6 py-2.5 rounded-xl hover:bg-accent/90 transition-all shadow-lg shadow-accent/20"
                                 >
                                     View Full Report
                                 </button>
@@ -330,20 +330,20 @@ export default function HomeContent() {
             <section className="py-16 md:py-40 relative" id="features">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
-                    <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px]"></div>
+                    <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px]"></div>
                     <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[120px]"></div>
                 </div>
 
                 <div className="container-mobile relative z-10">
                     <div className="text-center mb-10 md:mb-24">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-6">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest mb-6">
                             <Zap size={14} /> Powering Modern India
                         </div>
                         <h2 className="text-3xl md:text-6xl font-bold text-white mb-6 tracking-tight">
                             Everything you need to <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Scale Digitally</span>
                         </h2>
-                        <p className="text-blue-100/70 text-lg md:text-xl leading-relaxed font-light">
+                        <p className="text-slate-200/70 text-lg md:text-xl leading-relaxed font-light">
                             Stop relying on paper ledgers and confusing spreadsheets. Kada Ledger brings all your business financial needs into one secure, easy-to-use mobile application.
                             Manage staff, track customer credits, and generate invoices in seconds.
                         </p>
@@ -352,16 +352,16 @@ export default function HomeContent() {
                     {/* Bento Grid Layout */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[700px]">
                         {/* 1. Team Management (Large Left) */}
-                        <div className="md:col-span-7 group relative overflow-hidden glass-card rounded-[2.5rem] border border-white/5 p-8 md:p-12 flex flex-col justify-between hover:border-blue-500/30 transition-all duration-500">
+                        <div className="md:col-span-7 group relative overflow-hidden glass-card rounded-[2.5rem] border border-white/5 p-8 md:p-12 flex flex-col justify-between hover:border-primary/30 transition-all duration-500">
                             <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 group-hover:opacity-10 transition-opacity">
-                                <Users size={300} strokeWidth={1} className="text-blue-500" />
+                                <Users size={300} strokeWidth={1} className="text-primary" />
                             </div>
                             <div className="relative z-10">
-                                <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center text-blue-400 mb-8 border border-blue-500/20 group-hover:scale-110 transition-transform">
+                                <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center text-primary mb-8 border border-primary/20 group-hover:scale-110 transition-transform">
                                     <Users size={32} />
                                 </div>
                                 <h3 className="text-3xl font-bold text-white mb-4">Team Management</h3>
-                                <p className="text-blue-100/60 text-lg max-w-md leading-relaxed">
+                                <p className="text-slate-200/60 text-lg max-w-md leading-relaxed">
                                     Add staff and assign specific roles to manage your shop effectively. Control access and track staff performance in real-time.
                                 </p>
                             </div>
@@ -376,7 +376,7 @@ export default function HomeContent() {
                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500"></div>
                                         <div>
                                             <p className="text-xs font-bold text-white">{staff.name}</p>
-                                            <p className="text-[10px] text-blue-400">{staff.role}</p>
+                                            <p className="text-[10px] text-primary">{staff.role}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -389,7 +389,7 @@ export default function HomeContent() {
                                 <Shield size={28} />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-3">Data Security</h3>
-                            <p className="text-blue-100/60 leading-relaxed mb-8">
+                            <p className="text-slate-200/60 leading-relaxed mb-8">
                                 Automatic backups and industrial-grade encryption keep your business data safe and always recoverable.
                             </p>
                             <div className="mt-auto flex justify-center py-4 bg-white/5 rounded-2xl border border-white/5">
@@ -405,7 +405,7 @@ export default function HomeContent() {
                                 <FileText size={28} />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-3">GST Billing</h3>
-                            <p className="text-blue-100/60 leading-relaxed mb-6">
+                            <p className="text-slate-200/60 leading-relaxed mb-6">
                                 Generate professional, GST-compliant invoices in a single tap. Manage tax filings with ease.
                             </p>
                             {/* Mock Invoice Visual */}
@@ -422,13 +422,13 @@ export default function HomeContent() {
                         </div>
 
                         {/* 4. Mobile First (Right Bottom - Large) */}
-                        <div className="md:col-span-7 group relative overflow-hidden bg-gradient-to-br from-blue-600/10 to-indigo-600/10 rounded-[2.5rem] border border-blue-500/10 p-8 md:p-12 flex flex-col md:flex-row gap-12 hover:border-blue-500/30 transition-all duration-500">
+                        <div className="md:col-span-7 group relative overflow-hidden bg-gradient-to-br from-blue-600/10 to-indigo-600/10 rounded-[2.5rem] border border-primary/10 p-8 md:p-12 flex flex-col md:flex-row gap-12 hover:border-primary/30 transition-all duration-500">
                             <div className="flex-1 flex flex-col justify-center">
-                                <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center text-blue-400 mb-8 border border-blue-500/20 group-hover:scale-110 transition-transform">
+                                <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center text-primary mb-8 border border-primary/20 group-hover:scale-110 transition-transform">
                                     <Smartphone size={32} />
                                 </div>
                                 <h3 className="text-3xl font-bold text-white mb-4">Mobile First</h3>
-                                <p className="text-blue-100/60 text-lg leading-relaxed">
+                                <p className="text-slate-200/60 text-lg leading-relaxed">
                                     A slick, fast application optimized for any Android or iOS device. Manage your business from anywhere in the world.
                                 </p>
                             </div>
@@ -437,7 +437,7 @@ export default function HomeContent() {
                                 <div className="w-32 h-64 bg-[#0B0F19] border-[6px] border-white/10 rounded-[2rem] shadow-2xl relative overflow-hidden group-hover:rotate-6 transition-transform duration-700">
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-4 bg-white/10 rounded-b-xl"></div>
                                     <div className="p-4 pt-10 space-y-3">
-                                        <div className="w-12 h-12 rounded-lg bg-blue-600/20 mx-auto"></div>
+                                        <div className="w-12 h-12 rounded-lg bg-accent/20 mx-auto"></div>
                                         <div className="w-full h-2 bg-white/5 rounded-full"></div>
                                         <div className="w-1/2 h-2 bg-white/5 rounded-full mx-auto"></div>
                                     </div>
@@ -473,7 +473,7 @@ export default function HomeContent() {
                 <div className="container-mobile relative z-10">
                     <div className="glass-card rounded-[3.5rem] border border-white/5 bg-gradient-to-br from-blue-600/5 via-transparent to-indigo-600/5 p-8 md:p-20 overflow-hidden relative">
                         {/* Background Accents */}
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
                         <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
@@ -485,11 +485,11 @@ export default function HomeContent() {
                                     Plans designed to <br />
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Scale with You</span>
                                 </h2>
-                                <p className="text-blue-100/60 text-lg md:text-xl leading-relaxed mb-10">
+                                <p className="text-slate-200/60 text-lg md:text-xl leading-relaxed mb-10">
                                     Whether you're a small roadside shop or a multi-city retail chain, we have a plan that fits your business needs. No hidden fees, just pure value.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <Link href="/pricing" className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-[0_0_40px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2 group">
+                                    <Link href="/pricing" className="bg-accent text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-accent/90 transition-all shadow-[0_0_40px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2 group">
                                         View All Plans <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                                     </Link>
                                     <Link href="/register?plan=trial" className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-md flex items-center justify-center">
@@ -503,7 +503,7 @@ export default function HomeContent() {
                                     {
                                         title: 'Starter',
                                         desc: 'Perfect for local merchants exploring digital ledger solutions.',
-                                        icon: <Smartphone className="text-blue-400" />
+                                        icon: <Smartphone className="text-primary" />
                                     },
                                     {
                                         title: 'Premium',
@@ -516,7 +516,7 @@ export default function HomeContent() {
                                             {item.icon}
                                         </div>
                                         <h4 className="text-lg font-bold text-white mb-2">{item.title}</h4>
-                                        <p className="text-sm text-blue-100/40 leading-relaxed font-medium">
+                                        <p className="text-sm text-slate-200/40 leading-relaxed font-medium">
                                             {item.desc}
                                         </p>
                                     </div>
@@ -588,7 +588,7 @@ export default function HomeContent() {
                     <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-[3rem] p-12 md:p-20 relative overflow-hidden border border-white/10 text-center">
                         <div className="relative z-10 max-w-3xl mx-auto">
                             <h2 className="text-3xl md:text-5xl font-bold text-white mb-8">Ready to grow your business?</h2>
-                            <p className="text-blue-100/70 text-lg mb-12">
+                            <p className="text-slate-200/70 text-lg mb-12">
                                 Join 10,000+ merchants who are already using Kada Ledger to manage their credits
                                 and payments more effectively. Download the app today.
                             </p>

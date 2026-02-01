@@ -152,19 +152,19 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 <div className="p-8 md:p-12">
                     <div className="text-center mb-10">
                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Upgrade Your Plan</h2>
-                        <p className="text-blue-200/60 mb-8">Choose the plan that fits your business needs.</p>
+                        <p className="text-slate-300/60 mb-8">Choose the plan that fits your business needs.</p>
 
                         {/* Toggle */}
                         <div className="inline-flex items-center gap-2 bg-white/5 p-1 rounded-full border border-white/10">
                             <button
                                 onClick={() => setBillingCycle('monthly')}
-                                className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                                className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-accent text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
                             >
                                 Monthly
                             </button>
                             <button
                                 onClick={() => setBillingCycle('yearly')}
-                                className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingCycle === 'yearly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                                className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingCycle === 'yearly' ? 'bg-accent text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
                             >
                                 Yearly (Save ~16%)
                             </button>
@@ -182,9 +182,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                 </div>
                             </div>
                             <ul className="space-y-3 mb-8 flex-1">
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-blue-500 shrink-0" /> 1 User</li>
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-blue-500 shrink-0" /> Basic Reports</li>
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-blue-500 shrink-0" /> 100 Customers</li>
+                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-primary shrink-0" /> 1 User</li>
+                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-primary shrink-0" /> Basic Reports</li>
+                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-primary shrink-0" /> 100 Customers</li>
                             </ul>
                             <button disabled className="w-full py-3 rounded-xl border border-white/10 text-slate-400 font-bold text-sm">
                                 Current Plan
@@ -192,8 +192,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                         </div>
 
                         {/* Plan 2: Premium */}
-                        <div className="glass-card p-6 border-2 border-blue-500 rounded-2xl flex flex-col bg-blue-900/10 relative transform md:scale-105 shadow-xl shadow-blue-900/20">
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                        <div className="glass-card p-6 border-2 border-primary rounded-2xl flex flex-col bg-blue-900/10 relative transform md:scale-105 shadow-xl shadow-accent/20">
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                                 Recommended
                             </div>
                             <div className="mb-4">
@@ -206,9 +206,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                 </div>
                             </div>
                             <ul className="space-y-3 mb-8 flex-1">
-                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-blue-400 shrink-0" /> Up to 3 Users</li>
-                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-blue-400 shrink-0" /> WhatsApp Reminders</li>
-                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-blue-400 shrink-0" /> Advanced Analytics</li>
+                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-primary shrink-0" /> Up to 3 Users</li>
+                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-primary shrink-0" /> WhatsApp Reminders</li>
+                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-primary shrink-0" /> Advanced Analytics</li>
                                 {billingCycle === 'yearly' && (
                                     <li className="flex gap-3 text-sm text-emerald-400 font-bold"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> 2 Months Free</li>
                                 )}
@@ -216,7 +216,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                             <button
                                 onClick={() => handlePayment('professional')}
                                 disabled={loadingPlan === 'professional'}
-                                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold text-sm shadow-lg shadow-accent/25 transition-all flex items-center justify-center gap-2"
                             >
                                 {loadingPlan === 'professional' && <Loader2 size={16} className="animate-spin" />}
                                 Upgrade to Premium

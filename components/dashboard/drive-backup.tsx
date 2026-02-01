@@ -336,10 +336,10 @@ export default function DriveBackup() {
     };
 
     return (
-        <div className="p-6 rounded-3xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none transition-all hover:border-blue-200 dark:hover:border-blue-500/20">
+        <div className="p-6 rounded-3xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none transition-all hover:border-blue-200 dark:hover:border-primary/20">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-primary/20 flex items-center justify-center text-blue-600 dark:text-primary">
                         <Cloud size={24} />
                     </div>
                     <div>
@@ -377,7 +377,7 @@ export default function DriveBackup() {
                             <button
                                 onClick={handleBackup}
                                 disabled={loading}
-                                className="py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50 shadow-lg shadow-blue-600/20"
+                                className="py-4 px-6 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50 shadow-lg shadow-accent/20"
                             >
                                 <Upload size={24} className="group-hover:-translate-y-1 transition-transform" />
                                 <span>Export CSV</span>

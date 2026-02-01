@@ -1,8 +1,11 @@
+/* IBM Plex Sans - Professional Fintech Typography */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
 
   --color-border: var(--border);
   --color-input: var(--input);
@@ -114,6 +117,31 @@
   }
 }
 
+/* Design System Tokens */
+:root {
+  /* Spacing System */
+  --space-xs: 0.25rem;
+  /* 4px */
+  --space-sm: 0.5rem;
+  /* 8px */
+  --space-md: 1rem;
+  /* 16px */
+  --space-lg: 1.5rem;
+  /* 24px */
+  --space-xl: 2rem;
+  /* 32px */
+  --space-2xl: 3rem;
+  /* 48px */
+  --space-3xl: 4rem;
+  /* 64px */
+
+  /* Shadow System */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+}
+
 :root {
   /* LIGHT MODE DEFAULT */
   --background: #f8fafc;
@@ -157,34 +185,44 @@
 }
 
 .dark {
-  /* DARK MODE OVERRIDES (Original :root values) */
-  --background: #020617;
-  --foreground: #f0f4f8;
+  /* DARK MODE OVERRIDES - Design System (Fintech OLED) */
+  --background: #0F172A;
+  /* Slate Dark - OLED optimized */
+  --foreground: #F8FAFC;
+  /* Slate Light - High contrast */
 
-  --card: #0f172a;
-  --card-foreground: #f0f4f8;
+  --card: #1E293B;
+  /* Slate 800 */
+  --card-foreground: #F8FAFC;
 
-  --popover: #0f172a;
-  --popover-foreground: #f0f4f8;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
 
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
+  --primary: #F59E0B;
+  /* Amber Gold - Trust & Professionalism */
+  --primary-foreground: #0F172A;
 
-  --secondary: #1e293b;
-  --secondary-foreground: #f0f4f8;
+  --secondary: #FBBF24;
+  /* Light Gold - Accents */
+  --secondary-foreground: #0F172A;
 
-  --muted: #1e293b;
-  --muted-foreground: #cbd5e1;
+  --muted: #334155;
+  /* Slate 700 */
+  --muted-foreground: #CBD5E1;
 
-  --accent: #1e293b;
-  --accent-foreground: #ffffff;
+  --accent: #8B5CF6;
+  /* Purple - CTA/Innovation */
+  --accent-foreground: #FFFFFF;
 
-  --destructive: #ef4444;
-  --destructive-foreground: #f0f4f8;
+  --destructive: #EF4444;
+  /* Red - Errors */
+  --destructive-foreground: #F8FAFC;
 
-  --border: #1e293b;
-  --input: #1e293b;
-  --ring: #3b82f6;
+  --border: #334155;
+  /* Slate 700 */
+  --input: #334155;
+  --ring: #F59E0B;
+  /* Gold focus ring */
 }
 
 @layer base {

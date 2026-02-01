@@ -53,7 +53,7 @@ export default function TableOfContents() {
                         <a
                             href={`#${heading.id}`}
                             className={`block border-l-2 pl-4 py-1 leading-relaxed ${activeId === heading.id
-                                    ? 'border-blue-500 text-blue-400 font-bold bg-blue-500/10 rounded-r-lg'
+                                    ? 'border-primary text-primary font-bold bg-primary/10 rounded-r-lg'
                                     : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
                                 }`}
                             onClick={(e) => {

@@ -23,7 +23,7 @@ export default function SubscriptionLockScreen({ onRenew }: SubscriptionLockScre
 
             <button
                 onClick={onRenew}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-blue-600/30 hover:scale-105 transition-all flex items-center gap-3"
+                className="bg-accent hover:bg-accent/90 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-accent/30 hover:scale-105 transition-all flex items-center gap-3"
             >
                 <CreditCard size={20} />
                 Renew Subscription Now

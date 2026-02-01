@@ -33,12 +33,12 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                                 <Activity size={20} />
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-white">Seed Data Report</h3>
-                                <p className="text-sm text-blue-200/60">Annual Performance Overview</p>
+                                <p className="text-sm text-slate-300/60">Annual Performance Overview</p>
                             </div>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white">
@@ -52,7 +52,7 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
                                 { label: 'Total Recovery', val: '₹4.2L', chg: '+12%', icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
-                                { label: 'Active Customers', val: '840', chg: '+25%', icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+                                { label: 'Active Customers', val: '840', chg: '+25%', icon: Users, color: 'text-primary', bg: 'bg-primary/20' },
                                 { label: 'Growth Rate', val: '18%', chg: '+5%', icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-500/20' },
                             ].map((stat, i) => (
                                 <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/5 md:hover:scale-105 transition-transform">
@@ -65,7 +65,7 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
                                         </span>
                                     </div>
                                     <h4 className="text-2xl font-bold text-white mb-1">{stat.val}</h4>
-                                    <p className="text-xs text-blue-200/50">{stat.label}</p>
+                                    <p className="text-xs text-slate-300/50">{stat.label}</p>
                                 </div>
                             ))}
                         </div>
@@ -74,11 +74,11 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
                         <div className="bg-white/5 rounded-xl p-6 border border-white/5">
                             <div className="flex items-center justify-between mb-6">
                                 <h4 className="font-bold text-white flex items-center gap-2">
-                                    <BarChart3 size={16} className="text-blue-400" />
+                                    <BarChart3 size={16} className="text-primary" />
                                     Recovery Trends
                                 </h4>
                                 <div className="flex gap-2 text-xs">
-                                    <span className="px-3 py-1 rounded-full bg-blue-600 text-white">2024</span>
+                                    <span className="px-3 py-1 rounded-full bg-accent text-white">2024</span>
                                     <span className="px-3 py-1 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer">2023</span>
                                 </div>
                             </div>
@@ -102,7 +102,7 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
 
                     {/* Footer */}
                     <div className="p-6 bg-white/5 border-t border-white/5 flex justify-end">
-                        <button onClick={onClose} className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors">
+                        <button onClick={onClose} className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-bold transition-colors">
                             Close Report
                         </button>
                     </div>
