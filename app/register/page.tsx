@@ -1,11 +1,11 @@
 'use client';
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { authApi } from '../api/auth';
+import { authApi } from '@/lib/auth-client';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
 import Image from 'next/image';
-import { Home, Eye, EyeOff, CheckCircle, Star, Zap, Shield, ArrowRight, Sparkles } from 'lucide-react';
+import { Home, Eye, EyeOff, CheckCircle, Star, Zap, Shield, ArrowRight, Sparkles, User, Smartphone, Lock, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function RegisterContent() {
     const [businessName, setBusinessName] = useState('');
@@ -13,7 +13,6 @@ function RegisterContent() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -22,393 +21,185 @@ function RegisterContent() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Enhanced validation with specific error messages
-        if (!businessName) {
-            toast.error('🏪 Business name is required');
-            return;
-        }
-
-        if (businessName.length < 3) {
-            toast.error('🏪 Business name must be at least 3 characters');
-            return;
-        }
-
-        if (!phone) {
-            toast.error('📱 Phone number is required');
-            return;
-        }
-
-        if (phone.length < 10) {
-            toast.error('📱 Please enter a valid 10-digit phone number');
-            return;
-        }
-
-        if (!password) {
-            toast.error('🔒 Password is required');
-            return;
-        }
-
-        if (password.length < 6) {
-            toast.error('🔒 Password must be at least 6 characters');
-            return;
-        }
-
-        if (!confirmPassword) {
-            toast.error('🔒 Please confirm your password');
+        // Basic validation
+        if (!businessName || !phone || !password) {
+            toast.error('Please fill in all required fields');
             return;
         }
 
         if (password !== confirmPassword) {
-            toast.error('🔒 Passwords do not match');
+            toast.error('Passwords do not match');
             return;
         }
 
         setLoading(true);
-        const loadingToast = toast.loading('✨ Creating your account...');
+        const loadingToast = toast.loading('Creating your account...');
 
         try {
             const { access_token } = await authApi.register({ businessName, phoneNumber: phone, password });
             localStorage.setItem('token', access_token);
-
-            toast.success('🎉 Registration successful! Welcome to Kada Ledger!', {
-                id: loadingToast,
-                duration: 5000
-            });
-
-            // Small delay for better UX
+            toast.success('Registration successful!', { id: loadingToast });
             setTimeout(() => {
                 router.push('/onboarding');
             }, 1000);
         } catch (err: any) {
-            // Enhanced error handling with specific messages
-            let errorMessage = '❌ Registration failed. Please try again.';
-
-            if (err.message?.includes('already exists') || err.message?.includes('duplicate')) {
-                errorMessage = '👤 This phone number is already registered. Please login instead.';
-            } else if (err.message?.includes('network') || err.message?.includes('fetch')) {
-                errorMessage = '🌐 Network error. Please check your connection';
-            } else if (err.message?.includes('invalid')) {
-                errorMessage = '⚠️ Invalid information provided. Please check your details';
-            } else if (err.message) {
-                errorMessage = `❌ ${err.message}`;
-            }
-
-            toast.error(errorMessage, { id: loadingToast });
+            toast.error(err.message || 'Registration failed', { id: loadingToast });
         } finally {
             setLoading(false);
         }
     };
 
-    const [plans, setPlans] = useState<any[]>([]);
-
-    useEffect(() => {
-        const fetchPlans = async () => {
-            try {
-                const res = await fetch('/api/plans');
-                if (res.ok) {
-                    const data = await res.json();
-                    setPlans(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch plans");
-            }
-        };
-        fetchPlans();
-    }, []);
-
-    const getPlanPrice = (planName: string) => {
-        const plan = plans.find(p => p.name === planName);
-        return plan ? plan.price : (planName === 'starter' ? 0 : (planName === 'professional' ? 199 : 999));
-    };
-
-    const isPremium = plan?.includes('professional');
-    const planBenefits = isPremium ? [
-        'Premium features included',
-        'Advanced Analytics',
-        'WhatsApp Reminders',
-        'Priority Phone Support',
-        'Multi-user access'
-    ] : (plan === 'trial' ? [
-        '14 days free trial',
-        'Unlimited customers',
-        'WhatsApp reminders',
-        'Advanced analytics',
-        'Priority support'
-    ] : [
-        'Free forever plan',
-        'Up to 50 customers',
-        'Basic features',
-        'Email support'
-    ]);
-
     return (
-        <div className="h-screen bg-[#020617] flex relative overflow-hidden">
-            {/* Toast Notifications */}
-            <Toaster
-                position="top-center"
-                toastOptions={{
-                    duration: 4000,
-                    style: {
-                        background: '#1e293b',
-                        color: '#fff',
-                        border: '1px solid rgba(59, 130, 246, 0.3)',
-                    },
-                    success: {
-                        iconTheme: {
-                            primary: '#10b981',
-                            secondary: '#fff',
-                        },
-                    },
-                    error: {
-                        iconTheme: {
-                            primary: '#ef4444',
-                            secondary: '#fff',
-                        },
-                    },
-                }}
-            />
+        <div className="min-h-screen bg-blue-600 flex items-center justify-center p-4 font-sans text-slate-900">
+            <Toaster position="top-right" />
+            <div className="bg-white rounded-[2rem] shadow-2xl flex w-full max-w-5xl overflow-hidden min-h-[600px] flex-row-reverse">
 
-            {/* Background Effects */}
-            <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[150px] animate-pulse pointer-events-none"></div>
-            <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+                {/* Right Side - Blue Panel (Now on Right for Register to alternate) */}
+                <div className="hidden lg:flex w-1/2 bg-blue-600 relative p-12 flex-col justify-between text-white">
+                    {/* Background Pattern */}
+                    <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -ml-16 -mt-16 pointer-events-none"></div>
+                    <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-500/30 rounded-full blur-3xl -mr-20 -mb-20 pointer-events-none"></div>
 
-            {/* Back to Home Button */}
-            <Link
-                href="/"
-                className="fixed top-4 left-4 md:top-8 md:left-8 z-50 glass-card px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group flex items-center gap-2 text-white"
-            >
-                <Home size={18} className="group-hover:-translate-x-1 transition-transform" />
-                <span className="hidden sm:inline text-sm font-medium">Back to Home</span>
-            </Link>
-
-            {/* Left Side - Plan Benefits (Hidden on Mobile) */}
-            <div className="hidden lg:flex lg:w-1/2 p-8 xl:p-12 relative z-10">
-                <div className="flex flex-col justify-center max-w-xl ml-20 xl:ml-32">
-                    {/* Logo & Brand */}
-                    <div className="mb-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <Image
-                                src="/brand-logo-final.png"
-                                alt="Kada Ledger"
-                                width={48}
-                                height={48}
-                                className="rounded-2xl shadow-xl shadow-blue-500/20"
-                            />
-                            <div>
-                                <h2 className="text-2xl font-bold text-white">Kada Ledger</h2>
-                                <p className="text-blue-200/60 text-xs">India's #1 Digital Khata</p>
-                            </div>
+                    {/* Logo */}
+                    <div className="flex items-center gap-3 relative z-10 justify-end">
+                        <span className="text-xl font-bold tracking-tight">Kada Ledger</span>
+                        <div className="bg-white p-2 rounded-xl shadow-lg">
+                            <Image src="/brand-logo-final.png" alt="Logo" width={32} height={32} className="w-8 h-8" />
                         </div>
-                        <h1 className="text-3xl font-bold text-white mb-3 leading-tight">
-                            Start Your
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400"> Digital Journey</span>
-                        </h1>
-                        <p className="text-blue-200/70 text-sm leading-relaxed">
-                            Join 10,000+ merchants who have transformed their business with Kada Ledger's powerful digital khata platform.
-                        </p>
                     </div>
 
-                    {/* Plan Highlight */}
-                    {(plan === 'trial' || isPremium) && (
-                        <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-blue-500/20">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Sparkles className="text-blue-400" size={24} />
-                                <h3 className="text-xl font-bold text-white">{isPremium ? 'Premium Plan' : 'Premium Trial Plan'}</h3>
-                            </div>
-                            <p className="text-blue-200/70 text-sm mb-4">
-                                {isPremium ? 'Excellent choice! You are signing up for the Premium plan.' : 'Experience all premium features absolutely free for 14 days. No credit card required!'}
-                            </p>
-                            <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold">
-                                <CheckCircle size={16} />
-                                Worth ₹{getPlanPrice(plan && plan.includes('yearly') ? 'professional_yearly' : 'professional')}/{plan && plan.includes('yearly') ? 'year' : 'month'}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Benefits List */}
-                    <div className="space-y-4">
-                        <h3 className="text-white font-bold text-lg mb-4">What you'll get:</h3>
-                        {planBenefits.map((benefit, i) => (
-                            <div key={i} className="flex items-center gap-3 group">
-                                <div className="w-6 h-6 rounded-full bg-blue-600/20 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                                    <CheckCircle size={14} />
+                    {/* Main Content */}
+                    <div className="relative z-10">
+                        {/* Plan Card Mock */}
+                        <div className="bg-white text-slate-900 rounded-2xl p-6 shadow-2xl mb-8 mx-auto max-w-xs transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 className="font-bold text-lg">Pro Plan</h3>
+                                    <p className="text-sm text-slate-500">Best for small businesses</p>
                                 </div>
-                                <span className="text-blue-200/80">{benefit}</span>
+                                <div className="bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded text-xs">ACTIVE</div>
                             </div>
-                        ))}
-                    </div>
-
-
-                </div>
-            </div>
-
-            {/* Right Side - Registration Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-8 relative z-10">
-                <div className="w-full max-w-md">
-                    {/* Mobile Header */}
-                    <div className="lg:hidden text-center mb-8">
-                        <div className="flex justify-center mb-4">
-                            <Image
-                                src="/brand-logo-final.png"
-                                alt="Kada Ledger"
-                                width={80}
-                                height={80}
-                                className="rounded-2xl shadow-xl shadow-blue-500/20"
-                            />
+                            <div className="space-y-3 mb-6">
+                                <div className="flex items-center gap-2 text-sm">
+                                    <CheckCircle size={16} className="text-green-500" />
+                                    <span>Unlimited Customers</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <CheckCircle size={16} className="text-green-500" />
+                                    <span>WhatsApp Reminders</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <CheckCircle size={16} className="text-green-500" />
+                                    <span>Daily Backup</span>
+                                </div>
+                            </div>
+                            <button className="w-full bg-slate-900 text-white py-2 rounded-lg font-medium text-sm">Manage Subscription</button>
                         </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">
-                            {plan === 'trial' ? 'Start Free Trial' : 'Create Account'}
-                        </h1>
-                        <p className="text-blue-200/70">
-                            {plan === 'trial' ? '14 days of premium features, free!' : 'Join Kada Ledger today'}
+
+                        <h2 className="text-3xl font-bold mb-4 leading-tight text-right">
+                            Join 10,000+ businesses growing with us.
+                        </h2>
+                        <p className="text-blue-100 text-lg opacity-90 text-right">
+                            Start your 14-day free trial today. No credit card required.
                         </p>
                     </div>
 
-                    {/* Registration Card */}
-                    <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-white/10 shadow-2xl backdrop-blur-xl">
-                        <div className="hidden lg:block mb-6">
-                            <h2 className="text-2xl font-bold text-white mb-2">Create Account</h2>
-                            <p className="text-blue-200/70">Fill in your details to get started</p>
+                    {/* Dots */}
+                    <div className="flex justify-end gap-2">
+                        <div className="w-2 h-2 rounded-full bg-white/40"></div>
+                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                        <div className="w-2 h-2 rounded-full bg-white/40"></div>
+                    </div>
+                </div>
+
+                {/* Left Side - Register Form */}
+                <div className="w-full lg:w-1/2 p-12 lg:p-16 flex flex-col justify-center bg-white">
+                    <div className="max-w-md mx-auto w-full">
+                        <div className="flex items-center gap-3 mb-8 lg:hidden">
+                            <Image src="/brand-logo-final.png" alt="Logo" width={40} height={40} className="w-10 h-10 rounded-xl shadow-md" />
+                            <span className="text-xl font-bold text-slate-800">Kada Ledger</span>
                         </div>
 
-                        <form onSubmit={handleRegister} className="space-y-5">
+                        <div className="mb-2">
+                            <div className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider mb-3">
+                                New Account
+                            </div>
+                        </div>
+                        <h1 className="text-3xl font-bold text-slate-900 mb-2">Create an account</h1>
+                        <p className="text-slate-500 mb-8">
+                            Already have an account? <Link href="/login" className="text-blue-600 font-medium hover:underline">Log in</Link>
+                        </p>
+
+                        <form onSubmit={handleRegister} className="space-y-4">
                             {/* Business Name */}
-                            <div>
-                                <label className="block text-sm font-medium text-blue-200/80 mb-2 pl-1">
-                                    Business Name
-                                </label>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700">Business Name *</label>
                                 <input
                                     type="text"
+                                    required
                                     value={businessName}
                                     onChange={(e) => setBusinessName(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all focus:bg-white/10"
-                                    placeholder="e.g. Sharma General Store"
-                                    required
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+                                    placeholder="e.g. Sharma Store"
                                 />
                             </div>
 
-                            {/* Phone Number */}
-                            <div>
-                                <label className="block text-sm font-medium text-blue-200/80 mb-2 pl-1">
-                                    Phone Number
-                                </label>
+                            {/* Phone */}
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700">Phone Number *</label>
                                 <input
                                     type="tel"
+                                    required
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all focus:bg-white/10"
-                                    placeholder="e.g. 9496491654"
-                                    required
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+                                    placeholder="e.g. 9876543210"
                                 />
                             </div>
 
-                            {/* Password */}
-                            <div>
-                                <label className="block text-sm font-medium text-blue-200/80 mb-2 pl-1">
-                                    Password
-                                </label>
-                                <div className="relative">
+                            {/* Password Row */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-semibold text-slate-700">Password *</label>
                                     <input
-                                        type={showPassword ? 'text' : 'password'}
+                                        type="password"
+                                        required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 pr-12 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all focus:bg-white/10"
-                                        placeholder="Create a strong password"
-                                        required
+                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+                                        placeholder="Min 6 chars"
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-200/40 hover:text-blue-200/80 transition-colors"
-                                    >
-                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
+                                    <p className="text-[10px] text-slate-400">Must be at least 8 characters.</p>
                                 </div>
-                                <p className="text-blue-200/40 text-xs mt-1 pl-1">At least 6 characters</p>
-                            </div>
-
-                            {/* Confirm Password */}
-                            <div>
-                                <label className="block text-sm font-medium text-blue-200/80 mb-2 pl-1">
-                                    Confirm Password
-                                </label>
-                                <div className="relative">
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-semibold text-slate-700">Confirm *</label>
                                     <input
-                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        type="password"
+                                        required
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 pr-12 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all focus:bg-white/10"
-                                        placeholder="Confirm your password"
-                                        required
+                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+                                        placeholder="Repeat"
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-200/40 hover:text-blue-200/80 transition-colors"
-                                    >
-                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
                                 </div>
                             </div>
 
-                            {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group mt-6"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed mt-4"
                             >
-                                {loading ? (
-                                    <>
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        Creating Account...
-                                    </>
-                                ) : (
-                                    <>
-                                        {plan === 'trial' ? 'Start Free Trial' : 'Create Account'}
-                                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                    </>
-                                )}
+                                {loading ? 'Creating Account...' : 'Create Account'}
                             </button>
+
+
                         </form>
-
-                        {/* Terms */}
-                        <p className="text-blue-200/40 text-xs text-center mt-6">
-                            By signing up, you agree to our{' '}
-                            <Link href="/legal/terms" className="text-blue-400 hover:text-blue-300">Terms</Link>
-                            {' '}and{' '}
-                            <Link href="/legal/privacy" className="text-blue-400 hover:text-blue-300">Privacy Policy</Link>
-                        </p>
-
-                        {/* Divider */}
-                        <div className="my-6 flex items-center gap-4">
-                            <div className="flex-1 h-px bg-white/10"></div>
-                            <span className="text-blue-200/40 text-sm">or</span>
-                            <div className="flex-1 h-px bg-white/10"></div>
-                        </div>
-
-                        {/* Login Link */}
-                        <div className="text-center">
-                            <p className="text-blue-200/60">
-                                Already have an account?{' '}
-                                <Link
-                                    href="/login"
-                                    className="text-blue-400 hover:text-blue-300 font-bold transition-colors inline-flex items-center gap-1"
-                                >
-                                    Sign In
-                                    <ArrowRight size={14} />
-                                </Link>
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Trust Badge */}
-                    <div className="mt-6 text-center">
-                        <p className="text-blue-200/40 text-xs flex items-center justify-center gap-2">
-                            <Shield size={14} />
-                            Secured with 256-bit encryption
-                        </p>
                     </div>
                 </div>
+            </div>
+            {/* Simple footer for larger screens */}
+            <div className="fixed bottom-6 right-6 text-blue-100 text-xs font-medium hidden lg:block opacity-60">
+                Kada Ledger Inc.
             </div>
         </div>
     );
@@ -416,14 +207,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-                <div className="text-white flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin"></div>
-                    <p className="text-blue-200/60">Loading...</p>
-                </div>
-            </div>
-        }>
+        <Suspense fallback={<div className="min-h-screen bg-blue-600 flex items-center justify-center p-4"><div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div></div>}>
             <RegisterContent />
         </Suspense>
     );

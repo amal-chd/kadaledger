@@ -10,7 +10,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
 export async function POST(req: Request) {
     try {
-        const { phoneNumber, password } = await req.json();
+        const body = await req.json();
+        console.log('Login Request Body:', body);
+        const { phoneNumber, password } = body;
 
         if (!phoneNumber || !password) {
             return NextResponse.json({ error: 'Phone number and password are required' }, { status: 400 });
@@ -36,8 +38,10 @@ export async function POST(req: Request) {
         });
 
         if (!vendor) {
+            console.log('Login failed: Vendor not found for phone:', phoneNumber);
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
         }
+        console.log('Vendor found:', vendor.id);
 
         // Verify Password
         // Handle migration case: if password is null/empty in DB (shouldn't happen with new schema but good safety)

@@ -1,281 +1,189 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi } from '../api/auth';
+import { authApi } from '@/lib/auth-client';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
-import { Home, Eye, EyeOff, Shield, Zap, Users, ArrowRight } from 'lucide-react';
+import { ArrowRight, Lock, Mail, Phone, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 export default function LoginPage() {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Validation with specific error messages
-        if (!phone) {
-            toast.error('📱 Phone number is required');
-            return;
-        }
-
-        if (!password) {
-            toast.error('🔒 Password is required');
-            return;
-        }
-
         setLoading(true);
-        const loadingToast = toast.loading('🔐 Signing you in...');
+        const loadingToast = toast.loading('Logging in...');
 
         try {
             const response = await authApi.login({ phoneNumber: phone, password });
             const { access_token, role } = response;
             localStorage.setItem('token', access_token);
-
-            toast.success('✅ Login successful! Redirecting...', { id: loadingToast });
-
-            // Small delay for better UX
+            toast.success('Successfully logged in!', { id: loadingToast });
             setTimeout(() => {
-                // Redirect based on role
-                if (role === 'ADMIN') {
-                    router.push('/admin');
-                } else {
-                    router.push('/dashboard');
-                }
+                if (role === 'ADMIN') router.push('/admin');
+                else router.push('/dashboard');
             }, 500);
         } catch (err: any) {
-            // Enhanced error handling with specific messages
-            let errorMessage = '❌ Login failed. Please try again.';
-
-            if (err.message?.includes('credentials') || err.message?.includes('Invalid')) {
-                errorMessage = '🔐 Invalid phone number or password';
-            } else if (err.message?.includes('network') || err.message?.includes('fetch')) {
-                errorMessage = '🌐 Network error. Please check your connection';
-            } else if (err.message?.includes('not found') || err.message?.includes('404')) {
-                errorMessage = '👤 Account not found. Please register first';
-            } else if (err.message) {
-                errorMessage = `❌ ${err.message}`;
-            }
-
-            toast.error(errorMessage, { id: loadingToast });
+            toast.error(err.message || 'Login failed', { id: loadingToast });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="h-screen bg-[#020617] flex relative overflow-hidden">
-            {/* Toaster removed - using global toaster from layout */}
+        <div className="min-h-screen bg-blue-600 flex items-center justify-center p-4 font-sans">
+            <div className="bg-white rounded-[2rem] shadow-2xl flex w-full max-w-5xl overflow-hidden min-h-[600px]">
 
-            {/* Background Effects */}
-            <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[150px] animate-pulse pointer-events-none"></div>
-            <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+                {/* Left Side - Blue Panel */}
+                <div className="hidden lg:flex w-1/2 bg-blue-600 relative p-12 flex-col justify-between text-white">
+                    {/* Background Pattern */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/30 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
 
-            {/* Back to Home Button */}
-            <Link
-                href="/"
-                className="fixed top-4 left-4 md:top-8 md:left-8 z-50 glass-card px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group flex items-center gap-2 text-white"
-            >
-                <Home size={18} className="group-hover:-translate-x-1 transition-transform" />
-                <span className="hidden sm:inline text-sm font-medium">Back to Home</span>
-            </Link>
-
-            {/* Left Side - Branding & Features (Hidden on Mobile) */}
-            <div className="hidden lg:flex lg:w-1/2 p-8 xl:p-12 relative z-10">
-                <div className="flex flex-col justify-center max-w-xl ml-20 xl:ml-32">
-                    {/* Logo & Brand */}
-                    <div className="mb-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <Image
-                                src="/brand-logo-final.png"
-                                alt="Kada Ledger"
-                                width={48}
-                                height={48}
-                                className="rounded-2xl shadow-xl shadow-blue-500/20"
-                            />
-                            <div>
-                                <h2 className="text-2xl font-bold text-white">Kada Ledger</h2>
-                                <p className="text-blue-200/60 text-xs">India's #1 Digital Khata</p>
-                            </div>
+                    {/* Logo */}
+                    <div className="flex items-center gap-3 relative z-10">
+                        <div className="bg-white p-2 rounded-xl shadow-lg">
+                            <Image src="/brand-logo-final.png" alt="Logo" width={32} height={32} className="w-8 h-8" />
                         </div>
-                        <h1 className="text-3xl font-bold text-white mb-3 leading-tight">
-                            Welcome Back to Your
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400"> Digital Empire</span>
-                        </h1>
-                        <p className="text-blue-200/70 text-sm leading-relaxed">
-                            Access your dashboard to manage customers, track payments, and grow your business with powerful analytics.
-                        </p>
+                        <span className="text-xl font-bold tracking-tight">Kada Ledger</span>
                     </div>
 
-                    {/* Feature Highlights */}
-                    <div className="space-y-3">
-                        {[
-                            {
-                                icon: Shield,
-                                title: 'Bank-Grade Security',
-                                desc: 'Your data is encrypted and protected 24/7'
-                            },
-                            {
-                                icon: Zap,
-                                title: 'Lightning Fast',
-                                desc: 'Access your ledger instantly from anywhere'
-                            },
-                            {
-                                icon: Users,
-                                title: 'Trusted by 10,000+',
-                                desc: 'Join thousands of merchants across India'
-                            }
-                        ].map((feature, i) => (
-                            <div key={i} className="flex items-start gap-3 group">
-                                <div className="w-10 h-10 rounded-lg bg-blue-600/20 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                                    <feature.icon size={18} />
+                    {/* Main Content */}
+                    <div className="relative z-10">
+                        {/* Mock UI Card */}
+                        <div className="bg-[#0f172a] rounded-xl p-4 shadow-2xl border border-white/10 mb-8 transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                                <div className="flex gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-300/80"></div>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-400/80"></div>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500/80"></div>
                                 </div>
-                                <div>
-                                    <h3 className="text-white font-bold text-sm mb-0.5">{feature.title}</h3>
-                                    <p className="text-blue-200/60 text-xs">{feature.desc}</p>
-                                </div>
+                                <div className="h-2 w-20 bg-white/10 rounded-full"></div>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Social Proof */}
-                    <div className="mt-6 pt-4 border-t border-white/5">
-                        <div className="flex items-center gap-4">
-                            <div className="flex -space-x-3">
-                                {[1, 2, 3, 4].map(i => (
-                                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#020617] bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">
-                                        {String.fromCharCode(64 + i)}
+                            <div className="space-y-3">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-blue-500/20"></div>
+                                            <div className="space-y-1">
+                                                <div className="h-2 w-24 bg-white/20 rounded-full"></div>
+                                                <div className="h-1.5 w-16 bg-white/10 rounded-full"></div>
+                                            </div>
+                                        </div>
+                                        <div className="h-2 w-12 bg-white/20 rounded-full"></div>
                                     </div>
                                 ))}
                             </div>
-                            <div>
-                                <p className="text-white font-bold text-sm">10,000+ Active Users</p>
-                                <p className="text-blue-200/60 text-xs">Trusted across India</p>
+                        </div>
+
+                        <h2 className="text-3xl font-bold mb-4 leading-tight">
+                            Did you know most "digital" ledgers aren't actually secure?
+                        </h2>
+                        <p className="text-blue-100 text-lg opacity-90">
+                            Ours truly delivers bank-grade security and real-time backups.
+                        </p>
+                    </div>
+
+                    {/* Navigation/Dots */}
+                    <div className="flex items-center gap-4 relative z-10">
+                        <button className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Right Side - Login Form */}
+                <div className="w-full lg:w-1/2 p-12 lg:p-16 flex flex-col justify-center bg-white">
+                    <div className="max-w-md mx-auto w-full">
+                        <div className="flex items-center gap-3 mb-8 lg:hidden">
+                            <Image src="/brand-logo-final.png" alt="Logo" width={40} height={40} className="w-10 h-10 rounded-xl shadow-md" />
+                            <span className="text-xl font-bold text-slate-800">Kada Ledger</span>
+                        </div>
+
+                        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h1>
+                        <p className="text-slate-500 mb-8">Please enter your details to sign in.</p>
+
+                        <form onSubmit={handleLogin} className="space-y-5">
+                            {/* Phone Input */}
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700">Phone Number *</label>
+                                <div className="relative">
+                                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="tel"
+                                        required
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400 text-slate-900"
+                                        placeholder="Enter your phone number"
+                                    />
+                                </div>
                             </div>
+
+                            {/* Password Any Input */}
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700">Password *</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400 text-slate-900"
+                                        placeholder="Enter your password"
+                                    />
+                                </div>
+                                <div className="flex justify-end">
+                                    <Link href="#" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                                        Forgot password?
+                                    </Link>
+                                </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {loading ? (
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        'Sign In'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+
+                        <div className="mt-8 flex items-center gap-4">
+                            <div className="h-px bg-slate-200 flex-1"></div>
+                            <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Or</span>
+                            <div className="h-px bg-slate-200 flex-1"></div>
+                        </div>
+
+                        <div className="mt-8 text-center">
+                            <p className="text-slate-600">
+                                Don't have an account?{' '}
+                                <Link href="/register" className="font-bold text-blue-600 hover:text-blue-700 hover:underline">
+                                    Create free account
+                                </Link>
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-8 relative z-10">
-                <div className="w-full max-w-md">
-                    {/* Mobile Logo */}
-                    <div className="lg:hidden text-center mb-8">
-                        <div className="flex justify-center mb-4">
-                            <Image
-                                src="/brand-logo-final.png"
-                                alt="Kada Ledger"
-                                width={80}
-                                height={80}
-                                className="rounded-2xl shadow-xl shadow-blue-500/20"
-                            />
-                        </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-                        <p className="text-blue-200/70">Login to access your dashboard</p>
-                    </div>
-
-                    {/* Login Card */}
-                    <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-white/10 shadow-2xl backdrop-blur-xl">
-                        <div className="hidden lg:block mb-6">
-                            <h2 className="text-2xl font-bold text-white mb-2">Sign In</h2>
-                            <p className="text-blue-200/70">Enter your credentials to continue</p>
-                        </div>
-
-                        <form onSubmit={handleLogin} className="space-y-4">
-                            {/* Phone Number */}
-                            <div>
-                                <label className="block text-sm font-medium text-blue-200/80 mb-2 pl-1">
-                                    Phone Number
-                                </label>
-                                <input
-                                    type="tel"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all focus:bg-white/10"
-                                    placeholder="Enter your phone number"
-                                    required
-                                />
-                            </div>
-
-                            {/* Password */}
-                            <div>
-                                <label className="block text-sm font-medium text-blue-200/80 mb-2 pl-1">
-                                    Password
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-blue-200/30 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all focus:bg-white/10"
-                                        placeholder="Enter your password"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-200/40 hover:text-blue-200/80 transition-colors"
-                                    >
-                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Submit Button */}
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
-                            >
-                                {loading ? (
-                                    <>
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        Logging in...
-                                    </>
-                                ) : (
-                                    <>
-                                        Sign In
-                                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
-
-                        {/* Divider */}
-                        <div className="my-6 flex items-center gap-4">
-                            <div className="flex-1 h-px bg-white/10"></div>
-                            <span className="text-blue-200/40 text-sm">or</span>
-                            <div className="flex-1 h-px bg-white/10"></div>
-                        </div>
-
-                        {/* Sign Up Link */}
-                        <div className="text-center">
-                            <p className="text-blue-200/60">
-                                Don't have an account?{' '}
-                                <Link
-                                    href="/register?plan=trial"
-                                    className="text-blue-400 hover:text-blue-300 font-bold transition-colors inline-flex items-center gap-1"
-                                >
-                                    Start Free Trial
-                                    <ArrowRight size={14} />
-                                </Link>
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Trust Badge */}
-                    <div className="mt-6 text-center">
-                        <p className="text-blue-200/40 text-xs flex items-center justify-center gap-2">
-                            <Shield size={14} />
-                            Secured with 256-bit encryption
-                        </p>
-                    </div>
-                </div>
+            {/* Simple footer for larger screens */}
+            <div className="fixed bottom-6 text-blue-100 text-xs font-medium hidden lg:block opacity-60">
+                © 2026 Kada Ledger. Secure & Encrypted.
             </div>
         </div>
     );

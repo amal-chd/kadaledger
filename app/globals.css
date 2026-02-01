@@ -198,12 +198,12 @@
   --popover: #1E293B;
   --popover-foreground: #F8FAFC;
 
-  --primary: #F59E0B;
-  /* Amber Gold - Trust & Professionalism */
+  --primary: #3B82F6;
+  /* Blue 500 - Trust & Professionalism */
   --primary-foreground: #0F172A;
 
-  --secondary: #FBBF24;
-  /* Light Gold - Accents */
+  --secondary: #60A5FA;
+  /* Blue 400 - Accents */
   --secondary-foreground: #0F172A;
 
   --muted: #334155;
@@ -221,8 +221,8 @@
   --border: #334155;
   /* Slate 700 */
   --input: #334155;
-  --ring: #F59E0B;
-  /* Gold focus ring */
+  --ring: #3B82F6;
+  /* Blue focus ring */
 }
 
 @layer base {
