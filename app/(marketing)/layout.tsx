@@ -18,7 +18,9 @@ export default function MarketingLayout({
             <div className="relative z-10 w-full mx-auto bg-[#0B0F19]/90 md:backdrop-blur-3xl overflow-hidden flex flex-col min-h-screen">
                 <Navbar />
                 <main className="flex-grow overflow-y-auto scrollbar-hide">
-                    {children}
+                    <div className="app-mobile-container">
+                        {children}
+                    </div>
                     <Footer />
                 </main>
             </div>

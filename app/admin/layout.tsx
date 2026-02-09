@@ -201,8 +201,10 @@ export default function AdminLayout({
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto p-6 lg:p-8">
-                    {children}
+                <main className="flex-1 overflow-y-auto p-0">
+                    <div className="app-mobile-container py-6 lg:py-8">
+                        {children}
+                    </div>
                 </main>
             </div>
         </div>

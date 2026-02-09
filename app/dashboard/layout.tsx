@@ -161,7 +161,8 @@ export default function DashboardLayout({
                     </aside>
 
                     {/* Main Content */}
-                    <main className="flex-1 md:ml-64 p-4 md:p-8 relative z-10">
+                    <main className="flex-1 md:ml-64 p-0 relative z-10">
+                        <div className="app-mobile-container py-4 md:py-8">
                         {/* Lock Screen if Expired */}
                         {profile?.subscription?.daysLeft <= 0 ? (
                             <SubscriptionLockScreen onRenew={() => setIsUpgradeModalOpen(true)} />
@@ -210,6 +211,7 @@ export default function DashboardLayout({
                                 {children}
                             </>
                         )}
+                        </div>
                     </main>
                 </div>
             </CustomerViewProvider>

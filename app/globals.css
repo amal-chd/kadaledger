@@ -116,6 +116,9 @@
 
 /* Design System Tokens */
 :root {
+  --app-container-max: 76rem;
+  --app-container-pad: clamp(1rem, 3.2vw, 1.5rem);
+
   /* Spacing System */
   --space-xs: 0.25rem;
   /* 4px */
@@ -232,19 +235,52 @@
   html {
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    font-size: clamp(15px, 0.28vw + 14.2px, 16px);
     height: 100%;
     width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   body {
     @apply bg-[color:var(--color-background)] text-[color:var(--color-foreground)] font-sans selection:bg-blue-500/30;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
+    overflow-x: clip;
     touch-action: pan-y;
     height: 100%;
     width: 100%;
+    min-width: 320px;
+  }
+
+  img,
+  picture,
+  video,
+  canvas {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+  }
+
+  img {
+    object-fit: cover;
+  }
+
+  button,
+  [role="button"],
+  a[href],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  select {
+    min-height: 2.75rem;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
   }
 
   h1,
@@ -255,9 +291,24 @@
   h6 {
     @apply font-heading tracking-tight text-[color:var(--color-foreground)];
   }
+
+  #__next,
+  main,
+  section,
+  article,
+  aside,
+  header,
+  footer {
+    min-width: 0;
+  }
 }
 
 @layer utilities {
+  .app-mobile-container {
+    width: min(100%, var(--app-container-max));
+    margin-inline: auto;
+    padding-inline: var(--app-container-pad);
+  }
 
   /* Glassmorphism Classes */
   .glass {
@@ -277,17 +328,22 @@
   }
 
   .container-width {
-    @apply max-w-7xl mx-auto px-5 sm:px-8;
+    width: min(100%, var(--app-container-max));
+    margin-inline: auto;
+    padding-inline: var(--app-container-pad);
   }
 
   /* Mobile-optimized container with better spacing */
   .container-mobile {
-    @apply px-4 sm:px-6 md:px-8;
+    padding-inline: var(--app-container-pad);
   }
 
   /* Edge-to-edge on mobile, contained on desktop */
   .edge-to-edge-mobile {
-    @apply w-full md:max-w-7xl md:mx-auto md:px-8;
+    @apply w-full;
+    max-width: var(--app-container-max);
+    margin-inline: auto;
+    padding-inline: var(--app-container-pad);
   }
 
   /* Full viewport height utilities for mobile */
@@ -326,5 +382,53 @@
 
   .snap-center {
     scroll-snap-align: center;
+  }
+}
+
+@media (min-width: 20rem) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 22.5rem) {
+  html {
+    font-size: 15.2px;
+  }
+}
+
+@media (min-width: 24.375rem) {
+  html {
+    font-size: 15.35px;
+  }
+}
+
+@media (min-width: 25.75rem) {
+  html {
+    font-size: 15.45px;
+  }
+}
+
+@media (min-width: 26.875rem) {
+  html {
+    font-size: 15.55px;
+  }
+}
+
+@media (min-width: 30rem) {
+  html {
+    font-size: 15.7px;
+  }
+}
+
+@media (min-width: 37.5rem) {
+  html {
+    font-size: 15.9px;
+  }
+}
+
+@media (min-width: 48rem) {
+  html {
+    font-size: 16px;
   }
 }
