@@ -38,10 +38,14 @@ export async function POST(
             return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
         }
         const campaign = campaignDoc.data() || {};
+        const authHeader = req.headers.get('Authorization') || '';
 
         const internalReq = new Request(new URL('/api/notifications/send', req.url).toString(), {
             method: 'POST',
-            headers: req.headers,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(authHeader ? { Authorization: authHeader } : {}),
+            },
             body: JSON.stringify({
                 title: campaign.title || '',
                 body: campaign.message || '',
