@@ -1,26 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit } from "next/font/google"; // Changed to Inter + Outfit
+import Script from "next/script";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from "./components/theme-provider";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: 'swap',
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  display: 'swap',
-});
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -115,7 +101,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${outfit.variable} antialiased bg-background text-foreground`}
+        className="antialiased bg-background text-foreground font-sans"
       >
         <ThemeProvider
           attribute="class"
@@ -130,7 +116,7 @@ export default function RootLayout({
           {children}
           <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
         </ThemeProvider>
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       </body>
     </html>
   );

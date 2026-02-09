@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Phone, Plus, Minus, Calendar, Download, MessageSquare, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
+import { getDeviceTimeHeaders, getLocalDateInputValue } from '@/lib/client-time';
 
 export default function CustomerDetailsPage() {
     const params = useParams();
@@ -86,12 +87,13 @@ export default function CustomerDetailsPage() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    ...getDeviceTimeHeaders()
                 },
                 body: JSON.stringify({
                     customerId: customer.id,
                     startDate: '2000-01-01', // Start from beginning
-                    endDate: new Date().toISOString().split('T')[0] // Until today
+                    endDate: getLocalDateInputValue() // Until today (device local date)
                 })
             });
 
@@ -145,7 +147,7 @@ export default function CustomerDetailsPage() {
                 styles: { fontSize: 9 }
             });
 
-            doc.save(`${customer.name}_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+            doc.save(`${customer.name}_Report_${getLocalDateInputValue()}.pdf`);
             toast.success('Report downloaded successfully', { id: toastId });
         } catch (error: any) {
             console.error('PDF Generation Error:', error);

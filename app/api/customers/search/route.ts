@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
 import { getJwtPayload } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -19,17 +19,21 @@ export async function GET(req: Request) {
             return NextResponse.json([]);
         }
 
-        const customers = await prisma.customer.findMany({
-            where: {
-                vendorId: user.sub,
-                OR: [
-                    { name: { contains: query } },
-                    { phoneNumber: { contains: query } },
-                ],
-            },
-            take: 5,
-            orderBy: { updatedAt: 'desc' },
-        });
+        const db = firebaseAdmin.firestore();
+        const customersSnapshot = await db.collection('vendors')
+            .doc(user.sub)
+            .collection('customers')
+            .orderBy('updatedAt', 'desc')
+            .get();
+
+        const queryLower = query.toLowerCase();
+        const customers = customersSnapshot.docs
+            .map(doc => doc.data())
+            .filter(c =>
+                c.name?.toLowerCase().includes(queryLower) ||
+                c.phoneNumber?.toLowerCase().includes(queryLower)
+            )
+            .slice(0, 5);
 
         return NextResponse.json(customers);
     } catch (error) {

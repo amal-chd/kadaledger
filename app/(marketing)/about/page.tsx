@@ -130,9 +130,9 @@ export default function AboutPage() {
                             <div className="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full"></div>
                             <div className="relative aspect-square rounded-[3rem] bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-white/10 overflow-hidden group">
                                 <img
-                                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
+                                    src="/about/mission-story.jpg"
                                     alt="Our Team"
-                                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                                    className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
                                 />
                                 <div className="absolute inset-0 bg-[#050810]/40 mix-blend-multiply"></div>
                             </div>

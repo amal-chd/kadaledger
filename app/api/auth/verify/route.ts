@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
 import jwt from 'jsonwebtoken';
 
 export const dynamic = 'force-dynamic';
@@ -15,40 +15,53 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Phone number and OTP are required' }, { status: 400 });
         }
 
-        // 1. Verify OTP
-        const storedOtp = await prisma.otp.findUnique({
-            where: { phone: phoneNumber },
-        });
+        const db = firebaseAdmin.firestore();
 
+        // 1. Verify OTP
+        const otpDoc = await db.collection('otps').doc(phoneNumber).get();
+
+        if (!otpDoc.exists) {
+            return NextResponse.json({ error: 'Invalid OTP' }, { status: 401 });
+        }
+
+        const storedOtp = otpDoc.data();
         if (!storedOtp || storedOtp.code !== otp) {
             return NextResponse.json({ error: 'Invalid OTP' }, { status: 401 });
         }
 
-        if (new Date() > storedOtp.expiresAt) {
+        const expiresAt = storedOtp.expiresAt?.toDate ? storedOtp.expiresAt.toDate() : new Date(storedOtp.expiresAt);
+        if (new Date() > expiresAt) {
             return NextResponse.json({ error: 'OTP expired' }, { status: 401 });
         }
 
         // 2. Find or Create Vendor
-        // We treat every login as a potential registration if the vendor doesn't exist
-        let vendor = await prisma.vendor.findUnique({
-            where: { phoneNumber },
-        });
+        const vendorsSnapshot = await db.collection('vendors').where('phoneNumber', '==', phoneNumber).limit(1).get();
 
-        if (!vendor) {
-            vendor = await prisma.vendor.create({
-                data: {
-                    phoneNumber,
-                    // Optional: Create a default trial subscription
-                    subscription: {
-                        create: {
-                            planType: 'TRIAL',
-                            status: 'ACTIVE',
-                            startDate: new Date(),
-                            endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-                        },
-                    },
+        let vendor;
+        if (vendorsSnapshot.empty) {
+            // Create new vendor
+            const vendorRef = db.collection('vendors').doc();
+            const now = new Date();
+            const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+
+            vendor = {
+                id: vendorRef.id,
+                phoneNumber,
+                businessName: null,
+                createdAt: now,
+                updatedAt: now,
+                subscription: {
+                    planType: 'TRIAL',
+                    status: 'ACTIVE',
+                    startDate: now,
+                    endDate: trialEnd
                 },
-            });
+                totalCustomers: 0
+            };
+
+            await vendorRef.set(vendor);
+        } else {
+            vendor = vendorsSnapshot.docs[0].data();
         }
 
         // 3. Generate JWT
@@ -59,7 +72,7 @@ export async function POST(req: Request) {
         );
 
         // 4. Cleanup OTP
-        await prisma.otp.delete({ where: { phone: phoneNumber } });
+        await db.collection('otps').doc(phoneNumber).delete();
 
         return NextResponse.json({
             access_token: token,

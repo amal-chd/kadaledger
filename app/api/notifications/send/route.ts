@@ -1,121 +1,231 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { firebaseAdmin } from '@/lib/firebase-admin';
+import { normalizePlanType } from '@/lib/admin-plans';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
-async function getAdminFromToken(req: Request) {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null;
+type CampaignTarget = 'ALL' | 'PAID' | 'FREE';
+
+function normalizeTarget(input: string): CampaignTarget {
+    const value = String(input || '').toUpperCase();
+    if (value === 'PAID' || value === 'FREE') return value;
+    return 'ALL';
+}
+
+function isPaidVendor(vendor: any) {
+    const planType = normalizePlanType(vendor?.subscription?.planType || vendor?.plan || 'FREE');
+    const status = String(vendor?.subscription?.status || vendor?.planStatus || 'ACTIVE').toUpperCase();
+    return status === 'ACTIVE' && planType !== 'FREE';
+}
+
+function isFreeVendor(vendor: any) {
+    return !isPaidVendor(vendor);
+}
+
+async function verifyAdmin(req: Request) {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+        return { ok: false, status: 401 as const, error: 'Unauthorized' };
     }
+
     const token = authHeader.split(' ')[1];
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { sub: string, role: string };
-        if (decoded.role !== 'ADMIN') {
-            return null;
+        const payload: any = jwt.verify(token, JWT_SECRET);
+        if (payload.role !== 'ADMIN') {
+            return { ok: false, status: 403 as const, error: 'Forbidden' };
         }
-        return decoded;
-    } catch (error) {
-        return null;
+        return { ok: true, payload };
+    } catch {
+        return { ok: false, status: 401 as const, error: 'Invalid token' };
     }
 }
 
 export async function POST(req: Request) {
-    const admin = await getAdminFromToken(req);
-    if (!admin) {
-        return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 401 });
+    const auth = await verifyAdmin(req);
+    if (!auth.ok) {
+        return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     try {
-        const { title, body, target, topic } = await req.json();
+        const body = await req.json();
+        const title = String(body?.title ?? '').trim();
+        const message = String(body?.body ?? '').trim();
+        const target = normalizeTarget(body?.target ?? 'ALL');
+        const mode = String(body?.mode || 'BROADCAST').toUpperCase(); // BROADCAST | TEST
+        const testToken = String(body?.testToken || '').trim();
+        const testVendorId = String(body?.testVendorId || '').trim();
 
-        if (!title || !body) {
+        if (!title || !message) {
             return NextResponse.json({ error: 'Title and body are required' }, { status: 400 });
         }
 
-        // 1. Fetch Target Devices
-        let whereClause = {};
-        if (target === 'PAID') {
-            whereClause = {
-                vendor: {
-                    subscription: {
-                        status: 'ACTIVE',
-                        planType: { not: 'TRIAL' }
+        const db = firebaseAdmin.firestore();
+        const adminSettings = await db.collection('admin').doc('settings').get();
+        const campaignsEnabled = adminSettings.exists ? adminSettings.data()?.campaignsEnabled !== false : true;
+        if (!campaignsEnabled) {
+            return NextResponse.json({ error: 'Campaigns are disabled in admin settings' }, { status: 403 });
+        }
+
+        const vendorsSnapshot = await db.collection('vendors').get();
+        const targetVendors = vendorsSnapshot.docs
+            .map((doc) => ({ docId: doc.id, id: doc.id, ...doc.data() }))
+            .filter((vendor: any) => {
+                if (target === 'PAID') return isPaidVendor(vendor);
+                if (target === 'FREE') return isFreeVendor(vendor);
+                return true;
+            });
+
+        const targetVendorIds = new Set<string>();
+        targetVendors.forEach((v: any) => {
+            const docId = String(v.docId || '').trim();
+            const dataId = String(v.id || '').trim();
+            if (docId) targetVendorIds.add(docId);
+            if (dataId) targetVendorIds.add(dataId);
+        });
+
+        const devicesSnapshot = await db.collection('devices').get();
+        let targetDevices = devicesSnapshot.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .filter((device: any) => targetVendorIds.has(String(device.vendorId || '').trim()));
+
+        if (mode === 'TEST') {
+            targetDevices = targetDevices.filter((device: any) => {
+                if (testToken) {
+                    return String(device.token || '').trim() === testToken;
+                }
+                if (testVendorId) {
+                    return String(device.vendorId || '').trim() === testVendorId;
+                }
+                return false;
+            });
+        }
+
+        const tokens = Array.from(
+            new Set(targetDevices.map((d: any) => String(d.token || '').trim()).filter(Boolean))
+        );
+
+        if (mode === 'TEST' && !tokens.length) {
+            return NextResponse.json({ error: 'No active test device found. Provide a valid test vendor ID or token.' }, { status: 400 });
+        }
+
+        const campaignRef = db.collection('campaigns').doc();
+        const now = new Date();
+
+        let sentCount = 0;
+        let failureCount = 0;
+        const invalidTokens: string[] = [];
+
+        if (tokens.length > 0) {
+            const response = await firebaseAdmin.messaging().sendEachForMulticast({
+                tokens,
+                notification: {
+                    title,
+                    body: message,
+                },
+                data: {
+                    type: 'CAMPAIGN',
+                    title,
+                    body: message,
+                    target,
+                    campaignId: campaignRef.id,
+                },
+                android: {
+                    priority: 'high',
+                    notification: {
+                        channelId: 'notification_system',
+                        priority: 'max',
+                    },
+                },
+                apns: {
+                    headers: { 'apns-priority': '10' },
+                    payload: {
+                        aps: {
+                            alert: {
+                                title,
+                                body: message,
+                            },
+                            sound: 'default',
+                            badge: 1,
+                            contentAvailable: true,
+                        },
+                    },
+                },
+            });
+
+            sentCount = response.successCount;
+            failureCount = response.failureCount;
+
+            response.responses.forEach((result, index) => {
+                if (!result.success) {
+                    const token = tokens[index];
+                    const code = result.error?.code || '';
+                    if (
+                        code.includes('invalid-registration-token') ||
+                        code.includes('registration-token-not-registered')
+                    ) {
+                        invalidTokens.push(token);
                     }
                 }
-            };
-        } else if (target === 'FREE') {
-            whereClause = {
-                vendor: {
-                    OR: [
-                        { subscription: null },
-                        { subscription: { status: 'EXPIRED' } },
-                        { subscription: { planType: 'TRIAL' } }
-                    ]
-                }
-            };
-        }
-        // 'ALL' needs no filter on vendor
-
-        const devices = await prisma.device.findMany({
-            where: whereClause,
-            select: { token: true, vendorId: true }
-        });
-
-        if (devices.length === 0) {
-            return NextResponse.json({ message: 'No devices found for target', count: 0 });
+            });
         }
 
-        const tokens = devices.map(d => d.token);
-        // Deduplicate tokens
-        const uniqueTokens = Array.from(new Set(tokens));
+        if (invalidTokens.length > 0) {
+            const batch = db.batch();
+            invalidTokens.forEach((token) => {
+                batch.delete(db.collection('devices').doc(token));
+            });
+            await batch.commit();
+        }
 
-        // 2. Send via Firebase
-        // Batched sending (max 500 per batch recommended, simplified here)
-        const response = await firebaseAdmin.messaging().sendEachForMulticast({
-            tokens: uniqueTokens,
-            notification: {
-                title,
-                body,
-            },
-            data: {
-                type: 'SYSTEM', // Generic system notification
-                click_action: 'FLUTTER_NOTIFICATION_CLICK',
-            },
+        await campaignRef.set({
+            id: campaignRef.id,
+            title,
+            message,
+            target,
+            mode,
+            createdAt: now,
+            sentCount,
+            failureCount,
+            totalDevices: tokens.length,
+            status: tokens.length > 0 ? 'SENT' : 'NO_ACTIVE_DEVICES',
+            testVendorId: testVendorId || null,
         });
 
-        // 3. Log System Notification
-        // Since we might send to many, maybe just log the Campaign/Bulk action? 
-        // Or log individually if crucial. For now, logging the campaign action.
-
-        await prisma.pushCampaign.create({
-            data: {
-                title,
-                body,
-                target: target || 'ALL',
-                status: 'SENT',
-                sentAt: new Date(),
-                metadata: {
-                    successCount: response.successCount,
-                    failureCount: response.failureCount,
-                }
-            }
-        });
-
-        // Also log to NotificationLog for audit? Maybe too heavy for bulk.
-        // Let's stick to Campaign log for admin blasts.
+        if (mode !== 'TEST') {
+            const notificationWriteBatch = db.batch();
+            targetVendors.forEach((vendor: any) => {
+                const ref = db.collection('vendors').doc(vendor.id).collection('notifications').doc();
+                notificationWriteBatch.set(ref, {
+                    id: ref.id,
+                    title,
+                    message,
+                    type: 'campaign',
+                    source: 'admin_campaign',
+                    campaignId: campaignRef.id,
+                    read: false,
+                    createdAt: now,
+                });
+            });
+            await notificationWriteBatch.commit();
+        }
 
         return NextResponse.json({
             success: true,
-            sentCount: response.successCount,
-            failureCount: response.failureCount,
-            totalMatched: uniqueTokens.length
+            campaignId: campaignRef.id,
+            sentCount,
+            failureCount,
+            totalDevices: tokens.length,
+            targetDevices: targetDevices.length,
+            targetVendors: mode === 'TEST'
+                ? new Set(targetDevices.map((d: any) => String(d.vendorId || ''))).size
+                : targetVendors.length,
+            note: tokens.length === 0
+                ? 'Campaign recorded and in-app notifications created, but no active push tokens were found.'
+                : undefined,
         });
-
     } catch (error) {
-        console.error('Error sending notification:', error);
-        return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown' }, { status: 500 });
+        console.error('Send notification error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

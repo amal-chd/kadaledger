@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
 import { getJwtPayload } from '@/lib/auth';
-import { SyncService } from '@/lib/sync-service';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 
 export const dynamic = 'force-dynamic';
-
 
 // GET: Fetch recent transactions
 export async function GET(req: Request) {
@@ -17,21 +16,38 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const customerId = searchParams.get('customerId');
 
-        const whereClause: any = { vendorId: user.sub };
+        const db = firebaseAdmin.firestore();
+
         if (customerId) {
-            whereClause.customerId = customerId;
+            // Fetch transactions for a specific customer
+            const transactionsSnapshot = await db
+                .collection('vendors')
+                .doc(user.sub)
+                .collection('customers')
+                .doc(customerId)
+                .collection('transactions')
+                .orderBy('date', 'desc')
+                .limit(50)
+                .get();
+
+            const transactions = transactionsSnapshot.docs.map(doc => doc.data());
+            return NextResponse.json(serializeFirestoreData(transactions));
+        } else {
+            // Fetch all recent transactions from vendor's transactions collection
+            const transactionsSnapshot = await db
+                .collection('vendors')
+                .doc(user.sub)
+                .collection('transactions')
+                .orderBy('date', 'desc')
+                .limit(100)
+                .get();
+
+            const transactions = transactionsSnapshot.docs.map(doc => doc.data());
+            return NextResponse.json(serializeFirestoreData(transactions));
         }
-
-        const transactions = await prisma.transaction.findMany({
-            where: whereClause,
-            include: { customer: { select: { name: true, phoneNumber: true } } },
-            orderBy: { date: 'desc' },
-            take: 50, // Limit to last 50 for now
-        });
-
-        return NextResponse.json(transactions);
     } catch (error) {
         console.error('Fetch transactions error:', error);
+
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
@@ -45,14 +61,12 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        console.log('Transaction Request Body:', body);
         const { customerId, type, amount, description, date } = body;
 
         if (!customerId || !type || !amount) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // 1. Create Transaction
         const transactionDate = date ? new Date(date) : new Date();
         if (isNaN(transactionDate.getTime())) {
             return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
@@ -63,40 +77,61 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
         }
 
-        const transaction = await prisma.transaction.create({
-            data: {
-                vendorId: user.sub,
-                customerId,
-                type, // 'CREDIT' or 'PAYMENT'
-                amount: transactionAmount,
-                description: description || undefined,
-                date: transactionDate,
-            },
-        });
+        const db = firebaseAdmin.firestore();
+        const batch = db.batch();
 
-        // 2. Update Customer Balance
-        // If CREDIT, balance increases (customer owes more)
-        // If PAYMENT, balance decreases (customer owes less)
+        // 1. Create transaction in customer's subcollection
+        const transactionRef = db
+            .collection('vendors')
+            .doc(user.sub)
+            .collection('customers')
+            .doc(customerId)
+            .collection('transactions')
+            .doc();
+
+        const transaction = {
+            id: transactionRef.id,
+            vendorId: user.sub,
+            customerId,
+            type,
+            amount: transactionAmount,
+            description: description || null,
+            date: transactionDate,
+            createdAt: transactionDate
+        };
+
+        batch.set(transactionRef, transaction);
+
+        // 2. Also store in vendor's main transactions collection for efficient queries
+        const vendorTransactionRef = db
+            .collection('vendors')
+            .doc(user.sub)
+            .collection('transactions')
+            .doc(transactionRef.id);
+
+        batch.set(vendorTransactionRef, transaction);
+
+        // 3. Update customer balance
         const balanceChange = type === 'CREDIT' ? transactionAmount : -transactionAmount;
+        const customerRef = db.collection('vendors').doc(user.sub).collection('customers').doc(customerId);
 
-        const updatedCustomer = await prisma.customer.update({
-            where: { id: customerId },
-            data: {
-                balance: { increment: balanceChange },
-            },
+        batch.update(customerRef, {
+            balance: firebaseAdmin.firestore.FieldValue.increment(balanceChange),
+            updatedAt: new Date()
         });
 
-        // [SYNC] Double-Write to Firestore
-        await SyncService.syncTransaction(user.sub, customerId, transaction, updatedCustomer.balance);
+        // 4. Update vendor's total pending
+        const vendorRef = db.collection('vendors').doc(user.sub);
+        batch.update(vendorRef, {
+            totalPending: firebaseAdmin.firestore.FieldValue.increment(balanceChange)
+        });
 
-        return NextResponse.json(transaction);
+        // Commit all operations atomically
+        await batch.commit();
+
+        return NextResponse.json(transaction, { status: 201 });
     } catch (error) {
-        console.error('Add transaction error details:', error);
-        // @ts-ignore
-        if (error.code) console.error('Error code:', error.code);
-        // @ts-ignore
-        if (error.meta) console.error('Error meta:', error.meta);
-
-        return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });
+        console.error('Add transaction error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

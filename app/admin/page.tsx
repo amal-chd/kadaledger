@@ -10,6 +10,7 @@ import {
     Calendar
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { getDeviceTimeHeaders } from '@/lib/client-time';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState<any>(null);
@@ -21,17 +22,27 @@ export default function AdminDashboard() {
 
     const fetchStats = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('admin_token');
+            if (!token) {
+                setStats(null);
+                return;
+            }
             const res = await fetch('/api/admin/stats', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    ...getDeviceTimeHeaders()
+                }
             });
 
             if (res.ok) {
                 const data = await res.json();
                 setStats(data);
+            } else {
+                setStats(null);
             }
         } catch (error) {
             console.error('Failed to fetch admin stats', error);
+            setStats(null);
         } finally {
             setLoading(false);
         }
@@ -85,6 +96,20 @@ export default function AdminDashboard() {
                     icon={CreditCard}
                     subtitle={`${stats.overview.todaysCount} transactions`}
                     color="emerald"
+                />
+                <StatCard
+                    title="Push Sent (50)"
+                    value={`${stats.push?.sentCount?.toLocaleString?.() || 0}`}
+                    icon={Calendar}
+                    subtitle={`${stats.push?.failedCount || 0} failed`}
+                    color="blue"
+                />
+                <StatCard
+                    title="Active Devices"
+                    value={`${stats.push?.activeDevices?.toLocaleString?.() || 0}`}
+                    icon={Activity}
+                    subtitle={`${stats.push?.totalCampaigns || 0} campaigns`}
+                    color="purple"
                 />
             </div>
 

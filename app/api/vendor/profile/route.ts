@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
 import { getJwtPayload } from '@/lib/auth';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 
 export const dynamic = 'force-dynamic';
-
 
 // GET: Fetch Vendor Profile
 export async function GET(req: Request) {
@@ -13,34 +13,20 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const vendor = await prisma.vendor.findUnique({
-            where: { id: user.sub },
-            include: {
-                subscription: true, // properties: planType, status, startDate, endDate
-            },
-        });
+        const db = firebaseAdmin.firestore();
+        const vendorDoc = await db.collection('vendors').doc(user.sub).get();
 
-        if (!vendor) {
+        if (!vendorDoc.exists) {
             return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
         }
 
-        // Calculate total pending from all customers using database aggregation
-        const aggregation = await prisma.customer.aggregate({
-            _sum: {
-                balance: true
-            },
-            where: {
-                vendorId: vendor.id
-            }
-        });
-
-        const totalPending = aggregation._sum.balance || 0;
+        const vendor = vendorDoc.data();
 
         // Calculate Days Left
         let daysLeft = 0;
-        let subscriptionStatus = vendor.subscription?.status || 'EXPIRED';
-        if (vendor.subscription?.endDate) {
-            const end = new Date(vendor.subscription.endDate).getTime();
+        let subscriptionStatus = vendor?.planStatus || 'EXPIRED';
+        if (vendor?.subscriptionEndDate) {
+            const end = vendor.subscriptionEndDate.toDate ? vendor.subscriptionEndDate.toDate().getTime() : new Date(vendor.subscriptionEndDate).getTime();
             const now = new Date().getTime();
             const diff = end - now;
             daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -51,25 +37,29 @@ export async function GET(req: Request) {
             }
         }
 
-        return NextResponse.json({
-            id: vendor.id,
-            businessName: vendor.businessName,
-            phoneNumber: vendor.phoneNumber,
-            language: vendor.language || 'English',
+        const profileData = {
+            id: vendor?.id || user.sub,
+            businessName: vendor?.businessName,
+            phoneNumber: vendor?.phoneNumber,
+            language: vendor?.language || 'English',
             subscription: {
-                ...(vendor.subscription || {}),
-                planType: vendor.subscription?.planType || 'FREE', // Default for legacy
+                planType: vendor?.plan || 'FREE',
                 status: subscriptionStatus,
-                daysLeft: daysLeft
+                daysLeft: daysLeft,
+                startDate: vendor?.trialStartDate,
+                endDate: vendor?.subscriptionEndDate
             },
-            totalPending: totalPending
-        });
+            totalPending: vendor?.totalPending || 0
+        };
+
+        return NextResponse.json(serializeFirestoreData(profileData));
 
     } catch (error) {
         console.error('Fetch profile error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
 
 // PATCH: Update Vendor Profile
 export async function PATCH(req: Request) {
@@ -80,33 +70,20 @@ export async function PATCH(req: Request) {
         }
 
         const body = await req.json();
-        // Allow updating: businessName, ownerName, businessCategory, city, language
-        // And subscription related updates if needed (usually handled by payment webhook, but okay for trial start)
+        const { businessName, language } = body;
 
-        // Extract only allowed fields
-        const { businessName, language, plan, trialStartDate } = body;
-
+        const db = firebaseAdmin.firestore();
         const updateData: any = {
-            businessName,
-            language
+            updatedAt: new Date()
         };
 
-        // Special handling for Starting Trial (if sent from mobile onboarding)
-        // In a real app, strict checks would be needed.
-        if (plan === 'TRIAL' && trialStartDate) {
-            // Check if subscription exists, otherwise create/update
-            // For simplicity, we assume we might update the related subscription record
-            // But via Prisma update of vendor, we can update relation
-            // Note: Prisma relation update can be tricky if record doesn't exist.
-            // Let's do a transactional update or separate simple update.
-        }
+        if (businessName !== undefined) updateData.businessName = businessName;
+        if (language !== undefined) updateData.language = language;
 
-        const updatedVendor = await prisma.vendor.update({
-            where: { id: user.sub },
-            data: updateData,
-        });
+        await db.collection('vendors').doc(user.sub).update(updateData);
 
-        return NextResponse.json(updatedVendor);
+        const updatedDoc = await db.collection('vendors').doc(user.sub).get();
+        return NextResponse.json(updatedDoc.data());
 
     } catch (error) {
         console.error('Update profile error:', error);

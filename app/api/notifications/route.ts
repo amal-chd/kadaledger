@@ -1,96 +1,32 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { firebaseAdmin } from '@/lib/firebase-admin';
+import { getJwtPayload } from '@/lib/auth';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
-
-async function getVendorFromToken(req: Request) {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null;
-    }
-    const token = authHeader.split(' ')[1];
+export async function GET() {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { sub: string, role: string };
-        return decoded.sub; // This is the vendorId
-    } catch (error) {
-        return null;
-    }
-}
-
-export async function GET(req: Request) {
-    const vendorId = await getVendorFromToken(req);
-    if (!vendorId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    try {
-        // 1. Fetch Vendor Details (for target filtering)
-        const vendor = await prisma.vendor.findUnique({
-            where: { id: vendorId },
-            include: { subscription: true }
-        });
-
-        if (!vendor) {
-            return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
+        const user = await getJwtPayload();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const isPaid = vendor.subscription?.status === 'ACTIVE' && vendor.subscription?.planType !== 'TRIAL';
-        const isFree = !isPaid;
+        const db = firebaseAdmin.firestore();
+        const notificationsSnapshot = await db
+            .collection('vendors')
+            .doc(user.sub)
+            .collection('notifications')
+            .orderBy('createdAt', 'desc')
+            .limit(100)
+            .get();
 
-        // 2. Fetch Personal Notifications (NotificationLog)
-        const personalNotifications = await prisma.notificationLog.findMany({
-            where: { vendorId },
-            orderBy: { sentAt: 'desc' },
-            take: 50
-        });
-
-        // 3. Fetch Broadcast Campaigns (PushCampaign)
-        // ALL, plus matching PAID/FREE status
-        const campaignConditions = [
-            { target: 'ALL' },
-            ...(isPaid ? [{ target: 'PAID' }] : []),
-            ...(isFree ? [{ target: 'FREE' }] : [])
-        ];
-
-        const campaigns = await prisma.pushCampaign.findMany({
-            where: {
-                status: 'SENT',
-                OR: campaignConditions
-            },
-            orderBy: { sentAt: 'desc' },
-            take: 20 // Last 20 broadcasts
-        });
-
-        // 4. Merge and Format
-        const formattedPersonal = personalNotifications.map((n: any) => ({
-            id: n.id,
-            title: n.title,
-            body: n.body,
-            type: n.type,
-            date: n.sentAt,
-            isGlobal: false,
-            read: false
+        const notifications = notificationsSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
         }));
 
-        const formattedCampaigns = campaigns.map((c: any) => ({
-            id: c.id,
-            title: c.title,
-            body: c.body,
-            type: 'SYSTEM', // Campaigns are usually system announcements
-            date: c.sentAt || c.createdAt,
-            isGlobal: true,
-            read: false
-        }));
-
-        const allNotifications = [...formattedPersonal, ...formattedCampaigns]
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .slice(0, 50); // Cap total list
-
-        return NextResponse.json(allNotifications);
-
+        return NextResponse.json(serializeFirestoreData(notifications));
     } catch (error) {
-        console.error('Error fetching notifications:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        console.error('Notifications fetch error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

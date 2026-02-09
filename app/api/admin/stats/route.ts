@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 import jwt from 'jsonwebtoken';
+import { getClientTimeContext, getLocalDateKey, getUtcRangeForLocalDates } from '@/lib/time-context';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,54 +26,93 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
         }
 
+        const db = firebaseAdmin.firestore();
+        const timeContext = getClientTimeContext(req);
+
         // Fetch Stats
-        const totalVendors = await prisma.vendor.count();
-        const totalCustomers = await prisma.customer.count();
+        const vendorsSnapshot = await db.collection('vendors').get();
+        const totalVendors = vendorsSnapshot.size;
 
-        // Calculate total pending (sum of all customer balances)
-        const customersWithBalance = await prisma.customer.findMany({
-            select: { balance: true }
+        // Count all customers across all vendors
+        let totalCustomers = 0;
+        let totalPending = 0;
+
+        for (const vendorDoc of vendorsSnapshot.docs) {
+            const customersSnapshot = await db.collection('vendors').doc(vendorDoc.id).collection('customers').get();
+            totalCustomers += customersSnapshot.size;
+
+            // Calculate total pending from customer balances
+            customersSnapshot.docs.forEach(customerDoc => {
+                const customer = customerDoc.data();
+                totalPending += Number(customer.balance || 0);
+            });
+        }
+
+        // Recent Vendors (last 5)
+        const recentVendorsSnapshot = await db.collection('vendors')
+            .orderBy('createdAt', 'desc')
+            .limit(5)
+            .get();
+
+        const recentVendors = recentVendorsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: data.id || doc.id,
+                businessName: data.businessName,
+                phoneNumber: data.phoneNumber,
+                createdAt: data.createdAt,
+                subscription: data.subscription
+            };
         });
-        const totalPending = customersWithBalance.reduce((sum, c) => sum + Number(c.balance || 0), 0);
 
-        // Recent Vendors
-        const recentVendors = await prisma.vendor.findMany({
-            take: 5,
-            orderBy: { createdAt: 'desc' },
-            select: {
-                id: true,
-                businessName: true,
-                phoneNumber: true,
-                createdAt: true,
-                subscription: true,
-            }
-        });
+        // Transactions stats for today in device local timezone
+        const todayKey = getLocalDateKey(new Date(), timeContext);
+        const { start: startOfDay, end: endOfDay } = getUtcRangeForLocalDates(todayKey, todayKey, timeContext);
 
-        // Transactions stats for today
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
+        let todaysVolume = 0;
+        let todaysCount = 0;
 
-        const todaysTransactions = await prisma.transaction.aggregate({
-            where: {
-                date: { gte: startOfDay }
-            },
-            _count: true,
-            _sum: {
-                amount: true
-            }
-        });
+        for (const vendorDoc of vendorsSnapshot.docs) {
+            const transactionsSnapshot = await db.collection('vendors')
+                .doc(vendorDoc.id)
+                .collection('transactions')
+                .where('date', '>=', startOfDay)
+                .where('date', '<=', endOfDay)
+                .get();
 
-        return NextResponse.json({
+            todaysCount += transactionsSnapshot.size;
+            transactionsSnapshot.docs.forEach(txDoc => {
+                const tx = txDoc.data();
+                todaysVolume += Number(tx.amount || 0);
+            });
+        }
+
+        const campaignsSnapshot = await db.collection('campaigns')
+            .orderBy('createdAt', 'desc')
+            .limit(50)
+            .get();
+        const devicesSnapshot = await db.collection('devices').get();
+        const campaigns = campaignsSnapshot.docs.map((doc) => doc.data() as any);
+        const pushSent = campaigns.reduce((sum: number, c: any) => sum + Number(c.sentCount || 0), 0);
+        const pushFailed = campaigns.reduce((sum: number, c: any) => sum + Number(c.failureCount || 0), 0);
+
+        return NextResponse.json(serializeFirestoreData({
             overview: {
                 totalVendors,
                 totalCustomers,
                 totalPending,
-                todaysVolume: todaysTransactions._sum.amount || 0,
-                todaysCount: todaysTransactions._count
+                todaysVolume,
+                todaysCount
+            },
+            push: {
+                totalCampaigns: campaignsSnapshot.size,
+                sentCount: pushSent,
+                failedCount: pushFailed,
+                activeDevices: devicesSnapshot.size
             },
             recentVendors,
             systemHealth: 'Healthy'
-        });
+        }));
 
     } catch (error) {
         console.error('Admin stats error:', error);

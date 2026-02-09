@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 import jwt from 'jsonwebtoken';
+import { normalizePlanType, getPlanDurationDays } from '@/lib/admin-plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,45 +31,69 @@ export async function GET(
 
 
         const { id: vendorId } = await params;
+        const db = firebaseAdmin.firestore();
 
-        const vendor = await prisma.vendor.findUnique({
-            where: { id: vendorId },
-            include: {
-                subscription: true,
-                customers: {
-                    orderBy: { createdAt: 'desc' },
-                    take: 5
-                },
-                transactions: {
-                    orderBy: { date: 'desc' },
-                    take: 10
-                }
-            }
-        });
+        const vendorDoc = await db.collection('vendors').doc(vendorId).get();
 
-        if (!vendor) {
+        if (!vendorDoc.exists) {
             return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
         }
 
+        const vendor = vendorDoc.data();
+        const normalizedPlanType = normalizePlanType(vendor?.subscription?.planType || vendor?.plan || 'FREE');
+        const normalizedStatus = String(vendor?.subscription?.status || vendor?.planStatus || 'ACTIVE').toUpperCase() === 'SUSPENDED'
+            ? 'SUSPENDED'
+            : 'ACTIVE';
+
+        // Fetch recent customers (top 5)
+        const customersSnapshot = await db.collection('vendors')
+            .doc(vendorId)
+            .collection('customers')
+            .orderBy('createdAt', 'desc')
+            .limit(5)
+            .get();
+        const customers = customersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Fetch recent transactions (top 10)
+        const transactionsSnapshot = await db.collection('vendors')
+            .doc(vendorId)
+            .collection('transactions')
+            .orderBy('date', 'desc')
+            .limit(10)
+            .get();
+        const transactions = transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
         // Calculate stats
-        const customerCount = await prisma.customer.count({ where: { vendorId } });
-        const transactionCount = await prisma.transaction.count({ where: { vendorId } });
+        const allCustomersSnapshot = await db.collection('vendors').doc(vendorId).collection('customers').get();
+        const allTransactionsSnapshot = await db.collection('vendors').doc(vendorId).collection('transactions').get();
+
+        const customerCount = allCustomersSnapshot.size;
+        const transactionCount = allTransactionsSnapshot.size;
 
         // Calculate financial stats
-        const allCustomers = await prisma.customer.findMany({
-            where: { vendorId },
-            select: { balance: true }
+        let totalPending = 0;
+        allCustomersSnapshot.docs.forEach(doc => {
+            const customer = doc.data();
+            totalPending += Number(customer.balance || 0);
         });
-        const totalPending = allCustomers.reduce((sum, c) => sum + Number(c.balance || 0), 0);
 
-        return NextResponse.json({
+        return NextResponse.json(serializeFirestoreData({
             ...vendor,
+            id: vendor?.id || vendorId,
+            plan: normalizedPlanType,
+            subscription: {
+                ...(vendor?.subscription || {}),
+                planType: normalizedPlanType,
+                status: normalizedStatus,
+            },
+            customers,
+            transactions,
             stats: {
                 customerCount,
                 transactionCount,
                 totalPending
             }
-        });
+        }));
 
     } catch (error) {
         console.error('Fetch vendor details error:', error);
@@ -102,36 +128,53 @@ export async function PATCH(
         const body = await req.json();
         const { planType, status, businessName, phoneNumber, language } = body;
 
-        // Update Vendor Profile
-        if (businessName || phoneNumber || language) {
-            await prisma.vendor.update({
-                where: { id: vendorId },
-                data: {
-                    businessName,
-                    phoneNumber,
-                    language
-                }
-            });
+        const db = firebaseAdmin.firestore();
+        const vendorRef = db.collection('vendors').doc(vendorId);
+        const vendorDoc = await vendorRef.get();
+
+        if (!vendorDoc.exists) {
+            return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
         }
 
-        // Perform update
-        // Note: For subscription, we might need to update the related Subscription model or the Vendor if fields are there.
-        // Assuming subscription is a relation, we need to update that.
+        const updateData: any = {};
 
-        // First get current subscription
-        const vendor = await prisma.vendor.findUnique({
-            where: { id: vendorId },
-            include: { subscription: true }
-        });
+        // Update Vendor Profile
+        if (businessName) updateData.businessName = businessName;
+        if (phoneNumber) {
+            updateData.phoneNumber = phoneNumber;
+            updateData.phoneSearchKey = normalizePhone(phoneNumber);
+        }
+        if (language) updateData.language = language;
 
-        if (vendor?.subscription) {
-            await prisma.subscription.update({
-                where: { id: vendor.subscription.id },
-                data: {
-                    planType: planType || vendor.subscription.planType,
-                    status: status || vendor.subscription.status
-                }
-            });
+        // Update subscription fields (assuming subscription is embedded in vendor doc)
+        if (planType || status) {
+            const vendor = vendorDoc.data();
+            const subscription = vendor?.subscription || {};
+            const normalizedPlanType = planType ? normalizePlanType(planType) : undefined;
+            const normalizedStatus = status ? String(status).toUpperCase() : undefined;
+            const validStatus = normalizedStatus === 'SUSPENDED' ? 'SUSPENDED' : 'ACTIVE';
+
+            updateData.subscription = {
+                ...subscription,
+                ...(normalizedPlanType && { planType: normalizedPlanType }),
+                ...(normalizedStatus && { status: validStatus })
+            };
+
+            if (normalizedPlanType) {
+                const now = new Date();
+                const days = getPlanDurationDays(normalizedPlanType);
+                updateData.plan = normalizedPlanType;
+                updateData.trialStartDate = now;
+                updateData.subscriptionEndDate = days === null
+                    ? new Date('2099-12-31T23:59:59.999Z')
+                    : new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+                updateData.planStatus = 'ACTIVE';
+            }
+        }
+
+        if (Object.keys(updateData).length > 0) {
+            updateData.updatedAt = new Date();
+            await vendorRef.update(updateData);
         }
 
         return NextResponse.json({ success: true });
@@ -140,6 +183,12 @@ export async function PATCH(
         console.error('Update vendor error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
+}
+
+function normalizePhone(input: string) {
+    const digits = String(input ?? '').replace(/\D/g, '');
+    if (!digits) return '';
+    return digits.length > 10 ? digits.slice(-10) : digits;
 }
 
 // DELETE: Remove/Suspend Vendor
@@ -166,27 +215,19 @@ export async function DELETE(
 
 
         const { id: vendorId } = await params;
+        const db = firebaseAdmin.firestore();
 
-        // Manually cascade delete related records
-        // 1. Delete Transactions
-        await prisma.transaction.deleteMany({
-            where: { vendorId }
-        });
+        // Delete subcollections (customers and transactions)
+        const customersSnapshot = await db.collection('vendors').doc(vendorId).collection('customers').get();
+        const customerDeletePromises = customersSnapshot.docs.map(doc => doc.ref.delete());
+        await Promise.all(customerDeletePromises);
 
-        // 2. Delete Customers
-        await prisma.customer.deleteMany({
-            where: { vendorId }
-        });
+        const transactionsSnapshot = await db.collection('vendors').doc(vendorId).collection('transactions').get();
+        const transactionDeletePromises = transactionsSnapshot.docs.map(doc => doc.ref.delete());
+        await Promise.all(transactionDeletePromises);
 
-        // 3. Delete Subscription
-        await prisma.subscription.deleteMany({
-            where: { vendorId }
-        });
-
-        // 4. Finally Delete Vendor
-        await prisma.vendor.delete({
-            where: { id: vendorId }
-        });
+        // Finally delete vendor document
+        await db.collection('vendors').doc(vendorId).delete();
 
         return NextResponse.json({ success: true });
 

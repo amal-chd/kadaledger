@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,11 +26,7 @@ export default function DashboardLayout({
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    useEffect(() => {
-        checkProfile();
-    }, []);
-
-    const checkProfile = async () => {
+    const checkProfile = useCallback(async () => {
         const token = localStorage.getItem('token');
         if (!token) {
             router.push('/login');
@@ -63,7 +59,11 @@ export default function DashboardLayout({
             console.error('Profile check failed', e);
             setChecking(false);
         }
-    };
+    }, [router]);
+
+    useEffect(() => {
+        void checkProfile();
+    }, [checkProfile]);
 
     if (checking) {
         return (

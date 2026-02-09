@@ -25,12 +25,18 @@ export default function AdminLayout({
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [checking, setChecking] = useState(true);
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
 
     useEffect(() => {
+        if (pathname === '/admin/login') {
+            setChecking(false);
+            return;
+        }
+
         // Simple auth check
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('admin_token');
         if (!token) {
-            router.push('/login');
+            router.push('/admin/login');
             return;
         }
 
@@ -38,21 +44,41 @@ export default function AdminLayout({
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
             if (payload.role !== 'ADMIN') {
-                router.push('/dashboard'); // Redirect non-admins to standard dashboard
+                router.push('/admin/login');
                 return;
             }
         } catch (e) {
-            localStorage.removeItem('token');
-            router.push('/login');
+            localStorage.removeItem('admin_token');
+            router.push('/admin/login');
             return;
         }
 
         setChecking(false);
-    }, [router]);
+    }, [pathname, router]);
+
+    useEffect(() => {
+        if (pathname === '/admin/login') return;
+
+        const fetchSettings = async () => {
+            try {
+                const token = localStorage.getItem('admin_token');
+                if (!token) return;
+                const res = await fetch('/api/admin/settings', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                setMaintenanceMode(Boolean(data.maintenanceMode));
+            } catch {
+                // ignore settings fetch failures in layout
+            }
+        };
+        fetchSettings();
+    }, [pathname]);
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        router.push('/login');
+        localStorage.removeItem('admin_token');
+        router.push('/admin/login');
     };
 
     const navItems = [
@@ -70,6 +96,10 @@ export default function AdminLayout({
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
         );
+    }
+
+    if (pathname === '/admin/login') {
+        return <>{children}</>;
     }
 
     return (
@@ -106,7 +136,9 @@ export default function AdminLayout({
                     <nav className="flex-1 px-4 py-6 space-y-2">
                         {navItems.map((item) => {
                             const Icon = item.icon;
-                            const isActive = pathname === item.href;
+                            const isActive = item.href === '/admin'
+                                ? pathname === '/admin'
+                                : pathname.startsWith(item.href);
 
                             return (
                                 <Link
@@ -153,6 +185,11 @@ export default function AdminLayout({
                     </button>
 
                     <div className="flex items-center gap-4 ml-auto">
+                        {maintenanceMode && (
+                            <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-300">
+                                Maintenance Mode
+                            </span>
+                        )}
                         <div className="hidden sm:block text-right">
                             <p className="text-sm font-medium text-white">Super Admin</p>
                             <p className="text-xs text-slate-400">admin@kadaledger.com</p>

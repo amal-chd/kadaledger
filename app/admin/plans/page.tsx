@@ -13,6 +13,8 @@ interface Plan {
     description: string;
 }
 
+const PLAN_ORDER = ['FREE', 'MONTHLY', 'YEARLY', 'LIFETIME'];
+
 export default function PlansPage() {
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
@@ -22,16 +24,35 @@ export default function PlansPage() {
         fetchPlans();
     }, []);
 
+    const getAuthHeader = () => {
+        const token = localStorage.getItem('admin_token');
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+    };
+
     const fetchPlans = async () => {
         try {
             console.log('Fetching plans...');
-            const res = await fetch('/api/admin/plans');
+            const res = await fetch('/api/admin/plans', {
+                headers: {
+                    ...getAuthHeader(),
+                    'Content-Type': 'application/json'
+                } as HeadersInit
+            });
             console.log('Response status:', res.status);
+
+            if (res.status === 401) {
+                toast.error('Unauthorized. Please login again.');
+                return;
+            }
+
             const data = await res.json();
             console.log('Fetched data:', data);
 
             if (Array.isArray(data)) {
-                setPlans(data);
+                const normalized = data
+                    .filter((p: any) => PLAN_ORDER.includes(String(p.id || p.name || '').toUpperCase()))
+                    .sort((a: any, b: any) => PLAN_ORDER.indexOf(String(a.id || a.name).toUpperCase()) - PLAN_ORDER.indexOf(String(b.id || b.name).toUpperCase()));
+                setPlans(normalized);
             } else {
                 console.error("API did not return an array", data);
             }
@@ -47,8 +68,11 @@ export default function PlansPage() {
         setSaving(id);
         try {
             const res = await fetch('/api/admin/plans', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'PUT',
+                headers: {
+                    ...getAuthHeader(),
+                    'Content-Type': 'application/json'
+                } as HeadersInit,
                 body: JSON.stringify({ id, ...updates })
             });
 
@@ -78,7 +102,7 @@ export default function PlansPage() {
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h3 className="text-xl font-bold capitalize">{plan.name}</h3>
-                                <p className="text-sm text-slate-500">{plan.interval}ly</p>
+                                <p className="text-sm text-slate-500">{plan.interval || 'custom'}</p>
                             </div>
                             <span className={`px-2 py-1 rounded-full text-xs font-bold ${plan.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                                 {plan.isActive ? 'Active' : 'Inactive'}

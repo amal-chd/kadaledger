@@ -1,7 +1,6 @@
-
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { getJwtPayload } from '@/lib/auth';
+import { firebaseAdmin } from '@/lib/firebase-admin';
 
 export async function GET(req: Request) {
     try {
@@ -11,45 +10,37 @@ export async function GET(req: Request) {
         }
 
         const vendorId = user.sub;
+        const db = firebaseAdmin.firestore();
 
-        // Fetch all relevant data
-        const vendor = await prisma.vendor.findUnique({
-            where: { id: vendorId },
-            include: {
-                subscription: true,
-                customers: true,
-                transactions: true,
-            }
-        });
-
-        if (!vendor) {
+        // Fetch vendor data
+        const vendorDoc = await db.collection('vendors').doc(vendorId).get();
+        if (!vendorDoc.exists) {
             return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
         }
 
-        // Structure the backup bundle
-        const backupData = {
-            metadata: {
-                version: '1.0',
-                timestamp: new Date().toISOString(),
-                exportedBy: vendorId,
-            },
+        const vendor = vendorDoc.data();
+
+        // Fetch all customers
+        const customersSnapshot = await db.collection('vendors').doc(vendorId).collection('customers').get();
+        const customers = customersSnapshot.docs.map(doc => doc.data());
+
+        // Fetch all transactions
+        const transactionsSnapshot = await db.collection('vendors').doc(vendorId).collection('transactions').get();
+        const transactions = transactionsSnapshot.docs.map(doc => doc.data());
+
+        const exportData = {
             vendor: {
-                businessName: vendor.businessName,
-                phoneNumber: vendor.phoneNumber,
-                // Do not export sensitive Auth data like password hash if possible, 
-                // but needed if full restore on new db. For now, we skip password/secrets for safety.
-                language: vendor.language,
-                createdAt: vendor.createdAt,
+                businessName: vendor?.businessName,
+                phoneNumber: vendor?.phoneNumber,
+                exportedAt: new Date().toISOString()
             },
-            subscription: vendor.subscription,
-            customers: vendor.customers,
-            transactions: vendor.transactions,
+            customers,
+            transactions
         };
 
-        return NextResponse.json(backupData);
-
+        return NextResponse.json(exportData);
     } catch (error) {
-        console.error('Export Error:', error);
+        console.error('Export data error:', error);
         return NextResponse.json({ error: 'Failed to export data' }, { status: 500 });
     }
 }

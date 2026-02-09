@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
 import { getJwtPayload } from '@/lib/auth';
-import { SyncService } from '@/lib/sync-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,11 +12,15 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const customers = await prisma.customer.findMany({
-            where: { vendorId: user.sub },
-            orderBy: { updatedAt: 'desc' },
-        });
+        const db = firebaseAdmin.firestore();
+        const customersSnapshot = await db
+            .collection('vendors')
+            .doc(user.sub)
+            .collection('customers')
+            .orderBy('updatedAt', 'desc')
+            .get();
 
+        const customers = customersSnapshot.docs.map(doc => doc.data());
         return NextResponse.json(customers);
     } catch (error) {
         console.error('Fetch customers error:', error);
@@ -33,40 +36,71 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { name, phoneNumber } = await req.json();
+        const body = await req.json();
+        const name = typeof body?.name === 'string' ? body.name.trim() : '';
+        const rawPhone = typeof body?.phoneNumber === 'string' ? body.phoneNumber.trim() : '';
+        const phoneNumber = normalizePhone(rawPhone);
+        const creditLimit = body?.creditLimit;
 
-        // Validation: At least one of name or phoneNumber is required (relaxed validation)
+        // Validation
         if (!name && !phoneNumber) {
             return NextResponse.json({ error: 'Either Name or Phone Number is required' }, { status: 400 });
         }
 
-        // Check availability
+        const db = firebaseAdmin.firestore();
+
+        // Check for duplicates
         if (phoneNumber) {
-            const existing = await prisma.customer.findFirst({
-                where: {
-                    vendorId: user.sub,
-                    phoneNumber: phoneNumber
-                }
-            });
-            if (existing) {
+            const bySearchKey = await db
+                .collection('vendors')
+                .doc(user.sub)
+                .collection('customers')
+                .where('phoneSearchKey', '==', phoneNumber)
+                .limit(1)
+                .get();
+
+            if (!bySearchKey.empty) {
                 return NextResponse.json({ error: 'Customer with this phone number already exists' }, { status: 400 });
             }
         }
 
-        const newCustomer = await prisma.customer.create({
-            data: {
-                name,
-                phoneNumber,
-                vendorId: user.sub,
-            },
+        // Create new customer
+        const customerRef = db.collection('vendors').doc(user.sub).collection('customers').doc();
+        const now = new Date();
+        const newCustomer = {
+            id: customerRef.id,
+            name: name || null,
+            phoneNumber: phoneNumber || null,
+            phoneSearchKey: phoneNumber || null,
+            balance: 0,
+            creditLimit: creditLimit ? parseFloat(creditLimit) : null,
+            vendorId: user.sub,
+            createdAt: now,
+            updatedAt: now
+        };
+
+        // Use batch write for atomic operation and better performance
+        const batch = db.batch();
+
+        batch.set(customerRef, newCustomer);
+
+        // Update vendor's customer count
+        const vendorRef = db.collection('vendors').doc(user.sub);
+        batch.update(vendorRef, {
+            totalCustomers: firebaseAdmin.firestore.FieldValue.increment(1)
         });
 
-        // Sync Real-Time Count
-        await SyncService.syncCustomerCount(user.sub, true);
+        await batch.commit();
 
         return NextResponse.json(newCustomer);
     } catch (error) {
         console.error('Add customer error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
+}
+
+function normalizePhone(input: string) {
+    const digits = String(input ?? '').replace(/\D/g, '');
+    if (!digits) return '';
+    return digits.length > 10 ? digits.slice(-10) : digits;
 }

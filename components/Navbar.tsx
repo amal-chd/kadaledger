@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight, Zap } from 'lucide-react';
+import { Menu, X, ArrowRight } from 'lucide-react';
 
 import Image from 'next/image';
 
@@ -39,7 +39,7 @@ const Navbar = () => {
           {/* Left: Brand */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="relative w-9 h-9 overflow-hidden rounded-full border border-white/10 shadow-2xl group-hover:scale-110 transition-all duration-500">
-              <Image src="/brand-logo-final.png" alt="Kada Ledger" fill className="object-cover" />
+              <Image src="/brand-logo-final.png" alt="Kada Ledger" fill sizes="36px" className="object-cover" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white">
               Kada<span className="text-primary">Ledger</span>
@@ -61,11 +61,11 @@ const Navbar = () => {
           </div>
 
           {/* Right: Actions */}
-          <div className="hidden md:flex items-center gap-6 shrink-0">
-            <Link href="/login" className="text-[13px] font-bold text-slate-200/60 hover:text-white transition-colors">
+          <div className="hidden md:flex items-center gap-3 md:gap-6 shrink-0">
+            <Link href="/login" className="text-[13px] font-bold text-slate-200/80 hover:text-white transition-colors">
               Login
             </Link>
-            <Link href="/register?plan=trial" className="relative group overflow-hidden bg-accent px-6 py-2.5 rounded-full font-bold text-[13px] text-white hover:bg-accent/90 transition-all shadow-[0_10px_20px_rgba(37,99,235,0.3)] active:scale-95">
+            <Link href="/register?plan=trial" className="relative group overflow-hidden bg-blue-600 px-6 py-2.5 rounded-full font-bold text-[13px] text-white hover:bg-blue-700 transition-all shadow-[0_10px_20px_rgba(37,99,235,0.3)] active:scale-95">
               <div className="flex items-center gap-2 relative z-10">
                 Get Started <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -75,7 +75,8 @@ const Navbar = () => {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="lg:hidden p-2.5 rounded-xl bg-white/5 border border-white/10 text-white"
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+            className="md:hidden p-2.5 rounded-xl bg-white/5 border border-white/10 text-white"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}

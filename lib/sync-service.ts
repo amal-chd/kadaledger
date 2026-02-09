@@ -130,5 +130,33 @@ export class SyncService {
             console.error('Firestore Sync Error (Customer Count):', error);
         }
     }
+
+    // Syncs Customer Details (Create/Update)
+    static async syncCustomer(vendorId: string, customer: any) {
+        try {
+            console.log(`Syncing Customer: Vendor=${vendorId}, Cust=${customer.id}`);
+            const adminDb = firebaseAdmin.firestore();
+            const custRef = adminDb
+                .collection('vendors')
+                .doc(vendorId)
+                .collection('customers')
+                .doc(customer.id);
+
+            await custRef.set({
+                id: customer.id,
+                name: customer.name,
+                phoneNumber: customer.phoneNumber,
+                creditLimit: customer.creditLimit || 0,
+                // If it's a new customer, balance is 0. If update, preserve existing or take from input if provided.
+                // For safety, we trust SQL 'balance' if passed, otherwise default to 0 for new.
+                // Ideally, SQL should track balance.
+                updatedAt: FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            console.log('Sync Customer Complete');
+        } catch (error) {
+            console.error('Firestore Sync Error (Customer):', error);
+        }
+    }
 }
 

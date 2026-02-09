@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
 import { getJwtPayload } from '@/lib/auth';
+import { getClientTimeContext, getUtcRangeForLocalDates } from '@/lib/time-context';
 
 export async function POST(req: NextRequest) {
     try {
@@ -17,36 +18,53 @@ export async function POST(req: NextRequest) {
         }
 
         const vendorId = user.sub;
+        const db = firebaseAdmin.firestore();
+        const timeContext = getClientTimeContext(req);
 
-        // Build query filters
-        const where: any = {
-            vendorId: vendorId,
-            date: {
-                gte: new Date(startDate),
-                lte: new Date(endDate + 'T23:59:59.999Z'), // Include entire end date
-            },
-        };
+        const { start, end } = getUtcRangeForLocalDates(startDate, endDate, timeContext);
 
-        // Add customer filter if provided
+        // Fetch all transactions from vendor's subcollection
+        const transactionsSnapshot = await db
+            .collection('vendors')
+            .doc(vendorId)
+            .collection('transactions')
+            .where('date', '>=', start)
+            .where('date', '<=', end)
+            .orderBy('date', 'desc')
+            .get();
+
+        let transactions = transactionsSnapshot.docs.map(doc => doc.data());
+
+        // Filter by customerId if provided
         if (customerId) {
-            where.customerId = customerId;
+            transactions = transactions.filter(tx => tx.customerId === customerId);
         }
 
-        // Fetch transactions
-        const transactions = await prisma.transaction.findMany({
-            where,
-            include: {
-                customer: {
-                    select: {
-                        name: true,
-                        phoneNumber: true,
-                    },
-                },
-            },
-            orderBy: {
-                date: 'desc',
-            },
-        });
+        // Fetch customer details for each transaction
+        const transactionsWithCustomer = await Promise.all(
+            transactions.map(async tx => {
+                if (tx.customerId) {
+                    const customerDoc = await db
+                        .collection('vendors')
+                        .doc(vendorId)
+                        .collection('customers')
+                        .doc(tx.customerId)
+                        .get();
+
+                    if (customerDoc.exists) {
+                        const customerData = customerDoc.data();
+                        return {
+                            ...tx,
+                            customer: {
+                                name: customerData?.name,
+                                phoneNumber: customerData?.phoneNumber
+                            }
+                        };
+                    }
+                }
+                return tx;
+            })
+        );
 
         // Calculate summary statistics
         let totalCredit = 0;
@@ -54,14 +72,14 @@ export async function POST(req: NextRequest) {
 
         transactions.forEach((tx) => {
             if (tx.type === 'CREDIT') {
-                totalCredit += tx.amount;
-            } else if (tx.type === 'PAYMENT') {
-                totalPayment += tx.amount;
+                totalCredit += Number(tx.amount || 0);
+            } else if (tx.type === 'PAYMENT' || tx.type === 'DEBIT') {
+                totalPayment += Number(tx.amount || 0);
             }
         });
 
         return NextResponse.json({
-            transactions,
+            transactions: transactionsWithCustomer,
             summary: {
                 totalCredit,
                 totalPayment,

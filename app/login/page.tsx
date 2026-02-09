@@ -21,7 +21,13 @@ export default function LoginPage() {
         try {
             const response = await authApi.login({ phoneNumber: phone, password });
             const { access_token, role } = response;
-            localStorage.setItem('token', access_token);
+            if (role === 'ADMIN') {
+                localStorage.setItem('admin_token', access_token);
+                localStorage.removeItem('token');
+            } else {
+                localStorage.setItem('token', access_token);
+                localStorage.removeItem('admin_token');
+            }
             toast.success('Successfully logged in!', { id: loadingToast });
             setTimeout(() => {
                 if (role === 'ADMIN') router.push('/admin');

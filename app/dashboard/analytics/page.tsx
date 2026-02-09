@@ -9,6 +9,7 @@ import {
     ArrowDownLeft, AlertCircle, ChevronRight, PieChart
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { getDeviceTimeHeaders } from '@/lib/client-time';
 
 export default function AnalyticsPage() {
     const [metrics, setMetrics] = useState<any>(null);
@@ -25,7 +26,10 @@ export default function AnalyticsPage() {
             if (!token) return;
 
             const res = await fetch('/api/analytics', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    ...getDeviceTimeHeaders()
+                }
             });
 
             if (res.ok) {

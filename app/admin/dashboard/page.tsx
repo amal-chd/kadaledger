@@ -15,24 +15,29 @@ export default function AdminDashboard() {
 
     const fetchStats = async () => {
         const token = localStorage.getItem('admin_token');
-        // Ideally fetch from an /admin/stats endpoint
-        // For now, we reuse the vendors list and aggregate client-side if needed, 
-        // or just mock for the UI skeleton
+        if (!token) {
+            setStats(null);
+            setLoading(false);
+            return;
+        }
         try {
-            const res = await fetch(`${API_URL}/admin/vendors`, {
+            const res = await fetch(`${API_URL}/admin/stats`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const vendors = await res.json();
-
-            // Calculate mock stats
+            if (!res.ok) {
+                setStats(null);
+                return;
+            }
+            const data = await res.json();
             setStats({
-                totalVendors: vendors.length,
-                totalRevenue: vendors.length * 499, // Mock revenue
-                activeTrials: vendors.filter((v: any) => v.subscription?.planType === 'TRIAL').length,
-                activePaid: vendors.filter((v: any) => v.subscription?.planType !== 'TRIAL').length
+                totalVendors: data?.overview?.totalVendors ?? 0,
+                totalRevenue: data?.overview?.todaysVolume ?? 0,
+                activeTrials: data?.recentVendors?.filter((v: any) => v.subscription?.planType === 'TRIAL').length ?? 0,
+                activePaid: data?.recentVendors?.filter((v: any) => v.subscription?.planType !== 'TRIAL').length ?? 0,
             });
         } catch (e) {
             console.error(e);
+            setStats(null);
         } finally {
             setLoading(false);
         }

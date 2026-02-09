@@ -1,11 +1,8 @@
-/* IBM Plex Sans - Professional Fintech Typography */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
-
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-heading: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --color-border: var(--border);
   --color-input: var(--input);
@@ -235,8 +232,6 @@
   html {
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
     height: 100%;
     width: 100%;
     overflow-x: hidden;
@@ -258,7 +253,7 @@
   h4,
   h5,
   h6 {
-    @apply font-heading tracking-tight text-white;
+    @apply font-heading tracking-tight text-[color:var(--color-foreground)];
   }
 }
 

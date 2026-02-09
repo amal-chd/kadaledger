@@ -149,7 +149,7 @@ export default function HomeContent() {
                         </p>
 
                         <div className="flex flex-row items-center justify-center gap-3 md:gap-4">
-                            <Link href="/register" className="bg-accent text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-bold text-sm md:text-lg hover:bg-accent/90 transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] flex items-center gap-2 group whitespace-nowrap">
+                            <Link href="/register" className="bg-blue-600 text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-bold text-sm md:text-lg hover:bg-blue-700 transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] flex items-center gap-2 group whitespace-nowrap">
                                 Get Started Free <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                             </Link>
                             <button onClick={scrollToFeatures} className="bg-white/5 border border-white/10 text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-bold text-sm md:text-lg hover:bg-white/10 transition-all backdrop-blur-md flex items-center gap-2 group whitespace-nowrap">
@@ -161,8 +161,14 @@ export default function HomeContent() {
                         <div className="mt-12 flex flex-col items-center gap-4">
                             <div className="flex -space-x-3">
                                 {[1, 2, 3, 4].map(i => (
-                                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#0B0F19] bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">
-                                        {String.fromCharCode(64 + i)}
+                                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#0B0F19] overflow-hidden">
+                                        <Image
+                                            src={`/testimonials/vendor${i}.png`}
+                                            alt={`Vendor ${i}`}
+                                            width={40}
+                                            height={40}
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                 ))}
                             </div>
@@ -267,7 +273,7 @@ export default function HomeContent() {
                                 <h3 className="text-sm font-medium text-slate-300/80 mb-2">Total Balance</h3>
                                 <div className="flex items-end gap-3 mb-8">
                                     <span className="text-5xl font-bold text-white">₹78,500</span>
-                                    <span className="bg-indigo-500/20 text-indigo-300 text-xs font-bold px-2 py-1 rounded-lg mb-2">▲ 16%</span>
+
                                 </div>
 
                                 <div className="flex-1 flex items-end justify-between gap-1.5 h-[160px] md:h-[200px]">
@@ -296,7 +302,7 @@ export default function HomeContent() {
                                 </div>
                                 <button
                                     onClick={() => setIsReportModalOpen(true)}
-                                    className="font-bold text-white bg-accent px-6 py-2.5 rounded-xl hover:bg-accent/90 transition-all shadow-lg shadow-accent/20"
+                                    className="font-bold text-white bg-blue-600 px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-accent/20"
                                 >
                                     View Full Report
                                 </button>
@@ -489,7 +495,7 @@ export default function HomeContent() {
                                     Whether you're a small roadside shop or a multi-city retail chain, we have a plan that fits your business needs. No hidden fees, just pure value.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <Link href="/pricing" className="bg-accent text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-accent/90 transition-all shadow-[0_0_40px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2 group">
+                                    <Link href="/pricing" className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-[0_0_40px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2 group">
                                         View All Plans <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                                     </Link>
                                     <Link href="/register?plan=trial" className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-md flex items-center justify-center">

@@ -17,6 +17,8 @@ import {
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
+const PLAN_OPTIONS = ['FREE', 'MONTHLY', 'YEARLY', 'LIFETIME'];
+
 export default function VendorDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const [vendor, setVendor] = useState<any>(null);
@@ -25,6 +27,8 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [editForm, setEditForm] = useState({ businessName: '', phoneNumber: '' });
     const router = useRouter();
+
+    const getAdminToken = () => localStorage.getItem('admin_token');
 
     useEffect(() => {
         if (vendor) {
@@ -37,11 +41,15 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
 
     useEffect(() => {
         fetchVendorDetails();
-    }, []);
+    }, [id]);
 
     const fetchVendorDetails = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getAdminToken();
+            if (!token) {
+                toast.error('Unauthorized');
+                return;
+            }
             const res = await fetch(`/api/admin/vendors/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -61,7 +69,11 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
 
     const handleUpdatePlan = async (newPlan: string) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getAdminToken();
+            if (!token) {
+                toast.error('Unauthorized');
+                return;
+            }
             const res = await fetch(`/api/admin/vendors/${id}`, {
                 method: 'PATCH',
                 headers: {
@@ -83,9 +95,40 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
         }
     };
 
+    const handleUpdateStatus = async (newStatus: 'ACTIVE' | 'SUSPENDED') => {
+        try {
+            const token = getAdminToken();
+            if (!token) {
+                toast.error('Unauthorized');
+                return;
+            }
+            const res = await fetch(`/api/admin/vendors/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (res.ok) {
+                toast.success(`Vendor ${newStatus === 'SUSPENDED' ? 'suspended' : 'reactivated'} successfully`);
+                fetchVendorDetails();
+            } else {
+                toast.error('Failed to update status');
+            }
+        } catch (error) {
+            toast.error('Status update failed');
+        }
+    };
+
     const handleUpdateProfile = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getAdminToken();
+            if (!token) {
+                toast.error('Unauthorized');
+                return;
+            }
             const res = await fetch(`/api/admin/vendors/${id}`, {
                 method: 'PATCH',
                 headers: {
@@ -113,7 +156,11 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
         }
 
         try {
-            const token = localStorage.getItem('token');
+            const token = getAdminToken();
+            if (!token) {
+                toast.error('Unauthorized');
+                return;
+            }
             const res = await fetch(`/api/admin/vendors/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -294,7 +341,7 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
                         {!isEditingPlan ? (
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                                 <div className="text-xs text-slate-400 uppercase font-bold mb-1">Current Plan</div>
-                                <div className="text-xl font-bold text-white mb-2">{vendor.subscription?.planType || 'TRIAL'}</div>
+                                <div className="text-xl font-bold text-white mb-2">{vendor.subscription?.planType || 'FREE'}</div>
                                 <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-bold ${vendor.subscription?.status === 'ACTIVE'
                                     ? 'bg-emerald-500/20 text-emerald-400'
                                     : 'bg-amber-500/20 text-amber-400'
@@ -308,10 +355,24 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
                                         Base plan expires on {format(new Date(vendor.subscription.endDate), 'MMM d, yyyy')}
                                     </div>
                                 )}
+                                <div className="mt-4 grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => handleUpdateStatus('ACTIVE')}
+                                        className="px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-colors"
+                                    >
+                                        Activate
+                                    </button>
+                                    <button
+                                        onClick={() => handleUpdateStatus('SUSPENDED')}
+                                        className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-colors"
+                                    >
+                                        Suspend
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                {['TRIAL', 'MONTHLY', 'YEARLY', 'PROFESSIONAL', 'BUSINESS'].map((plan) => (
+                                {PLAN_OPTIONS.map((plan) => (
                                     <button
                                         key={plan}
                                         onClick={() => handleUpdatePlan(plan)}

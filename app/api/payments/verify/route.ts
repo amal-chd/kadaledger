@@ -3,9 +3,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import Razorpay from 'razorpay';
-import prisma from '@/lib/prisma';
-import { SyncService } from '@/lib/sync-service';
-import { getJwtPayload } from '@/lib/auth'; // Optional: Use shared auth helper, but manual verify is fine too for custom logic
+import { firebaseAdmin } from '@/lib/firebase-admin';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
@@ -39,7 +37,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
         }
 
-        // 3. Fetch Order to get Plan Details (Security Fix)
+        // 3. Fetch Order to get Plan Details
         const razorpay = new Razorpay({
             key_id: process.env.RAZORPAY_KEY_ID!,
             key_secret: process.env.RAZORPAY_KEY_SECRET!,
@@ -52,45 +50,39 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid Order: Missing Plan ID' }, { status: 400 });
         }
 
-        // 4. Fetch Plan from DB
-        const plan = await prisma.pricingPlan.findUnique({ where: { id: planId } });
-        if (!plan) {
+        const db = firebaseAdmin.firestore();
+
+        // 4. Fetch Plan from Firestore
+        const planDoc = await db.collection('plans').doc(planId).get();
+        if (!planDoc.exists) {
             return NextResponse.json({ error: 'Plan not found' }, { status: 400 });
         }
+
+        const plan = planDoc.data();
 
         // 5. Calculate Subscription Dates
         const now = new Date();
         const endDate = new Date();
 
-        // Logic: Lifetime adds 100 years, Yearly adds 1 year, Monthly 1 month
-        if (plan.name.toUpperCase().includes('LIFETIME')) {
+        if (plan?.name.toUpperCase().includes('LIFETIME')) {
             endDate.setFullYear(endDate.getFullYear() + 100);
-        } else if (plan.interval === 'year') {
+        } else if (plan?.interval === 'year') {
             endDate.setFullYear(endDate.getFullYear() + 1);
         } else {
             endDate.setMonth(endDate.getMonth() + 1);
         }
 
-        // 6. Update Database
-        const subscription = await prisma.subscription.upsert({
-            where: { vendorId: vendorId },
-            update: {
-                planType: plan.name.toUpperCase(), // Store normalized name (e.g. LIFETIME, MONTHLY)
+        // 6. Update Vendor Subscription in Firestore
+        const vendorRef = db.collection('vendors').doc(vendorId);
+        await vendorRef.set({
+            subscription: {
+                planType: plan?.name.toUpperCase(),
                 status: 'ACTIVE',
                 startDate: now,
                 endDate: endDate
             },
-            create: {
-                vendorId: vendorId,
-                planType: plan.name.toUpperCase(),
-                status: 'ACTIVE',
-                startDate: now,
-                endDate: endDate
-            }
-        });
-
-        // 7. [SYNC] Double-Write to Firestore
-        await SyncService.syncSubscription(vendorId, subscription);
+            updatedAt: now
+        }, { merge: true });
 
         return NextResponse.json({ status: 'success', message: 'Subscription activated' });
 

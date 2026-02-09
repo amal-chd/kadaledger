@@ -1,99 +1,82 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { firebaseAdmin } from '@/lib/firebase-admin';
+import { getJwtPayload } from '@/lib/auth';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
+function buildDefaultPreferences() {
+    return {
+        quietMode: false,
+        quietStart: '22:00',
+        quietEnd: '07:00',
+        enabledCategories: ['SUMMARY', 'RISK', 'REMINDER', 'SYSTEM', 'INACTIVITY', 'PROMO'],
+    };
+}
 
-async function getVendorFromToken(req: Request) {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null;
-    }
-
-    const token = authHeader.split(' ')[1];
+export async function GET() {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { sub: string, role: string };
-        if (decoded.role !== 'VENDOR' && decoded.role !== 'ADMIN') { // Allow Admin too if needed
-            return null;
+        const user = await getJwtPayload();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        return decoded.sub; // vendorId
+
+        const db = firebaseAdmin.firestore();
+        const vendorRef = db.collection('vendors').doc(user.sub);
+        const vendorDoc = await vendorRef.get();
+
+        if (!vendorDoc.exists) {
+            return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
+        }
+
+        const vendor = vendorDoc.data() || {};
+        const preferences = {
+            ...buildDefaultPreferences(),
+            ...(vendor.preferences || {}),
+        };
+
+        return NextResponse.json(serializeFirestoreData(preferences));
     } catch (error) {
-        return null;
+        console.error('Preferences fetch error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
-export async function GET(req: Request) {
-    const vendorId = await getVendorFromToken(req);
-    if (!vendorId) {
+async function updatePreferences(req: Request) {
+    const user = await getJwtPayload();
+    if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    try {
-        const prefs = await prisma.vendorPreference.findUnique({
-            where: { vendorId },
-        });
+    const body = await req.json();
+    const db = firebaseAdmin.firestore();
+    const vendorRef = db.collection('vendors').doc(user.sub);
 
-        if (!prefs) {
-            // Return defaults if no prefs exist
-            return NextResponse.json({
-                quietMode: false,
-                quietStart: "22:00",
-                quietEnd: "07:00",
-                enabledCategories: ["SUMMARY", "RISK", "REMINDER", "SYSTEM", "INACTIVITY", "PROMO"]
-            });
-        }
+    const update = {
+        preferences: {
+            ...buildDefaultPreferences(),
+            ...(body || {}),
+        },
+        updatedAt: new Date(),
+    };
 
-        return NextResponse.json(prefs);
+    await vendorRef.set(update, { merge: true });
 
-    } catch (error) {
-        console.error('Error fetching preferences:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    }
+    return NextResponse.json({ success: true, preferences: serializeFirestoreData(update.preferences) });
 }
 
 export async function PATCH(req: Request) {
-    const vendorId = await getVendorFromToken(req);
-    if (!vendorId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
-        const body = await req.json();
-
-        // Validation could be added here
-
-        const prefs = await prisma.vendorPreference.upsert({
-            where: { vendorId },
-            update: {
-                quietMode: body.quietMode,
-                quietStart: body.quietStart,
-                quietEnd: body.quietEnd,
-                enabledCategories: body.enabledCategories, // Expecting JSON array
-            },
-            create: {
-                vendorId,
-                quietMode: body.quietMode ?? false,
-                quietStart: body.quietStart ?? "22:00",
-                quietEnd: body.quietEnd ?? "07:00",
-                enabledCategories: body.enabledCategories ?? ["SUMMARY", "RISK", "REMINDER", "SYSTEM", "INACTIVITY", "PROMO"]
-            }
-        });
-
-        return NextResponse.json(prefs);
-
+        return await updatePreferences(req);
     } catch (error) {
-        console.error('Error updating preferences:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        console.error('Preferences update error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
-export async function OPTIONS() {
-    return new NextResponse(null, {
-        status: 204,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, PATCH, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-    });
+export async function PUT(req: Request) {
+    try {
+        return await updatePreferences(req);
+    } catch (error) {
+        console.error('Preferences update error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
-import prisma from '@/lib/prisma'; // Ensure prisma client is available
+import { firebaseAdmin } from '@/lib/firebase-admin';
 
 export async function POST(req: Request) {
     try {
@@ -10,20 +10,25 @@ export async function POST(req: Request) {
         });
 
         const body = await req.json();
-        const { planName } = body; // Expect planName (e.g., 'Monthly', 'Lifetime')
+        const { planName } = body;
 
         if (!planName) {
             return NextResponse.json({ error: 'Plan Name is required' }, { status: 400 });
         }
 
-        // Fetch Plan from DB
-        const plan = await prisma.pricingPlan.findUnique({
-            where: { name: planName }
-        });
+        const db = firebaseAdmin.firestore();
 
-        if (!plan) {
+        // Fetch Plan from Firestore
+        const plansSnapshot = await db.collection('plans')
+            .where('name', '==', planName)
+            .limit(1)
+            .get();
+
+        if (plansSnapshot.empty) {
             return NextResponse.json({ error: 'Invalid Plan' }, { status: 404 });
         }
+
+        const plan = plansSnapshot.docs[0].data();
 
         if (!plan.isActive) {
             return NextResponse.json({ error: 'This plan is currently unavailable' }, { status: 400 });
@@ -43,10 +48,9 @@ export async function POST(req: Request) {
 
         const order = await razorpay.orders.create(options);
 
-        // Return order and the source-of-truth plan details
         return NextResponse.json({
             ...order,
-            planName: plan.name, // Confirm back to client
+            planName: plan.name,
             price: plan.price
         });
     } catch (error) {

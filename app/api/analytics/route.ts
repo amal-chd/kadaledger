@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { firebaseAdmin } from '@/lib/firebase-admin';
 import { getJwtPayload } from '@/lib/auth';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
+import { getClientTimeContext, getLocalDateKey } from '@/lib/time-context';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -13,121 +15,133 @@ export async function GET(req: Request) {
         }
 
         const vendorId = user.sub;
+        const db = firebaseAdmin.firestore();
+        const timeContext = getClientTimeContext(req);
 
-        // 1. Overview Metrics (Aggregated)
-        // We can run these concurrently
-        const [
-            totalCustomers,
-            outstandingAgg,
-            todaysStats,
-            recentTransactions,
-            topDefaulters
-        ] = await Promise.all([
-            prisma.customer.count({ where: { vendorId } }),
-            prisma.customer.aggregate({
-                where: { vendorId },
-                _sum: { balance: true }
-            }),
-            // Today's stats
-            (async () => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const txs = await prisma.transaction.groupBy({
-                    by: ['type'],
-                    where: {
-                        vendorId,
-                        date: { gte: today }
-                    },
-                    _sum: { amount: true }
-                });
+        // Fetch all customers
+        const customersSnapshot = await db.collection('vendors').doc(vendorId).collection('customers').get();
+        const totalCustomers = customersSnapshot.size;
 
-                let credit = 0;
-                let payment = 0;
-                txs.forEach(t => {
-                    if (t.type === 'CREDIT') credit = (t._sum.amount || 0);
-                    if (t.type === 'PAYMENT' || t.type === 'DEBIT') payment = (t._sum.amount || 0);
-                });
-                return { credit, payment };
-            })(),
-            // Recent Transactions
-            prisma.transaction.findMany({
-                where: { vendorId },
-                orderBy: { date: 'desc' },
-                take: 5,
-                include: { customer: { select: { name: true, phoneNumber: true } } }
-            }),
-            // Top Defaulters (High Risk)
-            prisma.customer.findMany({
-                where: { vendorId, balance: { gt: 0 } },
-                orderBy: { balance: 'desc' },
-                take: 5,
-                select: { id: true, name: true, balance: true, phoneNumber: true }
-            })
-        ]);
-
-        // 2. Chart Data - Last 30 Days
-        // Fetch raw transactions and aggregate in memory (faster than 30 separate queries)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        thirtyDaysAgo.setHours(0, 0, 0, 0);
-
-        const periodTransactions = await prisma.transaction.findMany({
-            where: {
-                vendorId,
-                date: { gte: thirtyDaysAgo }
-            },
-            select: {
-                date: true,
-                type: true,
-                amount: true
-            }
+        // Calculate total outstanding
+        let totalOutstanding = 0;
+        customersSnapshot.docs.forEach(doc => {
+            const customer = doc.data();
+            totalOutstanding += Number(customer.balance || 0);
         });
 
-        // Group by Date
-        const dailyStats = new Map<string, { credit: number, payment: number }>();
+        // Fetch all transactions
+        const transactionsSnapshot = await db.collection('vendors')
+            .doc(vendorId)
+            .collection('transactions')
+            .get();
 
-        // Initialize last 30 days
-        for (let i = 0; i < 30; i++) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const key = d.toISOString().split('T')[0];
-            dailyStats.set(key, { credit: 0, payment: 0 });
-        }
+        // Today's stats in device local timezone
+        const todayKey = getLocalDateKey(new Date(), timeContext);
 
-        periodTransactions.forEach(tx => {
-            const dateKey = new Date(tx.date).toISOString().split('T')[0];
-            if (dailyStats.has(dateKey)) {
-                const entry = dailyStats.get(dateKey)!;
+        let todaysCredit = 0;
+        let todaysPayment = 0;
+
+        transactionsSnapshot.docs.forEach(doc => {
+            const tx = doc.data();
+            const txDate = tx.date?.toDate ? tx.date.toDate() : new Date(tx.date);
+            const txDateKey = getLocalDateKey(txDate, timeContext);
+
+            if (txDateKey === todayKey) {
                 if (tx.type === 'CREDIT') {
-                    entry.credit += tx.amount;
+                    todaysCredit += Number(tx.amount || 0);
                 } else if (tx.type === 'PAYMENT' || tx.type === 'DEBIT') {
-                    entry.payment += tx.amount;
+                    todaysPayment += Number(tx.amount || 0);
                 }
             }
         });
 
-        // Convert map to sorted array
-        // Map keys are not guaranteed sorted, but we initialized them in reverse order? 
-        // Better to sort by date string explicitly.
+        // Recent Transactions (top 5)
+        const recentTransactionsSnapshot = await db.collection('vendors')
+            .doc(vendorId)
+            .collection('transactions')
+            .orderBy('date', 'desc')
+            .limit(5)
+            .get();
+
+        const recentTransactions = await Promise.all(recentTransactionsSnapshot.docs.map(async doc => {
+            const tx = doc.data();
+            let customer = null;
+            if (tx.customerId) {
+                const customerDoc = await db.collection('vendors')
+                    .doc(vendorId)
+                    .collection('customers')
+                    .doc(tx.customerId)
+                    .get();
+                if (customerDoc.exists) {
+                    const custData = customerDoc.data();
+                    customer = { name: custData?.name, phoneNumber: custData?.phoneNumber };
+                }
+            }
+            return { ...tx, customer };
+        }));
+
+        // Top Defaulters (High balance customers)
+        const customers = customersSnapshot.docs
+            .map(doc => doc.data())
+            .filter(c => Number(c.balance || 0) > 0)
+            .sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0))
+            .slice(0, 5)
+            .map(c => ({
+                id: c.id,
+                name: c.name,
+                balance: c.balance,
+                phoneNumber: c.phoneNumber
+            }));
+
+        // Chart Data - Last 30 Days in device local timezone
+        const dailyStats = new Map<string, { credit: number, payment: number }>();
+
+        const [todayYear, todayMonth, todayDay] = todayKey.split('-').map(Number);
+        for (let i = 29; i >= 0; i--) {
+            const day = new Date(Date.UTC(todayYear, todayMonth - 1, todayDay - i));
+            const key = `${day.getUTCFullYear()}-${String(day.getUTCMonth() + 1).padStart(2, '0')}-${String(day.getUTCDate()).padStart(2, '0')}`;
+            dailyStats.set(key, { credit: 0, payment: 0 });
+        }
+
+        // Aggregate transactions
+        transactionsSnapshot.docs.forEach(doc => {
+            const tx = doc.data();
+            const txDate = tx.date?.toDate ? tx.date.toDate() : new Date(tx.date);
+            const dateKey = getLocalDateKey(txDate, timeContext);
+            if (dailyStats.has(dateKey)) {
+                const entry = dailyStats.get(dateKey)!;
+                if (tx.type === 'CREDIT') {
+                    entry.credit += Number(tx.amount || 0);
+                } else if (tx.type === 'PAYMENT' || tx.type === 'DEBIT') {
+                    entry.payment += Number(tx.amount || 0);
+                }
+            }
+        });
+
         const chartData = Array.from(dailyStats.entries())
             .map(([date, stats]) => ({
                 date,
-                name: new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+                name: new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
+                    day: 'numeric',
+                    month: 'short',
+                    timeZone: 'UTC'
+                }),
                 credit: stats.credit,
                 payment: stats.payment
             }))
-            .sort((a, b) => a.date.localeCompare(b.date)); // Sort ascending for chart
+            .sort((a, b) => a.date.localeCompare(b.date));
 
-        return NextResponse.json({
+        const analyticsData = {
             totalCustomers,
-            totalOutstanding: outstandingAgg._sum.balance || 0,
-            todaysCollection: todaysStats.payment,
-            todaysCredit: todaysStats.credit,
-            recentTransactions,
-            topDefaulters,
+            totalOutstanding,
+            todaysCollection: todaysPayment,
+            todaysCredit,
+            recentTransactions: recentTransactions,
+            topDefaulters: customers,
             chartData
-        });
+        };
 
+        return NextResponse.json(serializeFirestoreData(analyticsData));
     } catch (error) {
         console.error('Analytics Fetch Error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

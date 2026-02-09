@@ -26,7 +26,8 @@ export default function AdminLogin() {
 
             const data = await res.json();
             localStorage.setItem('admin_token', data.access_token);
-            router.push('/admin/dashboard');
+            localStorage.removeItem('token');
+            router.push('/admin');
         } catch (err) {
             alert('Login Failed');
         } finally {

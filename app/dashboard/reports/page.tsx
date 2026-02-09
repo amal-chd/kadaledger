@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { Loader2, Calendar, Download, TrendingUp, TrendingDown, IndianRupee } from 'lucide-react';
+import { getDeviceTimeHeaders } from '@/lib/client-time';
 
 // Extend jsPDF type to include autoTable
 // interface jsPDFWithAutoTable extends jsPDF {
@@ -41,7 +42,8 @@ export default function ReportsPage() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    ...getDeviceTimeHeaders()
                 },
                 body: JSON.stringify({ startDate: dateStart, endDate: dateEnd })
             });
