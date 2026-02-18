@@ -68,7 +68,7 @@ export default function PricingPage() {
                     />
                 </div>
 
-                <div className="container-mobile relative z-10 px-4 text-center">
+                <div className="container-width relative z-10 px-4 text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6 md:mb-8">
                         <Zap size={14} className="fill-blue-400" /> Flexible Plans
                     </div>
@@ -98,7 +98,7 @@ export default function PricingPage() {
             </section>
 
             <section className="relative z-10 px-4 pb-20 md:pb-32">
-                <div className="container-mobile max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-6">
+                <div className="container-width max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-6">
                     {/* Basic */}
                     <div className="glass-card p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 flex flex-col hover:border-blue-500/20 transition-all duration-500">
                         <div className="mb-6 md:mb-6">

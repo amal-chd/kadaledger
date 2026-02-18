@@ -116,8 +116,8 @@
 
 /* Design System Tokens */
 :root {
-  --app-container-max: 76rem;
-  --app-container-pad: clamp(1rem, 3.2vw, 1.5rem);
+  --app-container-max: 80rem;
+  --app-container-pad: clamp(1rem, 3.2vw, 2rem);
 
   /* Spacing System */
   --space-xs: 0.25rem;
@@ -430,5 +430,17 @@
 @media (min-width: 48rem) {
   html {
     font-size: 16px;
+  }
+}
+
+@media (min-width: 80rem) {
+  :root {
+    --app-container-pad: 2.5rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  :root {
+    --app-container-pad: 3rem;
   }
 }

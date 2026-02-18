@@ -59,7 +59,7 @@ export default function ContactPage() {
                     />
                 </div>
 
-                <div className="container-mobile relative z-10 px-6 text-center">
+                <div className="container-width relative z-10 px-6 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8">
                         <MessageSquare size={14} className="fill-blue-400" /> Support Hub
                     </div>
@@ -74,7 +74,7 @@ export default function ContactPage() {
                 </div>
             </section>
 
-            <div className="container-mobile relative z-10 px-6 pb-32">
+            <div className="container-width relative z-10 px-6 pb-32">
                 <div className="grid md:grid-cols-12 gap-8 max-w-7xl mx-auto items-start">
 
                     {/* Contact Info Bento */}

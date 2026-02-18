@@ -44,7 +44,7 @@ export default function AboutPage() {
                     />
                 </div>
 
-                <div className="container-mobile relative z-10 px-6 text-center">
+                <div className="container-width relative z-10 px-6 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8">
                         <Star size={14} className="fill-blue-400" /> Our Mission
                     </div>
@@ -59,7 +59,7 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            <div className="container-mobile relative z-10 px-6 pb-32">
+            <div className="container-width relative z-10 px-6 pb-32">
                 {/* Bento Grid Values */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-32">
                     <div className="md:col-span-8 glass-card p-10 md:p-14 rounded-[3rem] border border-white/5 relative overflow-hidden group">

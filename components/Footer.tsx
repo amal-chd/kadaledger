@@ -8,7 +8,7 @@ const Footer = () => {
             {/* Ambient Glow */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[100px] -translate-y-1/2 pointer-events-none"></div>
 
-            <div className="container-mobile relative z-10">
+            <div className="container-width relative z-10">
 
                 {/* Subscribe Banner */}
                 <div className="bg-blue-600 rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 mb-16 md:mb-24 shadow-2xl shadow-blue-600/20 text-white relative overflow-hidden">

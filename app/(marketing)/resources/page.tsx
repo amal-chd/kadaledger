@@ -39,7 +39,7 @@ export default function ResourcesPage() {
                     />
                 </div>
 
-                <div className="container-mobile relative z-10 px-6 text-center">
+                <div className="container-width relative z-10 px-6 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8">
                         <BookOpen size={14} className="fill-blue-400" /> Resource Hub
                     </div>
@@ -54,7 +54,7 @@ export default function ResourcesPage() {
                 </div>
             </section>
 
-            <section className="container-mobile relative z-10 px-6 pb-32">
+            <section className="container-width relative z-10 px-6 pb-32">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                         {

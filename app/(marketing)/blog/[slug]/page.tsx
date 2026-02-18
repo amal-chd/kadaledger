@@ -83,7 +83,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         <img src={post.image} alt={post.title} className="w-full h-full object-cover opacity-30 blur-sm scale-105" />
                     </div>
 
-                    <div className="container-mobile relative z-20 max-w-5xl mx-auto text-center">
+                    <div className="container-width relative z-20 max-w-5xl mx-auto text-center">
                         <Link href="/blog" className="inline-flex items-center gap-2 text-blue-400 hover:text-white transition-colors mb-8 font-medium bg-white/5 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 hover:bg-white/10">
                             <ArrowLeft size={16} /> Back to Blog
                         </Link>
@@ -115,7 +115,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
                 {/* Content Body */}
                 {/* Content Body with Sidebar Layout */}
-                <div className="container-mobile max-w-7xl mx-auto px-6 pb-24 relative z-20">
+                <div className="container-width max-w-7xl mx-auto px-6 pb-24 relative z-20">
                     <div className="flex flex-col lg:flex-row gap-12">
 
                         {/* Sidebar (Desktop Only) */}
@@ -166,7 +166,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </article>
 
             {/* CTA Section */}
-            <section className="container-mobile px-6 pb-24">
+            <section className="container-width px-6 pb-24">
                 <div className="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-[2.5rem] p-10 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-blue-900/50">
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                     <div className="relative z-10">

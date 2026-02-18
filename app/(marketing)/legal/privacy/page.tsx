@@ -26,7 +26,7 @@ export default function PrivacyPage() {
                     />
                 </div>
 
-                <div className="container-mobile relative z-10 px-6 text-center">
+                <div className="container-width relative z-10 px-6 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8">
                         <Shield size={14} className="fill-blue-400" /> Security Center
                     </div>
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
                 </div>
             </section>
 
-            <section className="container-mobile relative z-10 px-6 pb-32">
+            <section className="container-width relative z-10 px-6 pb-32">
                 <div className="glass-card p-10 md:p-16 rounded-[3rem] border border-white/5 relative overflow-hidden max-w-4xl mx-auto">
                     <div className="prose prose-invert prose-blue max-w-none">
                         <div className="flex items-center gap-4 mb-8 text-blue-400">
