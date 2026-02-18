@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, X, Loader2 } from 'lucide-react';
+import { CheckCircle2, X, Loader2, Zap, Crown, Sparkles } from 'lucide-react';
 import Script from 'next/script';
 import toast from 'react-hot-toast';
 
@@ -10,8 +10,43 @@ interface SubscriptionModalProps {
     onClose: () => void;
 }
 
+const PLAN_META: Record<string, {
+    icon: typeof Zap;
+    color: string;
+    buttonClass: string;
+    badge?: string;
+    badgeClass?: string;
+    intervalLabel: string;
+}> = {
+    MONTHLY: {
+        icon: Zap,
+        color: 'text-blue-400',
+        buttonClass: 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/25',
+        badge: 'Popular',
+        badgeClass: 'bg-blue-600',
+        intervalLabel: '/ month',
+    },
+    YEARLY: {
+        icon: Crown,
+        color: 'text-purple-400',
+        buttonClass: 'bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/25',
+        badge: 'Save ~16%',
+        badgeClass: 'bg-purple-600',
+        intervalLabel: '/ year',
+    },
+    LIFETIME: {
+        icon: Sparkles,
+        color: 'text-amber-400',
+        buttonClass: 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-600/25',
+        badge: 'Best Value',
+        badgeClass: 'bg-gradient-to-r from-amber-500 to-orange-500',
+        intervalLabel: 'one-time',
+    },
+};
+
+const PAID_ORDER = ['MONTHLY', 'YEARLY', 'LIFETIME'];
+
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
-    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
     const [plans, setPlans] = useState<any[]>([]);
 
@@ -33,31 +68,24 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         }
     };
 
-    const getPlanPrice = (planName: string, cycle: 'monthly' | 'yearly') => {
-        if (planName === 'starter') return 0;
-        // For professional, we check the specific plan based on cycle
-        const targetPlanName = cycle === 'monthly' ? 'professional' : 'professional_yearly';
-        const plan = plans.find(p => p.name === targetPlanName);
-        return plan ? plan.price : (cycle === 'monthly' ? 199 : 1999);
-    };
+    // Filter to paid plans only, sorted by PAID_ORDER
+    const paidPlans = plans
+        .filter((p: any) => {
+            const key = String(p.id || p.name || '').toUpperCase();
+            return PAID_ORDER.includes(key);
+        })
+        .sort((a: any, b: any) =>
+            PAID_ORDER.indexOf(String(a.id || a.name).toUpperCase()) -
+            PAID_ORDER.indexOf(String(b.id || b.name).toUpperCase())
+        );
 
-    const handlePayment = async (planName: 'starter' | 'professional') => {
+    const handlePayment = async (planName: string) => {
         const token = localStorage.getItem('token');
         if (!token) {
             toast.error("You are not logged in. Please login to continue.");
             window.location.href = '/login';
             return;
         }
-
-        const price = getPlanPrice(planName, billingCycle);
-
-        if (planName === 'starter') {
-            toast.success("Free plan activated!");
-            onClose();
-            return;
-        }
-
-        const actualPlanName = billingCycle === 'monthly' ? 'professional' : 'professional_yearly';
 
         setLoadingPlan(planName);
         try {
@@ -67,7 +95,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ amount: price }),
+                body: JSON.stringify({ planName }),
             });
 
             if (!res.ok) throw new Error('Failed to create order');
@@ -79,7 +107,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 amount: order.amount,
                 currency: "INR",
                 name: "Kada Ledger",
-                description: `Subscription for ${actualPlanName} plan`,
+                description: `Subscription for ${planName} plan`,
                 order_id: order.id,
                 handler: async function (response: any) {
                     try {
@@ -93,7 +121,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
                                 razorpay_signature: response.razorpay_signature,
-                                planType: actualPlanName
+                                planType: planName
                             }),
                         });
 
@@ -106,7 +134,6 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                         if (verifyData.status === 'success') {
                             toast.success('Payment Successful! Plan activated.');
                             onClose();
-                            // Force redirect to dashboard to refresh state and escape onboarding if trapped
                             window.location.href = '/dashboard';
                         } else {
                             toast.error(verifyData.message || 'Payment verification failed.');
@@ -152,76 +179,67 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 <div className="p-8 md:p-12">
                     <div className="text-center mb-10">
                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Upgrade Your Plan</h2>
-                        <p className="text-slate-300/60 mb-8">Choose the plan that fits your business needs.</p>
-
-                        {/* Toggle */}
-                        <div className="inline-flex items-center gap-2 bg-white/5 p-1 rounded-full border border-white/10">
-                            <button
-                                onClick={() => setBillingCycle('monthly')}
-                                className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-accent text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                            >
-                                Monthly
-                            </button>
-                            <button
-                                onClick={() => setBillingCycle('yearly')}
-                                className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingCycle === 'yearly' ? 'bg-accent text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                            >
-                                Yearly (Save ~16%)
-                            </button>
-                        </div>
+                        <p className="text-slate-300/60">Choose the plan that fits your business needs.</p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                        {/* Plan 1: Starter */}
-                        <div className="glass-card p-6 border border-white/10 rounded-2xl flex flex-col hover:bg-white/5 transition-colors">
-                            <div className="mb-4">
-                                <h3 className="text-lg font-bold text-white mb-1">Starter</h3>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-white">Free</span>
-                                    <span className="text-slate-400 text-sm">/ 14 days</span>
-                                </div>
-                            </div>
-                            <ul className="space-y-3 mb-8 flex-1">
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-primary shrink-0" /> 1 User</li>
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-primary shrink-0" /> Basic Reports</li>
-                                <li className="flex gap-3 text-sm text-slate-300"><CheckCircle2 size={16} className="text-primary shrink-0" /> 100 Customers</li>
-                            </ul>
-                            <button disabled className="w-full py-3 rounded-xl border border-white/10 text-slate-400 font-bold text-sm">
-                                Current Plan
-                            </button>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-3xl mx-auto">
+                        {paidPlans.map((plan) => {
+                            const key = String(plan.id || plan.name).toUpperCase();
+                            const meta = PLAN_META[key] || PLAN_META.MONTHLY;
+                            const Icon = meta.icon;
+                            const features: string[] = plan.features || [];
+                            const planName = plan.name || plan.id;
+                            const isLoading = loadingPlan === planName;
 
-                        {/* Plan 2: Premium */}
-                        <div className="glass-card p-6 border-2 border-primary rounded-2xl flex flex-col bg-blue-900/10 relative transform md:scale-105 shadow-xl shadow-accent/20">
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                                Recommended
-                            </div>
-                            <div className="mb-4">
-                                <h3 className="text-lg font-bold text-white mb-1">Premium</h3>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-white">
-                                        ₹{getPlanPrice('professional', billingCycle)}
-                                    </span>
-                                    <span className="text-slate-400 text-sm">/ {billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                            return (
+                                <div
+                                    key={plan.id}
+                                    className={`glass-card p-6 rounded-2xl flex flex-col transition-all duration-300 relative border ${key === 'MONTHLY'
+                                            ? 'border-blue-600/40 bg-blue-900/10 shadow-xl shadow-blue-900/20 md:scale-105'
+                                            : 'border-white/10 hover:border-white/20 hover:bg-white/5'
+                                        }`}
+                                >
+                                    {/* Badge */}
+                                    {meta.badge && (
+                                        <div className={`absolute -top-3 left-1/2 -translate-x-1/2 ${meta.badgeClass} text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full`}>
+                                            {meta.badge}
+                                        </div>
+                                    )}
+
+                                    <div className="mb-4 pt-2">
+                                        <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center ${meta.color} mb-3`}>
+                                            <Icon size={20} />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-3xl font-bold text-white">
+                                                ₹{Number(plan.price).toLocaleString()}
+                                            </span>
+                                            <span className="text-slate-400 text-sm">{meta.intervalLabel}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Features */}
+                                    <ul className="space-y-3 mb-6 flex-1">
+                                        {features.map((feature: string, i: number) => (
+                                            <li key={i} className="flex gap-2.5 text-sm text-slate-300">
+                                                <CheckCircle2 size={14} className="text-primary shrink-0 mt-0.5" />
+                                                {feature}
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    <button
+                                        onClick={() => handlePayment(planName)}
+                                        disabled={isLoading}
+                                        className={`w-full py-3 rounded-xl text-white font-bold text-sm transition-all flex items-center justify-center gap-2 ${meta.buttonClass}`}
+                                    >
+                                        {isLoading && <Loader2 size={16} className="animate-spin" />}
+                                        {key === 'LIFETIME' ? 'Get Lifetime Access' : `Get ${plan.name}`}
+                                    </button>
                                 </div>
-                            </div>
-                            <ul className="space-y-3 mb-8 flex-1">
-                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-primary shrink-0" /> Up to 3 Users</li>
-                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-primary shrink-0" /> WhatsApp Reminders</li>
-                                <li className="flex gap-3 text-sm text-white"><CheckCircle2 size={16} className="text-primary shrink-0" /> Advanced Analytics</li>
-                                {billingCycle === 'yearly' && (
-                                    <li className="flex gap-3 text-sm text-emerald-400 font-bold"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> 2 Months Free</li>
-                                )}
-                            </ul>
-                            <button
-                                onClick={() => handlePayment('professional')}
-                                disabled={loadingPlan === 'professional'}
-                                className="w-full py-3 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold text-sm shadow-lg shadow-accent/25 transition-all flex items-center justify-center gap-2"
-                            >
-                                {loadingPlan === 'professional' && <Loader2 size={16} className="animate-spin" />}
-                                Upgrade to Premium
-                            </button>
-                        </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

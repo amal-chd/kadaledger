@@ -47,9 +47,9 @@ export default function HomeContent() {
         fetchPlans();
     }, []);
 
-    const getPlanPrice = (planName: string) => {
-        const plan = plans.find(p => p.name === planName);
-        return plan ? plan.price : (planName === 'starter' ? 0 : (planName === 'professional' ? 199 : 999));
+    const getPlanPrice = (planId: string) => {
+        const plan = plans.find(p => (p.id || p.name || '').toUpperCase() === planId.toUpperCase());
+        return plan ? plan.price : '...';
     };
 
 
@@ -566,7 +566,7 @@ export default function HomeContent() {
                             },
                             {
                                 q: 'How much does it cost?',
-                                a: `We offer a feature-rich "Starter" plan that is free forever for small businesses. for advanced features like Staff Management, Custom Branding, and Priority Support, our Premium plans start at just ₹${getPlanPrice('professional')}/month.`
+                                a: `We offer a feature-rich "Starter" plan that is free forever for small businesses. For advanced features like Staff Management, Custom Branding, and Priority Support, our Premium plans start at just ₹${getPlanPrice('MONTHLY')}/month.`
                             }
                         ].map((faq, i) => (
                             <div key={i} className="glass-panel border border-white/5 overflow-hidden">
