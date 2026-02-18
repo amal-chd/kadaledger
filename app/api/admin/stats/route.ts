@@ -3,6 +3,7 @@ import { firebaseAdmin } from '@/lib/firebase-admin';
 import { serializeFirestoreData } from '@/lib/firestore-utils';
 import jwt from 'jsonwebtoken';
 import { getClientTimeContext, getLocalDateKey, getUtcRangeForLocalDates } from '@/lib/time-context';
+import { normalizePlanType } from '@/lib/admin-plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +48,19 @@ export async function GET(req: Request) {
                 totalPending += Number(customer.balance || 0);
             });
         }
+
+        // Count plan types from all vendors
+        let activeTrials = 0;
+        let activePaid = 0;
+        vendorsSnapshot.docs.forEach(doc => {
+            const v = doc.data();
+            const planType = normalizePlanType(v?.subscription?.planType || v?.plan || 'FREE');
+            if (planType === 'FREE') {
+                activeTrials++;
+            } else {
+                activePaid++;
+            }
+        });
 
         // Recent Vendors (last 5)
         const recentVendorsSnapshot = await db.collection('vendors')
@@ -102,7 +116,9 @@ export async function GET(req: Request) {
                 totalCustomers,
                 totalPending,
                 todaysVolume,
-                todaysCount
+                todaysCount,
+                activeTrials,
+                activePaid
             },
             push: {
                 totalCampaigns: campaignsSnapshot.size,

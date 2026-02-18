@@ -32,8 +32,8 @@ export default function AdminDashboard() {
             setStats({
                 totalVendors: data?.overview?.totalVendors ?? 0,
                 totalRevenue: data?.overview?.todaysVolume ?? 0,
-                activeTrials: data?.recentVendors?.filter((v: any) => v.subscription?.planType === 'TRIAL').length ?? 0,
-                activePaid: data?.recentVendors?.filter((v: any) => v.subscription?.planType !== 'TRIAL').length ?? 0,
+                activeTrials: data?.overview?.activeTrials ?? 0,
+                activePaid: data?.overview?.activePaid ?? 0,
             });
         } catch (e) {
             console.error(e);
