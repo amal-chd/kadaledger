@@ -43,17 +43,37 @@ export async function GET(req: Request) {
 
         const plansSnapshot = await db.collection('plans').get();
         const allPlans = plansSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
-        const plans = allPlans
-            .map((plan: any) => {
-                const normalized = normalizePlanType(plan.id || plan.name);
-                return {
+
+        // Deduplicate: keep only canonical docs, delete legacy orphans
+        const canonicalMap = new Map<string, any>();
+        const deleteBatch = db.batch();
+        let hasDeletes = false;
+
+        for (const plan of allPlans) {
+            const normalized = normalizePlanType(plan.id || plan.name);
+            if (plan.id !== normalized) {
+                // This is a legacy doc (e.g. 'professional') — schedule deletion
+                deleteBatch.delete(db.collection('plans').doc(plan.id));
+                hasDeletes = true;
+            }
+            // Prefer the canonical doc over any legacy doc
+            if (!canonicalMap.has(normalized) || plan.id === normalized) {
+                canonicalMap.set(normalized, {
                     ...plan,
                     id: normalized,
                     name: normalized,
-                };
-            })
-            .filter((plan: any) => ADMIN_PLAN_TYPES.includes(plan.id))
-            .sort((a: any, b: any) => ADMIN_PLAN_TYPES.indexOf(a.id) - ADMIN_PLAN_TYPES.indexOf(b.id));
+                });
+            }
+        }
+
+        // Clean up legacy docs
+        if (hasDeletes) {
+            await deleteBatch.commit().catch(() => { });
+        }
+
+        const plans = ADMIN_PLAN_TYPES
+            .filter(id => canonicalMap.has(id))
+            .map(id => canonicalMap.get(id));
         return NextResponse.json(plans);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
