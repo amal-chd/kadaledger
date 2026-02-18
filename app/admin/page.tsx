@@ -9,7 +9,7 @@ import {
     CreditCard,
     Calendar
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { safeFormatDate } from '@/lib/safe-date';
 import { getDeviceTimeHeaders } from '@/lib/client-time';
 
 export default function AdminDashboard() {
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-slate-400">
-                                                {format(new Date(vendor.createdAt), 'MMM d, yyyy')}
+                                                {safeFormatDate(vendor.createdAt, 'MMM d, yyyy')}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button className="text-slate-400 hover:text-white transition-colors">

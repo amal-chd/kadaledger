@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownLeft, Search } from 'lucide-react';
-import { format } from 'date-fns';
+import { safeFormatDate } from '@/lib/safe-date';
 
 export default function TransactionsPage() {
     const [transactions, setTransactions] = useState<any[]>([]);
@@ -127,7 +127,7 @@ export default function TransactionsPage() {
                                 filteredTransactions.map((t) => (
                                     <tr key={t.id} className="text-sm hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4 text-slate-400">
-                                            {format(new Date(t.date), 'MMM d, yyyy h:mm a')}
+                                            {safeFormatDate(t.date, 'MMM d, yyyy h:mm a')}
                                         </td>
                                         <td className="px-6 py-4 text-white">
                                             {t.vendor?.businessName || 'Unknown Vendor'}

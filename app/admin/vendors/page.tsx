@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MoreVertical, ChevronLeft, ChevronRight, Download, CheckSquare, Square } from 'lucide-react';
-import { format } from 'date-fns';
+import { safeFormatDate } from '@/lib/safe-date';
 import toast from 'react-hot-toast';
 
 const PLAN_OPTIONS = ['ALL', 'FREE', 'MONTHLY', 'YEARLY', 'LIFETIME'] as const;
@@ -329,7 +329,7 @@ export default function VendorsPage() {
                                             ₹{v.totalPending.toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4 text-slate-400">
-                                            {format(new Date(v.createdAt), 'MMM d, yyyy')}
+                                            {safeFormatDate(v.createdAt, 'MMM d, yyyy')}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors">

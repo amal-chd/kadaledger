@@ -14,7 +14,7 @@ import {
     AlertCircle,
     Save
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { safeFormatDate } from '@/lib/safe-date';
 import toast from 'react-hot-toast';
 
 const PLAN_OPTIONS = ['FREE', 'MONTHLY', 'YEARLY', 'LIFETIME'];
@@ -218,7 +218,7 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
                             <div className="flex items-center gap-2 text-slate-400 text-sm">
                                 <span>{vendor.phoneNumber}</span>
                                 <span>•</span>
-                                <span>Joined {format(new Date(vendor.createdAt), 'MMMM d, yyyy')}</span>
+                                <span>Joined {safeFormatDate(vendor.createdAt, 'MMMM d, yyyy')}</span>
                             </div>
                         </div>
                     )}
@@ -308,7 +308,7 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
                                                     {t.type === 'CREDIT' ? 'Given on credit' : 'Payment received'}
                                                 </div>
                                                 <div className="text-xs text-slate-500">
-                                                    {format(new Date(t.date), 'MMM d, h:mm a')}
+                                                    {safeFormatDate(t.date, 'MMM d, h:mm a')}
                                                 </div>
                                             </div>
                                         </div>
@@ -352,7 +352,7 @@ export default function VendorDetailsPage({ params }: { params: Promise<{ id: st
                                 </div>
                                 {vendor.subscription?.endDate && (
                                     <div className="mt-4 text-xs text-slate-500">
-                                        Base plan expires on {format(new Date(vendor.subscription.endDate), 'MMM d, yyyy')}
+                                        Base plan expires on {safeFormatDate(vendor.subscription.endDate, 'MMM d, yyyy')}
                                     </div>
                                 )}
                                 <div className="mt-4 grid grid-cols-2 gap-2">

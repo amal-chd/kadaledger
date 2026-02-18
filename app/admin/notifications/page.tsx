@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import { Send, Bell, Users, CheckCircle, AlertCircle, Loader2, RefreshCcw, RotateCcw } from 'lucide-react';
-import { format } from 'date-fns';
+import { safeFormatDate } from '@/lib/safe-date';
 
 interface CampaignResult {
     success: boolean;
@@ -80,17 +80,14 @@ export default function PushCampaignsPage() {
             }
 
             const data = await res.json();
-            const recentVendors = Array.isArray(data?.recentVendors) ? data.recentVendors : [];
-            const paid = recentVendors.filter((v: any) => {
-                const p = String(v?.subscription?.planType || '').toUpperCase();
-                return p !== '' && p !== 'TRIAL' && p !== 'FREE';
-            }).length;
-            const free = recentVendors.length - paid;
+            const totalVendors = data?.overview?.totalVendors ?? 0;
+            const activePaid = data?.overview?.activePaid ?? 0;
+            const activeFree = data?.overview?.activeTrials ?? 0;
 
             setAudienceStats({
-                totalVendors: data?.overview?.totalVendors ?? recentVendors.length,
-                activePaid: paid,
-                activeFree: free,
+                totalVendors,
+                activePaid,
+                activeFree,
             });
         } catch {
             setAudienceStats({ totalVendors: 0, activePaid: 0, activeFree: 0 });
@@ -381,7 +378,7 @@ export default function PushCampaignsPage() {
                                                 <div>
                                                     <div className="text-white font-semibold">{campaign.title}</div>
                                                     <div className="text-slate-400 text-xs mt-1">
-                                                        {format(new Date(campaign.createdAt), 'MMM d, yyyy h:mm a')} | {campaign.target} | {campaign.mode || 'BROADCAST'}
+                                                        {safeFormatDate(campaign.createdAt, 'MMM d, yyyy h:mm a')} | {campaign.target} | {campaign.mode || 'BROADCAST'}
                                                     </div>
                                                     <div className="text-slate-300 text-sm mt-2">{campaign.message}</div>
                                                     <div className="text-xs text-slate-400 mt-2">
@@ -404,11 +401,10 @@ export default function PushCampaignsPage() {
                     )}
 
                     {result && (
-                        <div className={`p-4 rounded-xl border flex items-start gap-3 ${
-                            result.success
+                        <div className={`p-4 rounded-xl border flex items-start gap-3 ${result.success
                                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                                 : 'bg-red-500/10 border-red-500/20 text-red-400'
-                        }`}>
+                            }`}>
                             {result.success ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
                             <div>
                                 <h4 className="font-bold text-sm">
