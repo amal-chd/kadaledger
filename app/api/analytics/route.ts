@@ -30,9 +30,16 @@ export async function GET(req: Request) {
         });
 
         // Fetch all transactions
+        // Calculate date range for chart (last 30 days) + buffer for timezone differences
+        const today = new Date();
+        const thirtyTwoDaysAgo = new Date(today);
+        thirtyTwoDaysAgo.setDate(today.getDate() - 32);
+
+        // Fetch ONLY recent transactions for chart & today's stats
         const transactionsSnapshot = await db.collection('vendors')
             .doc(vendorId)
             .collection('transactions')
+            .where('date', '>=', thirtyTwoDaysAgo)
             .get();
 
         // Today's stats in device local timezone

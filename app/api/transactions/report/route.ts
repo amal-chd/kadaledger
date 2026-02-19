@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { firebaseAdmin } from '@/lib/firebase-admin';
 import { getJwtPayload } from '@/lib/auth';
 import { getClientTimeContext, getUtcRangeForLocalDates } from '@/lib/time-context';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 
 export async function POST(req: NextRequest) {
     try {
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        return NextResponse.json({
+        return NextResponse.json(serializeFirestoreData({
             transactions: transactionsWithCustomer,
             summary: {
                 totalCredit,
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
                 netBalance: totalCredit - totalPayment,
                 count: transactions.length,
             },
-        });
+        }));
     } catch (error) {
         console.error('Error fetching transaction report:', error);
         return NextResponse.json({ error: 'Failed to fetch report data' }, { status: 500 });
