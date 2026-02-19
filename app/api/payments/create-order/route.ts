@@ -50,6 +50,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             ...order,
+            keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
             planName: plan.name,
             price: plan.price
         });
