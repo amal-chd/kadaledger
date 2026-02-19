@@ -38,45 +38,58 @@ export async function POST(req: Request) {
         }
 
         // 3. Fetch Order to get Plan Details
+        console.log('[Verify] Fetching Razorpay Order:', razorpay_order_id);
         const razorpay = new Razorpay({
             key_id: process.env.RAZORPAY_KEY_ID!,
             key_secret: process.env.RAZORPAY_KEY_SECRET!,
         });
 
         const order = await razorpay.orders.fetch(razorpay_order_id);
+        console.log('[Verify] Order Fetched:', JSON.stringify(order));
+
         const planId = order.notes?.planId as string;
+        console.log('[Verify] Plan ID from Notes:', planId);
 
         if (!planId) {
+            console.error('[Verify] Error: Missing planId in order notes');
             return NextResponse.json({ error: 'Invalid Order: Missing Plan ID' }, { status: 400 });
         }
 
         const db = firebaseAdmin.firestore();
 
         // 4. Fetch Plan from Firestore
+        console.log('[Verify] Fetching Plan from Firestore:', planId);
         const planDoc = await db.collection('plans').doc(planId).get();
         if (!planDoc.exists) {
+            console.error('[Verify] Error: Plan doc does not exist');
             return NextResponse.json({ error: 'Plan not found' }, { status: 400 });
         }
 
         const plan = planDoc.data();
+        console.log('[Verify] Plan Data:', JSON.stringify(plan));
 
         // 5. Calculate Subscription Dates
         const now = new Date();
         const endDate = new Date();
 
-        if (plan?.name.toUpperCase().includes('LIFETIME')) {
+        const planName = plan?.name ? plan.name.toUpperCase() : '';
+        const planInterval = plan?.interval || 'month';
+        console.log('[Verify] Calculating dates for:', planName, planInterval);
+
+        if (planName.includes('LIFETIME')) {
             endDate.setFullYear(endDate.getFullYear() + 100);
-        } else if (plan?.interval === 'year') {
+        } else if (planInterval === 'year') {
             endDate.setFullYear(endDate.getFullYear() + 1);
         } else {
             endDate.setMonth(endDate.getMonth() + 1);
         }
 
         // 6. Update Vendor Subscription in Firestore
+        console.log('[Verify] Updating Vendor Subscription:', vendorId);
         const vendorRef = db.collection('vendors').doc(vendorId);
         await vendorRef.set({
             subscription: {
-                planType: plan?.name.toUpperCase(),
+                planType: planName,
                 status: 'ACTIVE',
                 startDate: now,
                 endDate: endDate
@@ -84,10 +97,11 @@ export async function POST(req: Request) {
             updatedAt: now
         }, { merge: true });
 
+        console.log('[Verify] Subscription Activated Successfully');
         return NextResponse.json({ status: 'success', message: 'Subscription activated' });
 
     } catch (error) {
-        console.error('Payment Verification Error:', error);
+        console.error('[Verify] Payment Verification EXCEPTION:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
