@@ -3,6 +3,7 @@ import { firebaseAdmin } from '@/lib/firebase-admin';
 import jwt from 'jsonwebtoken';
 import { SyncService } from '@/lib/sync-service';
 import { ADMIN_PLAN_TYPES, normalizePlanType } from '@/lib/admin-plans';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
@@ -74,7 +75,7 @@ export async function GET(req: Request) {
         const plans = ADMIN_PLAN_TYPES
             .filter(id => canonicalMap.has(id))
             .map(id => canonicalMap.get(id));
-        return NextResponse.json(plans);
+        return NextResponse.json(serializeFirestoreData(plans));
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
     }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { firebaseAdmin } from '@/lib/firebase-admin';
 import { getJwtPayload } from '@/lib/auth';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
             .get();
 
         const customers = customersSnapshot.docs.map(doc => doc.data());
-        return NextResponse.json(customers);
+        return NextResponse.json(serializeFirestoreData(customers));
     } catch (error) {
         console.error('Fetch customers error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
