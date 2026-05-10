@@ -17,7 +17,8 @@ export default function AnalyticsPage() {
     const router = useRouter();
 
     useEffect(() => {
-        fetchAnalytics();
+        void fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchAnalytics = async () => {

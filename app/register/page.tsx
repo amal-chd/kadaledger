@@ -1,214 +1,230 @@
 'use client';
-import { useState, Suspense, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/auth-client';
 import Link from 'next/link';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import Image from 'next/image';
-import { Home, Eye, EyeOff, CheckCircle, Star, Zap, Shield, ArrowRight, Sparkles, User, Smartphone, Lock, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, ArrowRight, Building2, Phone, Lock } from 'lucide-react';
 
 function RegisterContent() {
-    const [businessName, setBusinessName] = useState('');
-    const [phone, setPhone] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const plan = searchParams.get('plan');
+  const [businessName, setBusinessName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
+  const passwordsMatch = password && confirmPassword && password === confirmPassword;
+  const passwordStrong = password.length >= 8;
 
-        // Basic validation
-        if (!businessName || !phone || !password) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        if (password !== confirmPassword) {
-            toast.error('Passwords do not match');
-            return;
-        }
+    if (!businessName.trim() || !phone.trim() || !password.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
 
-        setLoading(true);
-        const loadingToast = toast.loading('Creating your account...');
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
 
-        try {
-            const { access_token } = await authApi.register({ businessName, phoneNumber: phone, password });
-            localStorage.setItem('token', access_token);
-            toast.success('Registration successful!', { id: loadingToast });
-            setTimeout(() => {
-                router.push('/onboarding');
-            }, 1000);
-        } catch (err: any) {
-            toast.error(err.message || 'Registration failed', { id: loadingToast });
-        } finally {
-            setLoading(false);
-        }
-    };
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
 
-    return (
-        <div className="min-h-screen bg-blue-600 flex items-center justify-center p-4 font-sans text-slate-900">
-            <Toaster position="top-right" />
-            <div className="bg-white rounded-[2rem] shadow-2xl flex w-full max-w-5xl overflow-hidden min-h-[600px] flex-row-reverse">
+    setLoading(true);
+    const loadingToast = toast.loading('Creating your account...');
 
-                {/* Right Side - Blue Panel (Now on Right for Register to alternate) */}
-                <div className="hidden lg:flex w-1/2 bg-blue-600 relative p-12 flex-col justify-between text-white">
-                    {/* Background Pattern */}
-                    <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -ml-16 -mt-16 pointer-events-none"></div>
-                    <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-500/30 rounded-full blur-3xl -mr-20 -mb-20 pointer-events-none"></div>
+    try {
+      const { access_token } = await authApi.register({ businessName, phoneNumber: phone, password }) as { access_token: string };
+      localStorage.setItem('token', access_token);
+      toast.success('Account created! Setting up your dashboard...', { id: loadingToast });
+      setTimeout(() => {
+        router.push('/onboarding');
+      }, 800);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      toast.error(message, { id: loadingToast });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    {/* Logo */}
-                    <div className="flex items-center gap-3 relative z-10 justify-end">
-                        <span className="text-xl font-bold tracking-tight">Kada Ledger</span>
-                        <div className="bg-white p-2 rounded-xl shadow-lg">
-                            <Image src="/brand-logo-final.png" alt="Logo" width={32} height={32} className="w-8 h-8" />
-                        </div>
-                    </div>
-
-                    {/* Main Content */}
-                    <div className="relative z-10">
-                        {/* Plan Card Mock */}
-                        <div className="bg-white text-slate-900 rounded-2xl p-6 shadow-2xl mb-8 mx-auto max-w-xs transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className="font-bold text-lg">Pro Plan</h3>
-                                    <p className="text-sm text-slate-500">Best for small businesses</p>
-                                </div>
-                                <div className="bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded text-xs">ACTIVE</div>
-                            </div>
-                            <div className="space-y-3 mb-6">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle size={16} className="text-green-500" />
-                                    <span>Unlimited Customers</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle size={16} className="text-green-500" />
-                                    <span>WhatsApp Reminders</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle size={16} className="text-green-500" />
-                                    <span>Daily Backup</span>
-                                </div>
-                            </div>
-                            <button className="w-full bg-slate-900 text-white py-2 rounded-lg font-medium text-sm">Manage Subscription</button>
-                        </div>
-
-                        <h2 className="text-3xl font-bold mb-4 leading-tight text-right">
-                            Join 10,000+ businesses growing with us.
-                        </h2>
-                        <p className="text-blue-100 text-lg opacity-90 text-right">
-                            Start your 14-day free trial today. No credit card required.
-                        </p>
-                    </div>
-
-                    {/* Dots */}
-                    <div className="flex justify-end gap-2">
-                        <div className="w-2 h-2 rounded-full bg-white/40"></div>
-                        <div className="w-2 h-2 rounded-full bg-white"></div>
-                        <div className="w-2 h-2 rounded-full bg-white/40"></div>
-                    </div>
-                </div>
-
-                {/* Left Side - Register Form */}
-                <div className="w-full lg:w-1/2 p-12 lg:p-16 flex flex-col justify-center bg-white">
-                    <div className="max-w-md mx-auto w-full">
-                        <div className="flex items-center gap-3 mb-8 lg:hidden">
-                            <Image src="/brand-logo-final.png" alt="Logo" width={40} height={40} className="w-10 h-10 rounded-xl shadow-md" />
-                            <span className="text-xl font-bold text-slate-800">Kada Ledger</span>
-                        </div>
-
-                        <div className="mb-2">
-                            <div className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider mb-3">
-                                New Account
-                            </div>
-                        </div>
-                        <h1 className="text-3xl font-bold text-slate-900 mb-2">Create an account</h1>
-                        <p className="text-slate-500 mb-8">
-                            Already have an account? <Link href="/login" className="text-blue-600 font-medium hover:underline">Log in</Link>
-                        </p>
-
-                        <form onSubmit={handleRegister} className="space-y-4">
-                            {/* Business Name */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700">Business Name *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={businessName}
-                                    onChange={(e) => setBusinessName(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
-                                    placeholder="e.g. Sharma Store"
-                                />
-                            </div>
-
-                            {/* Phone */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700">Phone Number *</label>
-                                <input
-                                    type="tel"
-                                    required
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
-                                    placeholder="e.g. 9876543210"
-                                />
-                            </div>
-
-                            {/* Password Row */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-semibold text-slate-700">Password *</label>
-                                    <input
-                                        type="password"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
-                                        placeholder="Min 6 chars"
-                                    />
-                                    <p className="text-[10px] text-slate-400">Must be at least 8 characters.</p>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-semibold text-slate-700">Confirm *</label>
-                                    <input
-                                        type="password"
-                                        required
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
-                                        placeholder="Repeat"
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed mt-4"
-                            >
-                                {loading ? 'Creating Account...' : 'Create Account'}
-                            </button>
-
-
-                        </form>
-                    </div>
-                </div>
+  return (
+    <div className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4 py-8">
+      <div className="w-full max-w-md">
+        {/* Card */}
+        <div className="bg-white dark:bg-[#0f172a] rounded-3xl shadow-2xl overflow-hidden">
+          {/* Top Brand Bar */}
+          <div className="bg-blue-600 px-8 py-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
+                <Image src="/brand-logo-final.png" alt="Kada Ledger" width={28} height={28} className="rounded-md" />
+              </div>
+              <div>
+                <h1 className="text-white font-bold text-lg leading-tight">Kada Ledger</h1>
+                <p className="text-blue-100 text-xs">Free to get started</p>
+              </div>
             </div>
-            {/* Simple footer for larger screens */}
-            <div className="fixed bottom-6 right-6 text-blue-100 text-xs font-medium hidden lg:block opacity-60">
-                Kada Ledger Inc.
+            <div className="hidden sm:flex flex-col items-end gap-1">
+              {['Unlimited Free Trial', 'No credit card'].map((t) => (
+                <div key={t} className="flex items-center gap-1.5 text-blue-100 text-[11px]">
+                  <CheckCircle size={11} className="text-blue-200" />
+                  {t}
+                </div>
+              ))}
             </div>
+          </div>
+
+          {/* Form Area */}
+          <div className="px-8 py-8">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Create your account</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-7">
+              Already have an account?{' '}
+              <Link href="/login" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Sign in</Link>
+            </p>
+
+            <form onSubmit={(e) => void handleRegister(e)} className="space-y-4">
+              {/* Business Name */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Business Name *</label>
+                <div className="relative">
+                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                  <input
+                    type="text"
+                    required
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                    placeholder="e.g. Sharma Store"
+                    autoCapitalize="words"
+                  />
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number *</label>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                    placeholder="e.g. 9876543210"
+                    inputMode="tel"
+                    autoComplete="tel"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password *</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-11 pr-12 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                    placeholder="Min 6 characters"
+                    autoComplete="new-password"
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1" aria-label="Toggle password">
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+                {password && (
+                  <p className={`text-xs flex items-center gap-1 ${passwordStrong ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    <CheckCircle size={12} />
+                    {passwordStrong ? 'Strong password' : 'Use at least 8 characters'}
+                  </p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Confirm Password *</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                  <input
+                    type={showConfirm ? 'text' : 'password'}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`w-full pl-11 pr-12 py-3.5 bg-slate-50 dark:bg-slate-800/50 border rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 outline-none transition-all text-sm ${
+                      confirmPassword
+                        ? passwordsMatch
+                          ? 'border-emerald-400 focus:ring-emerald-500'
+                          : 'border-red-400 focus:ring-red-500'
+                        : 'border-slate-200 dark:border-white/10 focus:ring-blue-500'
+                    }`}
+                    placeholder="Repeat password"
+                    autoComplete="new-password"
+                  />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1" aria-label="Toggle confirm password">
+                    {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+                {confirmPassword && !passwordsMatch && (
+                  <p className="text-xs text-red-500">Passwords do not match</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-600/25 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm mt-2"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Create Free Account
+                    <ArrowRight size={16} />
+                  </>
+                )}
+              </button>
+
+              <p className="text-center text-[11px] text-slate-400 dark:text-slate-500">
+                By registering you agree to our{' '}
+                <Link href="/legal/terms" className="text-blue-500 hover:underline">Terms</Link>
+                {' '}and{' '}
+                <Link href="/legal/privacy" className="text-blue-500 hover:underline">Privacy Policy</Link>
+              </p>
+            </form>
+          </div>
         </div>
-    );
+
+        {/* Trust Indicators */}
+        <div className="flex items-center justify-center gap-4 mt-5">
+          {['🔒 Secure', '⚡ Free', '🇮🇳 India'].map((item) => (
+            <span key={item} className="text-blue-100 text-[11px] font-medium opacity-80">{item}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function RegisterPage() {
-    return (
-        <Suspense fallback={<div className="min-h-screen bg-blue-600 flex items-center justify-center p-4"><div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div></div>}>
-            <RegisterContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-blue-600 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
+  );
 }

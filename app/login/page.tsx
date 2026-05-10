@@ -5,192 +5,147 @@ import { authApi } from '@/lib/auth-client';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
-import { ArrowRight, Lock, Mail, Phone, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Lock, Phone, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
-    const [phone, setPhone] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        const loadingToast = toast.loading('Logging in...');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        try {
-            const response = await authApi.login({ phoneNumber: phone, password });
-            const { access_token, role } = response;
-            if (role === 'ADMIN') {
-                localStorage.setItem('admin_token', access_token);
-                localStorage.removeItem('token');
-            } else {
-                localStorage.setItem('token', access_token);
-                localStorage.removeItem('admin_token');
-            }
-            toast.success('Successfully logged in!', { id: loadingToast });
-            setTimeout(() => {
-                if (role === 'ADMIN') router.push('/admin');
-                else router.push('/dashboard');
-            }, 500);
-        } catch (err: any) {
-            toast.error(err.message || 'Login failed', { id: loadingToast });
-        } finally {
-            setLoading(false);
-        }
-    };
+    if (!phone.trim() || !password.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
 
-    return (
-        <div className="min-h-screen bg-blue-600 flex items-center justify-center p-4 font-sans">
-            <div className="bg-white rounded-[2rem] shadow-2xl flex w-full max-w-5xl overflow-hidden min-h-[600px]">
+    setLoading(true);
+    const loadingToast = toast.loading('Signing in...');
 
-                {/* Left Side - Blue Panel */}
-                <div className="hidden lg:flex w-1/2 bg-blue-600 relative p-12 flex-col justify-between text-white">
-                    {/* Background Pattern */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/30 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
+    try {
+      const response = await authApi.login({ phoneNumber: phone, password });
+      const { access_token, role } = response as { access_token: string; role: string };
 
-                    {/* Logo */}
-                    <div className="flex items-center gap-3 relative z-10">
-                        <div className="bg-white p-2 rounded-xl shadow-lg">
-                            <Image src="/brand-logo-final.png" alt="Logo" width={32} height={32} className="w-8 h-8" />
-                        </div>
-                        <span className="text-xl font-bold tracking-tight">Kada Ledger</span>
-                    </div>
+      if (role === 'ADMIN') {
+        localStorage.setItem('admin_token', access_token);
+        localStorage.removeItem('token');
+      } else {
+        localStorage.setItem('token', access_token);
+        localStorage.removeItem('admin_token');
+      }
 
-                    {/* Main Content */}
-                    <div className="relative z-10">
-                        {/* Mock UI Card */}
-                        <div className="bg-[#0f172a] rounded-xl p-4 shadow-2xl border border-white/10 mb-8 transform rotate-1 hover:rotate-0 transition-transform duration-500">
-                            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
-                                <div className="flex gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-300/80"></div>
-                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-400/80"></div>
-                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500/80"></div>
-                                </div>
-                                <div className="h-2 w-20 bg-white/10 rounded-full"></div>
-                            </div>
-                            <div className="space-y-3">
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-blue-500/20"></div>
-                                            <div className="space-y-1">
-                                                <div className="h-2 w-24 bg-white/20 rounded-full"></div>
-                                                <div className="h-1.5 w-16 bg-white/10 rounded-full"></div>
-                                            </div>
-                                        </div>
-                                        <div className="h-2 w-12 bg-white/20 rounded-full"></div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+      toast.success('Welcome back!', { id: loadingToast });
+      setTimeout(() => {
+        router.push(role === 'ADMIN' ? '/admin' : '/dashboard');
+      }, 400);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Login failed';
+      toast.error(message, { id: loadingToast });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                        <h2 className="text-3xl font-bold mb-4 leading-tight">
-                            Did you know most "digital" ledgers aren't actually secure?
-                        </h2>
-                        <p className="text-blue-100 text-lg opacity-90">
-                            Ours truly delivers bank-grade security and real-time backups.
-                        </p>
-                    </div>
-
-                    {/* Navigation/Dots */}
-                    <div className="flex items-center gap-4 relative z-10">
-                        <button className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
-                            <ChevronLeft size={20} />
-                        </button>
-                        <button className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
-                            <ChevronRight size={20} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Right Side - Login Form */}
-                <div className="w-full lg:w-1/2 p-12 lg:p-16 flex flex-col justify-center bg-white">
-                    <div className="max-w-md mx-auto w-full">
-                        <div className="flex items-center gap-3 mb-8 lg:hidden">
-                            <Image src="/brand-logo-final.png" alt="Logo" width={40} height={40} className="w-10 h-10 rounded-xl shadow-md" />
-                            <span className="text-xl font-bold text-slate-800">Kada Ledger</span>
-                        </div>
-
-                        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h1>
-                        <p className="text-slate-500 mb-8">Please enter your details to sign in.</p>
-
-                        <form onSubmit={handleLogin} className="space-y-5">
-                            {/* Phone Input */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700">Phone Number *</label>
-                                <div className="relative">
-                                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                    <input
-                                        type="tel"
-                                        required
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400 text-slate-900"
-                                        placeholder="Enter your phone number"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Password Any Input */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700">Password *</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                    <input
-                                        type="password"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder:text-slate-400 text-slate-900"
-                                        placeholder="Enter your password"
-                                    />
-                                </div>
-                                <div className="flex justify-end">
-                                    <Link href="#" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                                        Forgot password?
-                                    </Link>
-                                </div>
-                            </div>
-
-                            <div className="pt-2">
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {loading ? (
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : (
-                                        'Sign In'
-                                    )}
-                                </button>
-                            </div>
-                        </form>
-
-                        <div className="mt-8 flex items-center gap-4">
-                            <div className="h-px bg-slate-200 flex-1"></div>
-                            <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Or</span>
-                            <div className="h-px bg-slate-200 flex-1"></div>
-                        </div>
-
-                        <div className="mt-8 text-center">
-                            <p className="text-slate-600">
-                                Don't have an account?{' '}
-                                <Link href="/register" className="font-bold text-blue-600 hover:text-blue-700 hover:underline">
-                                    Create free account
-                                </Link>
-                            </p>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <div className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Card */}
+        <div className="bg-white dark:bg-[#0f172a] rounded-3xl shadow-2xl overflow-hidden">
+          {/* Top Brand Bar */}
+          <div className="bg-blue-600 px-8 py-6 flex items-center gap-3">
+            <div className="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
+              <Image src="/brand-logo-final.png" alt="Kada Ledger" width={28} height={28} className="rounded-md" />
             </div>
-
-            {/* Simple footer for larger screens */}
-            <div className="fixed bottom-6 text-blue-100 text-xs font-medium hidden lg:block opacity-60">
-                © 2026 Kada Ledger. Secure & Encrypted.
+            <div>
+              <h1 className="text-white font-bold text-lg leading-tight">Kada Ledger</h1>
+              <p className="text-blue-100 text-xs">Digital Khata Book</p>
             </div>
+          </div>
+
+          {/* Form Area */}
+          <div className="px-8 py-8">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Welcome back</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-7">Sign in to your account to continue</p>
+
+            <form onSubmit={(e) => void handleLogin(e)} className="space-y-4">
+              {/* Phone */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                    placeholder="Enter your phone number"
+                    autoComplete="tel"
+                    inputMode="tel"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-11 pr-12 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-600/25 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm mt-2"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight size={16} />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+              Don&apos;t have an account?{' '}
+              <Link href="/register" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                Create free account
+              </Link>
+            </p>
+          </div>
         </div>
-    );
+
+        {/* Trust Indicators */}
+        <div className="flex items-center justify-center gap-4 mt-5 px-4">
+          {['🔒 Bank-grade Security', '⚡ Instant Setup', '🇮🇳 Made for India'].map((item) => (
+            <span key={item} className="text-blue-100 text-[11px] font-medium opacity-80 whitespace-nowrap">{item}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

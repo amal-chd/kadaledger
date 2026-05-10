@@ -7,9 +7,13 @@ import { ThemeProvider } from "./components/theme-provider";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0F172A" },
+  ],
 };
 
 export const metadata: Metadata = {
@@ -21,6 +25,25 @@ export const metadata: Metadata = {
   description: "The best online credit book and digital khata app for Indian businesses. Manage your ledger, track udhar, and collect payments faster with automated WhatsApp reminders.",
   keywords: ["online credit book", "digital khata book", "ledger book app", "business accounting india", "udhar khata", "cash book app", "Kada Ledger"],
   authors: [{ name: "Kada Ledger Team" }],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Kada Ledger",
+    startupImage: [
+      {
+        url: "/brand-logo-final.png",
+        media: "(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)",
+      },
+    ],
+  },
+  formatDetection: {
+    telephone: false,
+    date: false,
+    address: false,
+    email: false,
+    url: false,
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -44,9 +67,14 @@ export const metadata: Metadata = {
     images: ["/brand-logo-final.png"],
   },
   icons: {
-    icon: "/brand-logo-final.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/brand-logo-final.png", sizes: "192x192", type: "image/png" },
+    ],
     shortcut: "/brand-logo-final.png",
-    apple: "/brand-logo-final.png",
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -102,9 +130,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className="antialiased bg-background text-foreground font-sans"
-      >
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="mask-icon" href="/brand-logo-final.png" color="#2563eb" />
+      </head>
+      <body className="antialiased bg-background text-foreground font-sans">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -116,7 +148,18 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
           {children}
-          <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 500,
+                maxWidth: '360px',
+              },
+            }}
+          />
         </ThemeProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       </body>
