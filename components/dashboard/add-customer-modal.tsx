@@ -32,7 +32,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, customer 
         try {
             const token = localStorage.getItem('token');
             const url = customer ? `/api/customers/${customer.id}` : '/api/customers';
-            const method = customer ? 'PUT' : 'POST';
+            const method = customer ? 'PATCH' : 'POST';
 
             const res = await fetch(url, {
                 method,

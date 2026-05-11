@@ -1,69 +1,173 @@
 'use client';
 import { useEffect, useState, use } from 'react';
+import Image from 'next/image';
+import { ArrowDownLeft, ArrowUpRight, CheckCircle, Phone } from 'lucide-react';
 
-const API_URL = '/api';
+interface Transaction {
+  id: string;
+  type: 'CREDIT' | 'DEBIT' | 'PAYMENT';
+  amount: number;
+  description?: string;
+  date: string;
+}
+
+interface CustomerData {
+  vendor: { businessName: string; phoneNumber: string };
+  customer: { name: string };
+  balance: number;
+  transactions: Transaction[];
+}
 
 export default function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
-    // Unwrap params using React.use() or await in async component (Next.js 15+)
-    const resolvedParams = use(params);
-    const [data, setData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+  const resolvedParams = use(params);
+  const [data, setData] = useState<CustomerData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-    useEffect(() => {
-        fetch(`${API_URL}/public/customer/${resolvedParams.id}`)
-            .then(res => {
-                if (!res.ok) throw new Error('Not Found');
-                return res.json();
-            })
-            .then(setData)
-            .catch(console.error)
-            .finally(() => setLoading(false));
-    }, [resolvedParams.id]);
+  useEffect(() => {
+    fetch(`/api/public/customer/${resolvedParams.id}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Not Found');
+        return res.json() as Promise<CustomerData>;
+      })
+      .then(setData)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [resolvedParams.id]);
 
-    if (loading) return <div className="p-10 text-center animate-pulse">Loading Details...</div>;
-    if (!data) return <div className="p-10 text-center text-red-500">Invalid Link or Customer Not Found</div>;
-
+  if (loading) {
     return (
-        <div className="min-h-screen bg-slate-900 text-white p-6 max-w-md mx-auto">
-            <div className="text-center mb-8">
-                <div className="text-sm text-slate-400">Payment Due To</div>
-                <h1 className="text-2xl font-bold gradient-text">{data.vendor.businessName}</h1>
-                <p className="text-xs text-slate-500">{data.vendor.phoneNumber}</p>
-            </div>
-
-            <div className="bg-surface rounded-2xl p-8 text-center border border-white/10 mb-8 shadow-2xl">
-                <div className="text-slate-400 mb-2">You Owe</div>
-                <div className={`text-5xl font-bold ${Number(data.balance) > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    ₹{data.balance}
-                </div>
-                <div className="mt-6 flex gap-2 justify-center">
-                    <button className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-green-600/20">
-                        Pay Now
-                    </button>
-                    <button className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full font-bold">
-                        Dispute
-                    </button>
-                </div>
-            </div>
-
-            <h2 className="text-lg font-bold mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-                {data.transactions.map((t: any) => (
-                    <div key={t.id} className="flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/5">
-                        <div>
-                            <div className={`text-sm font-bold ${t.type === 'CREDIT' ? 'text-red-400' : 'text-green-400'}`}>
-                                {t.type}
-                            </div>
-                            <div className="text-xs text-slate-500">
-                                {new Date(t.createdAt).toLocaleDateString()}
-                            </div>
-                        </div>
-                        <div className="font-mono">
-                            ₹{t.amount}
-                        </div>
-                    </div>
-                ))}
-            </div>
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 text-sm animate-pulse">Loading your details...</p>
         </div>
+      </div>
     );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6">
+        <div className="text-center max-w-sm">
+          <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">🔗</span>
+          </div>
+          <h2 className="text-white font-bold text-xl mb-2">Invalid Link</h2>
+          <p className="text-slate-400 text-sm">This payment link is invalid or has expired. Please contact the business for a new link.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const balance = Number(data.balance);
+  const isOwed = balance < 0; // negative = customer owes vendor
+  const absBalance = Math.abs(balance);
+
+  return (
+    <div className="min-h-screen bg-[#0f172a] text-white">
+      <div className="max-w-md mx-auto px-4 py-8 space-y-6">
+
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-blue-600/20 flex items-center justify-center flex-shrink-0">
+            <Image src="/brand-logo-final.png" alt="Kada Ledger" width={28} height={28} />
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Payment Request from</p>
+            <h1 className="text-lg font-bold text-white leading-tight">{data.vendor.businessName}</h1>
+          </div>
+        </div>
+
+        {/* Balance Card */}
+        <div className={`rounded-3xl p-6 text-center ${
+          isOwed
+            ? 'bg-gradient-to-br from-red-600/80 to-red-700/80'
+            : 'bg-gradient-to-br from-emerald-600/80 to-emerald-700/80'
+        } border border-white/10 shadow-2xl`}>
+          <p className="text-white/70 text-sm font-medium mb-1">
+            {data.customer.name}&apos;s Balance
+          </p>
+          <div className="text-5xl font-bold text-white mb-1 tracking-tight">
+            ₹{absBalance.toLocaleString()}
+          </div>
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-1 ${
+            isOwed
+              ? 'bg-red-900/40 text-red-200'
+              : 'bg-emerald-900/40 text-emerald-200'
+          }`}>
+            {isOwed ? '⚠️ Payment Due' : '✅ Advance Balance'}
+          </div>
+
+          {isOwed && (
+            <div className="mt-5">
+              <a
+                href={`https://wa.me/${data.vendor.phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I want to pay ₹${absBalance} for my account at ${data.vendor.businessName}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white text-red-700 font-bold px-6 py-3 rounded-2xl shadow-xl transition-all active:scale-95"
+              >
+                <Phone size={18} />
+                Contact to Pay
+              </a>
+            </div>
+          )}
+
+          {!isOwed && balance === 0 && (
+            <div className="flex items-center justify-center gap-2 mt-4 text-emerald-200">
+              <CheckCircle size={16} />
+              <span className="text-sm font-medium">All settled!</span>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Transactions */}
+        {data.transactions.length > 0 && (
+          <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/5">
+              <h2 className="text-sm font-bold text-slate-200">Recent Activity</h2>
+            </div>
+            <div className="divide-y divide-white/5">
+              {data.transactions.map((tx) => {
+                const isCredit = tx.type === 'CREDIT';
+                const txDate = new Date(tx.date);
+                return (
+                  <div key={tx.id} className="flex items-center justify-between px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isCredit
+                          ? 'bg-red-500/20 text-red-400'
+                          : 'bg-emerald-500/20 text-emerald-400'
+                      }`}>
+                        {isCredit
+                          ? <ArrowUpRight size={15} />
+                          : <ArrowDownLeft size={15} />
+                        }
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">
+                          {tx.description || (isCredit ? 'Credit Given' : 'Payment Received')}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {txDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`font-bold text-sm ${isCredit ? 'text-red-400' : 'text-emerald-400'}`}>
+                      {isCredit ? '+' : '-'}₹{tx.amount.toLocaleString()}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Powered by */}
+        <div className="text-center text-slate-600 text-xs pt-4">
+          Powered by <span className="text-slate-400 font-semibold">Kada Ledger</span>
+        </div>
+      </div>
+    </div>
+  );
 }

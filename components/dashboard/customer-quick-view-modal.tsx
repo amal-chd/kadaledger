@@ -100,8 +100,8 @@ export default function CustomerQuickViewModal() {
     if (!selectedCustomerId) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-[#0f172a] rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden relative shadow-2xl border border-slate-200 dark:border-white/10 flex flex-col">
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center md:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-[#0f172a] rounded-t-3xl md:rounded-3xl w-full md:max-w-2xl md:max-h-[90vh] max-h-[92dvh] overflow-hidden relative shadow-2xl border-t md:border border-slate-200 dark:border-white/10 flex flex-col">
 
                 {/* Header */}
                 <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-start justify-between bg-slate-50/50 dark:bg-white/5">
@@ -150,7 +150,7 @@ export default function CustomerQuickViewModal() {
                     ) : customer ? (
                         <div className="space-y-8">
                             {/* Balance & Actions */}
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className={`p-6 rounded-2xl ${customer.balance < 0 ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20' : 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/20'} border`}>
                                     <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Current Balance</p>
                                     <h3 className={`text-3xl font-bold ${customer.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
@@ -187,32 +187,33 @@ export default function CustomerQuickViewModal() {
                                     <h4 className="font-bold text-slate-900 dark:text-white mb-4">
                                         {actionType === 'CREDIT' ? 'Record Credit' : 'Record Payment'}
                                     </h4>
-                                    <form onSubmit={handleTransaction} className="flex gap-4">
-                                        <div className="flex-1">
-                                            <input
-                                                type="number"
-                                                required
-                                                value={amount}
-                                                onChange={(e) => setAmount(e.target.value)}
-                                                placeholder="Amount"
-                                                className="w-full bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
-                                            />
-                                        </div>
-                                        <div className="flex-[2]">
+                                    <form onSubmit={handleTransaction} className="space-y-3">
+                                        <input
+                                            type="number"
+                                            required
+                                            inputMode="decimal"
+                                            value={amount}
+                                            onChange={(e) => setAmount(e.target.value)}
+                                            placeholder="Amount (₹)"
+                                            className="w-full bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
+                                            autoFocus
+                                        />
+                                        <div className="flex gap-3">
                                             <input
                                                 type="text"
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
-                                                placeholder="Description (Optional)"
-                                                className="w-full bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
+                                                placeholder="Note (Optional)"
+                                                className="flex-1 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none text-sm"
                                             />
+                                            <button
+                                                type="submit"
+                                                disabled={submitting}
+                                                className={`px-5 py-3 rounded-xl font-bold text-white shadow-lg flex items-center gap-1.5 ${actionType === 'CREDIT' ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'} disabled:opacity-60`}
+                                            >
+                                                {submitting ? <Loader2 size={16} className="animate-spin" /> : 'Save'}
+                                            </button>
                                         </div>
-                                        <button
-                                            disabled={submitting}
-                                            className={`px-6 rounded-xl font-bold text-white shadow-lg ${actionType === 'CREDIT' ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
-                                        >
-                                            {submitting ? <Loader2 className="animate-spin" /> : 'Save'}
-                                        </button>
                                     </form>
                                 </div>
                             )}
