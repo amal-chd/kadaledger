@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, CreditCard, BarChart2, FileText, Settings, LogOut, Crown } from 'lucide-react';
 
 import GlobalSearch from '@/components/dashboard/global-search';
 import SubscriptionModal from '@/components/dashboard/subscription-modal';
@@ -11,210 +11,275 @@ import { CustomerViewProvider } from '@/contexts/customer-view-context';
 import { DataRefreshProvider } from '@/contexts/data-refresh-context';
 import CustomerQuickViewModal from '@/components/dashboard/customer-quick-view-modal';
 import SubscriptionLockScreen from '@/components/dashboard/subscription-lock-screen';
+import MobileBottomNav from '@/components/dashboard/mobile-bottom-nav';
 import { ModeToggle } from '@/components/dashboard/mode-toggle';
 
 const API_URL = '/api';
 
+const navItems = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', exact: true },
+  { href: '/dashboard/analytics', icon: BarChart2, label: 'Analytics' },
+  { href: '/dashboard/customers', icon: Users, label: 'Customers' },
+  { href: '/dashboard/transactions', icon: CreditCard, label: 'Transactions' },
+  { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+];
+
 export default function DashboardLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    const router = useRouter();
-    const [checking, setChecking] = useState(true);
-    const [profile, setProfile] = useState<any>(null);
-    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const router = useRouter();
+  const [checking, setChecking] = useState(true);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [currentPath, setCurrentPath] = useState('');
 
-    const checkProfile = useCallback(async () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            router.push('/login');
-            return;
-        }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentPath(window.location.pathname);
+    }
+  }, []);
 
-        try {
-            const res = await fetch(`${API_URL}/vendor/profile`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!res.ok) {
-                if (res.status === 401) {
-                    localStorage.removeItem('token');
-                    router.push('/login');
-                }
-                return;
-            }
-
-            const data = await res.json();
-            setProfile(data);
-
-            if (!data.businessName) {
-                router.push('/onboarding');
-            } else {
-                setChecking(false);
-            }
-
-        } catch (e) {
-            console.error('Profile check failed', e);
-            setChecking(false);
-        }
-    }, [router]);
-
-    useEffect(() => {
-        void checkProfile();
-    }, [checkProfile]);
-
-    if (checking) {
-        return (
-            <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-500"></div>
-            </div>
-        );
+  const checkProfile = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
     }
 
-    const isPro = profile?.subscription?.planType === 'MONTHLY' || profile?.subscription?.planType === 'YEARLY' || profile?.subscription?.planType === 'PROFESSIONAL' || profile?.subscription?.planType === 'BUSINESS';
+    try {
+      const res = await fetch(`${API_URL}/vendor/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
+      if (!res.ok) {
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          router.push('/login');
+        }
+        return;
+      }
+
+      const data = await res.json();
+      setProfile(data as Record<string, unknown>);
+
+      const businessName = (data as Record<string, unknown>).businessName;
+      if (!businessName) {
+        router.push('/onboarding');
+      } else {
+        setChecking(false);
+      }
+    } catch (e) {
+      console.error('Profile check failed', e);
+      setChecking(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    void checkProfile();
+  }, [checkProfile]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    router.push('/login');
+  };
+
+  if (checking) {
     return (
-        <DataRefreshProvider>
-            <CustomerViewProvider>
-                <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex relative overflow-hidden transition-colors duration-300">
-                    <SubscriptionModal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} />
-                    <CustomerQuickViewModal />
-
-                    {/* Ambient Background Effects - Dark Mode Only */}
-                    <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none hidden dark:block"></div>
-                    <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none hidden dark:block"></div>
-
-                    {/* Mobile Sidebar Backdrop */}
-                    {isMobileSidebarOpen && (
-                        <div
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden"
-                            onClick={() => setIsMobileSidebarOpen(false)}
-                        />
-                    )}
-
-                    <aside className={`w-64 bg-white dark:bg-[#0f172a]/60 backdrop-blur-xl fixed h-full z-40 transition-all duration-300 ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-                        } md:block`}>
-                        <div className="h-24 flex items-center justify-between px-8 border-b border-slate-100 dark:border-white/5">
-                            <Link href="/dashboard" className="flex items-center gap-3">
-                                <Image src="/brand-logo-final.png" alt="Kada Ledger" width={40} height={40} className="rounded-xl shadow-lg shadow-blue-500/20" />
-                                <span className="text-xl font-bold text-slate-900 dark:text-white tracking-wide">Kada Ledger</span>
-                            </Link>
-                            <button
-                                onClick={() => setIsMobileSidebarOpen(false)}
-                                className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors"
-                            >
-                                <X size={20} className="text-slate-600 dark:text-slate-400" />
-                            </button>
-                        </div>
-
-                        <nav className="p-4 space-y-2">
-                            {[
-                                { href: '/dashboard', icon: '🏠', label: 'Overview' },
-                                { href: '/dashboard/analytics', icon: '📊', label: 'Analytics' },
-                                { href: '/dashboard/customers', icon: '👥', label: 'Customers' },
-                                { href: '/dashboard/transactions', icon: '💳', label: 'Transactions' },
-                                { href: '/dashboard/reports', icon: '📄', label: 'Reports' },
-                                { href: '/dashboard/settings', icon: '⚙️', label: 'Settings' },
-                            ].map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="flex items-center gap-3 px-4 py-3.5 text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-white rounded-xl transition-all duration-200 font-medium group"
-                                >
-                                    <span className="group-hover:scale-110 transition-transform">{item.icon}</span>
-                                    {item.label}
-                                </Link>
-                            ))}
-                        </nav>
-
-                        <div className="absolute bottom-8 left-0 w-full px-4">
-                            {!isPro ? (
-                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-600/20 dark:to-indigo-600/20 border border-blue-100 dark:border-blue-500/20 p-5 rounded-2xl relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-blue-500/10 blur-xl group-hover:bg-blue-500/20 transition-colors hidden dark:block"></div>
-                                    <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mb-1 relative z-10 flex justify-between">
-                                        <span>{profile?.subscription?.planType || 'Free Plan'}</span>
-                                        <span className="text-blue-600 dark:text-blue-300">{profile?.subscription?.daysLeft} Days Left</span>
-                                    </p>
-                                    <div className="w-full bg-blue-200 dark:bg-white/10 h-1.5 rounded-full mb-3 relative z-10">
-                                        <div
-                                            className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
-                                            style={{ width: `${Math.min(100, Math.max(0, (profile?.subscription?.daysLeft / 14) * 100))}%` }}
-                                        ></div>
-                                    </div>
-                                    <p className="text-xs text-blue-600 dark:text-blue-200/70 mb-4 relative z-10">Upgrade to unlock all features.</p>
-                                    <button onClick={() => setIsUpgradeModalOpen(true)} className="block w-full text-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-lg shadow-lg shadow-blue-600/20 transition-all relative z-10">
-                                        Upgrade Now
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-600/20 dark:to-emerald-600/20 border border-green-100 dark:border-green-500/20 p-5 rounded-2xl relative text-center">
-                                    <p className="text-xs font-bold text-green-800 dark:text-green-200 mb-1">PRO Active</p>
-                                    <p className="text-xs text-green-600 dark:text-green-200/70 mb-2">Thanks for being a premium member!</p>
-                                    <p className="text-[10px] text-green-700 dark:text-green-200/50 uppercase tracking-widest font-bold">
-                                        {profile?.subscription?.daysLeft} Days Left
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </aside>
-
-                    {/* Main Content */}
-                    <main className="flex-1 md:ml-64 p-0 relative z-10">
-                        <div className="app-mobile-container py-4 md:py-8">
-                        {/* Lock Screen if Expired */}
-                        {profile?.subscription?.daysLeft <= 0 ? (
-                            <SubscriptionLockScreen onRenew={() => setIsUpgradeModalOpen(true)} />
-                        ) : (
-                            <>
-                                {/* Subscription Warning Banner */}
-                                {profile?.subscription?.daysLeft <= 7 && profile?.subscription?.daysLeft > 0 && (
-                                    <div className="mb-6 p-4 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-between animate-fade-in-up">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-orange-500">⚠️</span>
-                                            <div>
-                                                <p className="text-sm font-bold text-orange-800 dark:text-orange-200">Subscription Expiring Soon</p>
-                                                <p className="text-xs text-orange-600 dark:text-orange-300">Your plan expires in {profile?.subscription?.daysLeft} days. Renew now to avoid interruption.</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => setIsUpgradeModalOpen(true)}
-                                            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-orange-500/20"
-                                        >
-                                            Renew Now
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Top Header */}
-                                <header className="flex md:justify-center justify-between items-center mb-6 md:mb-10 relative">
-                                    {/* Mobile Menu Button - Absolute on Desktop/Centered layout? No, keep it simple. */}
-                                    <div className="md:hidden">
-                                        <button
-                                            onClick={() => setIsMobileSidebarOpen(true)}
-                                            className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors border border-slate-200 dark:border-white/10"
-                                        >
-                                            <Menu size={24} className="text-slate-600 dark:text-slate-400" />
-                                        </button>
-                                    </div>
-
-                                    {/* Search - Centered */}
-                                    <div className="w-full max-w-2xl px-4">
-                                        <GlobalSearch />
-                                    </div>
-
-                                    {/* Spacer/Empty div for balance on mobile if needed, or just let Search take width */}
-                                    <div className="w-10 md:hidden"></div>
-                                </header>
-
-                                {children}
-                            </>
-                        )}
-                        </div>
-                    </main>
-                </div>
-            </CustomerViewProvider>
-        </DataRefreshProvider>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-500"></div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 animate-pulse">Loading your dashboard...</p>
+        </div>
+      </div>
     );
+  }
+
+  const subscription = profile?.subscription as Record<string, unknown> | undefined;
+  const planType = subscription?.planType as string | undefined;
+  const daysLeft = subscription?.daysLeft as number | undefined;
+
+  const isPro = planType === 'MONTHLY' || planType === 'YEARLY' || planType === 'PROFESSIONAL' || planType === 'BUSINESS';
+  const isExpired = typeof daysLeft === 'number' && daysLeft <= 0 && planType !== 'TRIAL';
+
+  const isNavActive = (item: typeof navItems[0]) => {
+    if (item.exact) return currentPath === item.href;
+    return currentPath.startsWith(item.href);
+  };
+
+  return (
+    <DataRefreshProvider>
+      <CustomerViewProvider>
+        <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex relative overflow-x-hidden transition-colors duration-300">
+          <SubscriptionModal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} />
+          <CustomerQuickViewModal />
+
+          {/* Ambient Background - Dark Mode */}
+          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600/8 rounded-full blur-[120px] pointer-events-none hidden dark:block" aria-hidden="true" />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/8 rounded-full blur-[120px] pointer-events-none hidden dark:block" aria-hidden="true" />
+
+          {/* Mobile Sidebar Backdrop */}
+          {isMobileSidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden"
+              onClick={() => setIsMobileSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Sidebar */}
+          <aside
+            className={`w-64 bg-white dark:bg-[#0f172a] border-r border-slate-100 dark:border-white/5 fixed h-full z-40 flex flex-col transition-transform duration-300 ease-out ${
+              isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'
+            }`}
+          >
+            {/* Logo */}
+            <div className="h-16 flex items-center justify-between px-5 border-b border-slate-100 dark:border-white/5 flex-shrink-0">
+              <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setIsMobileSidebarOpen(false)}>
+                <Image
+                  src="/brand-logo-final.png"
+                  alt="Kada Ledger"
+                  width={32}
+                  height={32}
+                  className="rounded-lg shadow-md shadow-blue-500/20"
+                />
+                <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Kada Ledger</span>
+              </Link>
+              <button
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={18} className="text-slate-500 dark:text-slate-400" />
+              </button>
+            </div>
+
+            {/* Nav */}
+            <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+              {navItems.map((item) => {
+                const active = isNavActive(item);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 font-medium text-sm group ${
+                      active
+                        ? 'bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Icon
+                      size={18}
+                      className={`flex-shrink-0 transition-transform group-hover:scale-110 ${active ? 'text-blue-600 dark:text-blue-400' : ''}`}
+                      strokeWidth={active ? 2.5 : 1.8}
+                    />
+                    {item.label}
+                    {active && (
+                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Bottom: Plan Status & Logout */}
+            <div className="p-3 border-t border-slate-100 dark:border-white/5 space-y-2 flex-shrink-0">
+              {isPro ? (
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
+                  <Crown size={16} className="text-amber-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-amber-800 dark:text-amber-300 truncate">PRO Active</p>
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400">{daysLeft} days remaining</p>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-blue-600/20"
+                >
+                  <Crown size={16} className="flex-shrink-0" />
+                  <span>Upgrade to Pro</span>
+                </button>
+              )}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors text-sm font-medium"
+              >
+                <LogOut size={16} className="flex-shrink-0" />
+                Sign Out
+              </button>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 md:ml-64 flex flex-col min-h-screen">
+            {/* Top Header */}
+            <header className="sticky top-0 z-20 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-xl border-b border-slate-100 dark:border-white/5 flex items-center gap-3 px-4 py-3 h-16">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-colors flex-shrink-0"
+                aria-label="Open menu"
+              >
+                <Menu size={20} className="text-slate-600 dark:text-slate-300" />
+              </button>
+
+              {/* Logo on mobile */}
+              <Link href="/dashboard" className="md:hidden flex items-center gap-2 flex-shrink-0">
+                <Image src="/brand-logo-final.png" alt="Kada Ledger" width={28} height={28} className="rounded-md" />
+                <span className="text-sm font-bold text-slate-900 dark:text-white">Kada Ledger</span>
+              </Link>
+
+              {/* Search - grows to fill space */}
+              <div className="flex-1">
+                <GlobalSearch />
+              </div>
+
+              {/* Mode Toggle */}
+              <div className="flex-shrink-0">
+                <ModeToggle />
+              </div>
+            </header>
+
+            {/* Page Content */}
+            <div className="flex-1 p-4 md:p-6 pb-24 md:pb-8">
+              {/* Subscription Warning Banner */}
+              {typeof daysLeft === 'number' && daysLeft <= 7 && daysLeft > 0 && (
+                <div className="mb-6 p-3 md:p-4 rounded-2xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-orange-500 flex-shrink-0">⚠️</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-orange-800 dark:text-orange-200 truncate">Plan expires in {daysLeft} days</p>
+                      <p className="text-xs text-orange-600 dark:text-orange-300 hidden sm:block">Renew now to avoid interruption.</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsUpgradeModalOpen(true)}
+                    className="flex-shrink-0 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors"
+                  >
+                    Renew
+                  </button>
+                </div>
+              )}
+
+              {/* Lock Screen or Content */}
+              {isExpired ? (
+                <SubscriptionLockScreen onRenew={() => setIsUpgradeModalOpen(true)} />
+              ) : (
+                children
+              )}
+            </div>
+          </main>
+
+          {/* Mobile Bottom Navigation */}
+          <MobileBottomNav />
+        </div>
+      </CustomerViewProvider>
+    </DataRefreshProvider>
+  );
 }
