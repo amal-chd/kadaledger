@@ -1,0 +1,24 @@
+{
+  "appId": "in.thekada.app",
+  "appName": "Kada Ledger",
+  "webDir": "www",
+  "server": {
+    "url": "https://thekada.in",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "always",
+    "scrollEnabled": true,
+    "deploymentTarget": "16.0",
+    "backgroundColor": "#0F172A",
+    "preferredContentMode": "mobile",
+    "allowsBackForwardNavigationGestures": true,
+    "scheme": "Kada Ledger"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}

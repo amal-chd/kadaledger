@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { CheckCircle2, X, Loader2, Zap, Crown, Sparkles } from 'lucide-react';
 import Script from 'next/script';
 import toast from 'react-hot-toast';
@@ -47,6 +48,7 @@ const PLAN_META: Record<string, {
 const PAID_ORDER = ['MONTHLY', 'YEARLY', 'LIFETIME'];
 
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
+    const router = useRouter();
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
     const [plans, setPlans] = useState<any[]>([]);
 
@@ -83,7 +85,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         const token = localStorage.getItem('token');
         if (!token) {
             toast.error("You are not logged in. Please login to continue.");
-            window.location.href = '/login';
+            router.push('/login');
             return;
         }
 
@@ -134,7 +136,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                         if (verifyData.status === 'success') {
                             toast.success('Payment Successful! Plan activated.');
                             onClose();
-                            window.location.href = '/dashboard';
+                            router.push('/dashboard');
                         } else {
                             toast.error(verifyData.message || 'Payment verification failed.');
                         }

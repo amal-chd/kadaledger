@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Cloud, Download, Upload, Loader2, CheckCircle2, AlertCircle, Trash2, Unplug } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -133,6 +134,7 @@ const jsonToCsv = (data: any): string => {
 };
 
 export default function DriveBackup() {
+    const router = useRouter();
     const [gapiLoaded, setGapiLoaded] = useState(false);
     const [gisLoaded, setGisLoaded] = useState(false);
     const [tokenClient, setTokenClient] = useState<any>(null);
@@ -322,8 +324,8 @@ export default function DriveBackup() {
                     throw new Error(errData.error || "Import failed on server");
                 }
 
-                toast.success('Import Successful! Database synced.', { id: toastId });
-                setTimeout(() => window.location.reload(), 2000);
+                toast.success('Import Successful! Redirecting to dashboard...', { id: toastId });
+                setTimeout(() => router.push('/dashboard'), 1500);
             } else {
                 toast.error('No backup CSV files found in Drive', { id: toastId });
             }

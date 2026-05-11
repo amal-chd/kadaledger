@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Build vars injected by Xcode -->
+    <key>CAPACITOR_DEBUG</key>
+    <string>$(CAPACITOR_DEBUG)</string>
+
+    <!-- App Identity -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>Kada Ledger</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+
+    <!-- iOS Requirement -->
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>MinimumOSVersion</key>
+    <string>16.0</string>
+
+    <!-- Launch Screen -->
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UIMainStoryboardFile</key>
+    <string>Main</string>
+
+    <!-- Required device capability: armv7 removed; arm64 is the modern target -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+
+    <!-- Lock to portrait on iPhone; all orientations on iPad -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- Status bar: let Capacitor / WKWebView control it -->
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
+    <key>UIStatusBarHidden</key>
+    <false/>
+
+    <!-- Dark mode support -->
+    <key>UIUserInterfaceStyle</key>
+    <string>Automatic</string>
+
+    <!-- App Transport Security: only allow HTTPS (production server) -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>thekada.in</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSRequiresCertificateTransparency</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+
+    <!-- Privacy usage descriptions (required by App Store) -->
+    <key>NSCameraUsageDescription</key>
+    <string>Used to scan barcodes or take photos for your business records.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Used to attach photos to your business transactions.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Used to securely authenticate you into Kada Ledger.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Used to import your phone contacts as customers in Kada Ledger.</string>
+
+    <!-- App Store Encryption Compliance -->
+    <!-- App uses HTTPS (TLS) only — standard exempt encryption -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+
+    <!-- Background modes: not needed for this app -->
+
+    <!-- URL schemes: allow the app to be opened via deep link -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>in.thekada.app</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>kadaledger</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- Queries: allow WhatsApp deep links -->
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>whatsapp</string>
+        <string>tel</string>
+        <string>sms</string>
+    </array>
+</dict>
+</plist>

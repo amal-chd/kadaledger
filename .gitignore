@@ -27,3 +27,13 @@ yarn-error.log*
 # Misc
 .turbo/
 .cache/
+
+# iOS / Xcode
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/Pods/
+ios/App/.swiftpm/
+ios/App/DerivedData/
+*.xcuserstate
+*.xcscheme
+ios/App/App.xcworkspace/xcshareddata/swiftpm/Package.resolved
