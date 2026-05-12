@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         const vendorRef = db.collection('vendors').doc(); // Auto-generate ID
         const vendorId = vendorRef.id;
         const now = new Date();
-        const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+        const lifetimeEnd = new Date('2100-01-01');
 
         await vendorRef.set({
             id: vendorId,
@@ -56,10 +56,10 @@ export async function POST(req: Request) {
             language: 'English',
             createdAt: now,
             updatedAt: now,
-            plan: 'TRIAL',
+            plan: 'LIFETIME',
             planStatus: 'ACTIVE',
             trialStartDate: now,
-            subscriptionEndDate: trialEnd,
+            subscriptionEndDate: lifetimeEnd,
             preferences: {
                 quietMode: false,
                 quietStart: null,

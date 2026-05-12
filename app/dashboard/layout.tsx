@@ -6,11 +6,9 @@ import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 
 import GlobalSearch from '@/components/dashboard/global-search';
-import SubscriptionModal from '@/components/dashboard/subscription-modal';
 import { CustomerViewProvider } from '@/contexts/customer-view-context';
 import { DataRefreshProvider } from '@/contexts/data-refresh-context';
 import CustomerQuickViewModal from '@/components/dashboard/customer-quick-view-modal';
-import SubscriptionLockScreen from '@/components/dashboard/subscription-lock-screen';
 import { ModeToggle } from '@/components/dashboard/mode-toggle';
 
 const API_URL = '/api';
@@ -23,7 +21,6 @@ export default function DashboardLayout({
     const router = useRouter();
     const [checking, setChecking] = useState(true);
     const [profile, setProfile] = useState<any>(null);
-    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     const checkProfile = useCallback(async () => {
@@ -73,13 +70,10 @@ export default function DashboardLayout({
         );
     }
 
-    const isPro = profile?.subscription?.planType === 'MONTHLY' || profile?.subscription?.planType === 'YEARLY' || profile?.subscription?.planType === 'PROFESSIONAL' || profile?.subscription?.planType === 'BUSINESS';
-
     return (
         <DataRefreshProvider>
             <CustomerViewProvider>
                 <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex relative overflow-hidden transition-colors duration-300">
-                    <SubscriptionModal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} />
                     <CustomerQuickViewModal />
 
                     {/* Ambient Background Effects - Dark Mode Only */}
@@ -130,87 +124,37 @@ export default function DashboardLayout({
                         </nav>
 
                         <div className="absolute bottom-8 left-0 w-full px-4">
-                            {!isPro ? (
-                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-600/20 dark:to-indigo-600/20 border border-blue-100 dark:border-blue-500/20 p-5 rounded-2xl relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-blue-500/10 blur-xl group-hover:bg-blue-500/20 transition-colors hidden dark:block"></div>
-                                    <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mb-1 relative z-10 flex justify-between">
-                                        <span>{profile?.subscription?.planType || 'Free Plan'}</span>
-                                        <span className="text-blue-600 dark:text-blue-300">{profile?.subscription?.daysLeft} Days Left</span>
-                                    </p>
-                                    <div className="w-full bg-blue-200 dark:bg-white/10 h-1.5 rounded-full mb-3 relative z-10">
-                                        <div
-                                            className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
-                                            style={{ width: `${Math.min(100, Math.max(0, (profile?.subscription?.daysLeft / 14) * 100))}%` }}
-                                        ></div>
-                                    </div>
-                                    <p className="text-xs text-blue-600 dark:text-blue-200/70 mb-4 relative z-10">Upgrade to unlock all features.</p>
-                                    <button onClick={() => setIsUpgradeModalOpen(true)} className="block w-full text-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-lg shadow-lg shadow-blue-600/20 transition-all relative z-10">
-                                        Upgrade Now
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-600/20 dark:to-emerald-600/20 border border-green-100 dark:border-green-500/20 p-5 rounded-2xl relative text-center">
-                                    <p className="text-xs font-bold text-green-800 dark:text-green-200 mb-1">PRO Active</p>
-                                    <p className="text-xs text-green-600 dark:text-green-200/70 mb-2">Thanks for being a premium member!</p>
-                                    <p className="text-[10px] text-green-700 dark:text-green-200/50 uppercase tracking-widest font-bold">
-                                        {profile?.subscription?.daysLeft} Days Left
-                                    </p>
-                                </div>
-                            )}
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-600/20 dark:to-emerald-600/20 border border-green-100 dark:border-green-500/20 p-5 rounded-2xl relative text-center">
+                                <p className="text-xs font-bold text-green-800 dark:text-green-200 mb-1">FREE TO USE</p>
+                                <p className="text-xs text-green-600 dark:text-green-200/70 mb-2">All features unlocked!</p>
+                            </div>
                         </div>
                     </aside>
 
                     {/* Main Content */}
                     <main className="flex-1 md:ml-64 p-0 relative z-10">
                         <div className="app-mobile-container py-4 md:py-8">
-                        {/* Lock Screen if Expired */}
-                        {profile?.subscription?.daysLeft <= 0 ? (
-                            <SubscriptionLockScreen onRenew={() => setIsUpgradeModalOpen(true)} />
-                        ) : (
-                            <>
-                                {/* Subscription Warning Banner */}
-                                {profile?.subscription?.daysLeft <= 7 && profile?.subscription?.daysLeft > 0 && (
-                                    <div className="mb-6 p-4 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-between animate-fade-in-up">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-orange-500">⚠️</span>
-                                            <div>
-                                                <p className="text-sm font-bold text-orange-800 dark:text-orange-200">Subscription Expiring Soon</p>
-                                                <p className="text-xs text-orange-600 dark:text-orange-300">Your plan expires in {profile?.subscription?.daysLeft} days. Renew now to avoid interruption.</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => setIsUpgradeModalOpen(true)}
-                                            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-orange-500/20"
-                                        >
-                                            Renew Now
-                                        </button>
-                                    </div>
-                                )}
+                            {/* Top Header */}
+                            <header className="flex md:justify-center justify-between items-center mb-6 md:mb-10 relative">
+                                {/* Mobile Menu Button */}
+                                <div className="md:hidden">
+                                    <button
+                                        onClick={() => setIsMobileSidebarOpen(true)}
+                                        className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors border border-slate-200 dark:border-white/10"
+                                    >
+                                        <Menu size={24} className="text-slate-600 dark:text-slate-400" />
+                                    </button>
+                                </div>
 
-                                {/* Top Header */}
-                                <header className="flex md:justify-center justify-between items-center mb-6 md:mb-10 relative">
-                                    {/* Mobile Menu Button - Absolute on Desktop/Centered layout? No, keep it simple. */}
-                                    <div className="md:hidden">
-                                        <button
-                                            onClick={() => setIsMobileSidebarOpen(true)}
-                                            className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors border border-slate-200 dark:border-white/10"
-                                        >
-                                            <Menu size={24} className="text-slate-600 dark:text-slate-400" />
-                                        </button>
-                                    </div>
+                                {/* Search - Centered */}
+                                <div className="w-full max-w-2xl px-4">
+                                    <GlobalSearch />
+                                </div>
 
-                                    {/* Search - Centered */}
-                                    <div className="w-full max-w-2xl px-4">
-                                        <GlobalSearch />
-                                    </div>
+                                <div className="w-10 md:hidden"></div>
+                            </header>
 
-                                    {/* Spacer/Empty div for balance on mobile if needed, or just let Search take width */}
-                                    <div className="w-10 md:hidden"></div>
-                                </header>
-
-                                {children}
-                            </>
-                        )}
+                            {children}
                         </div>
                     </main>
                 </div>

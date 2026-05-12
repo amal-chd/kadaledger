@@ -42,7 +42,7 @@ export async function POST(req: Request) {
             // Create new vendor
             const vendorRef = db.collection('vendors').doc();
             const now = new Date();
-            const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+            const lifetimeEnd = new Date('2100-01-01');
 
             vendor = {
                 id: vendorRef.id,
@@ -51,10 +51,10 @@ export async function POST(req: Request) {
                 createdAt: now,
                 updatedAt: now,
                 subscription: {
-                    planType: 'TRIAL',
+                    planType: 'LIFETIME',
                     status: 'ACTIVE',
                     startDate: now,
-                    endDate: trialEnd
+                    endDate: lifetimeEnd
                 },
                 totalCustomers: 0
             };

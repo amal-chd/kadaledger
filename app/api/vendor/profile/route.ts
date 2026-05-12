@@ -22,32 +22,18 @@ export async function GET(req: Request) {
 
         const vendor = vendorDoc.data();
 
-        // Calculate Days Left
-        let daysLeft = 0;
-        let subscriptionStatus = vendor?.planStatus || 'EXPIRED';
-        if (vendor?.subscriptionEndDate) {
-            const end = vendor.subscriptionEndDate.toDate ? vendor.subscriptionEndDate.toDate().getTime() : new Date(vendor.subscriptionEndDate).getTime();
-            const now = new Date().getTime();
-            const diff = end - now;
-            daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
-            if (daysLeft <= 0) {
-                subscriptionStatus = 'EXPIRED';
-                daysLeft = 0;
-            }
-        }
-
+        // Always return LIFETIME plan with unlimited days
         const profileData = {
             id: vendor?.id || user.sub,
             businessName: vendor?.businessName,
             phoneNumber: vendor?.phoneNumber,
             language: vendor?.language || 'English',
             subscription: {
-                planType: vendor?.plan || 'FREE',
-                status: subscriptionStatus,
-                daysLeft: daysLeft,
-                startDate: vendor?.trialStartDate,
-                endDate: vendor?.subscriptionEndDate
+                planType: 'LIFETIME',
+                status: 'ACTIVE',
+                daysLeft: 999999,
+                startDate: new Date(),
+                endDate: new Date('2100-01-01')
             },
             totalPending: vendor?.totalPending || 0
         };
