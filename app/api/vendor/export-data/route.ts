@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getJwtPayload } from '@/lib/auth';
 import { firebaseAdmin } from '@/lib/firebase-admin';
+import { serializeFirestoreData } from '@/lib/firestore-utils';
 
 export async function GET(req: Request) {
     try {
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
         const customers = customersSnapshot.docs.map(doc => doc.data());
 
         // Fetch all transactions
-        const transactionsSnapshot = await db.collection('vendors').doc(vendorId).collection('transactions').get();
+        const transactionsSnapshot = await db.collection('vendors').doc(vendorId).collection('transactions').orderBy('date', 'desc').get();
         const transactions = transactionsSnapshot.docs.map(doc => doc.data());
 
         const exportData = {
@@ -38,7 +39,7 @@ export async function GET(req: Request) {
             transactions
         };
 
-        return NextResponse.json(exportData);
+        return NextResponse.json(serializeFirestoreData(exportData));
     } catch (error) {
         console.error('Export data error:', error);
         return NextResponse.json({ error: 'Failed to export data' }, { status: 500 });

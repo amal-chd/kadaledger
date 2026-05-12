@@ -117,9 +117,10 @@ const jsonToCsv = (data: any): string => {
             const customer = customerLookup.get(tx.customerId);
             const customerName = customer ? customer.name : 'Unknown';
             const customerPhone = customer ? customer.phoneNumber : '';
+            const txDate = new Date(tx.date).toISOString();
 
             rows.push([
-                escapeCsv(tx.date),
+                escapeCsv(txDate),
                 escapeCsv(customerName),
                 escapeCsv(customerPhone),
                 escapeCsv(tx.type),
@@ -139,6 +140,7 @@ export default function DriveBackup() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(false);
     const [lastBackup, setLastBackup] = useState<string | null>(null);
+    const [fileInputRef, setFileInputRef] = useState<HTMLInputElement | null>(null);
 
     // Initialize Google Scripts
     useEffect(() => {
@@ -229,6 +231,76 @@ export default function DriveBackup() {
         if (!res.ok) throw new Error('Failed to fetch local data');
 
         return await res.json();
+    };
+
+    const handleLocalExport = async () => {
+        setLoading(true);
+        const toastId = toast.loading('Exporting to CSV...');
+
+        try {
+            const data = await fetchLocalData();
+            const csvContent = jsonToCsv(data);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `KadaLedger_Backup_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast.success('Export Successful!', { id: toastId });
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Local export failed', { id: toastId });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleLocalImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setLoading(true);
+        const toastId = toast.loading('Importing CSV...');
+
+        try {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const csvData = event.target?.result as string;
+                    const backupData = csvToJson(csvData);
+
+                    const token = localStorage.getItem('token');
+                    if (!token) throw new Error("Not logged in");
+
+                    const importRes = await fetch('/api/vendor/import-data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(backupData)
+                    });
+
+                    if (!importRes.ok) {
+                        const errData = await importRes.json();
+                        throw new Error(errData.error || "Import failed on server");
+                    }
+
+                    toast.success('Import Successful! Database synced.', { id: toastId });
+                    setTimeout(() => window.location.reload(), 2000);
+                } catch (error: any) {
+                    toast.error(error.message || 'Import failed', { id: toastId });
+                    setLoading(false);
+                }
+            };
+            reader.readAsText(file);
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Import failed', { id: toastId });
+            setLoading(false);
+        }
     };
 
     const handleBackup = async () => {
@@ -365,32 +437,91 @@ export default function DriveBackup() {
             ) : (
                 <div className="space-y-4">
                     {!isAuthenticated ? (
-                        <button
-                            onClick={handleAuth}
-                            className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 dark:shadow-white/20"
-                        >
-                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-                            Connect Google Account
-                        </button>
+                        <div className="space-y-4">
+                            <button
+                                onClick={handleAuth}
+                                className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 dark:shadow-white/20"
+                            >
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+                                Connect Google Account
+                            </button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button
+                                    onClick={handleLocalExport}
+                                    disabled={loading}
+                                    className="py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50 shadow-lg shadow-blue-600/20"
+                                >
+                                    <Download size={24} className="group-hover:-translate-y-1 transition-transform" />
+                                    <span>Export Local CSV</span>
+                                </button>
+                                <div className="flex flex-col items-center justify-center">
+                                    <input
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={handleLocalImport}
+                                        ref={(ref) => setFileInputRef(ref)}
+                                        className="hidden"
+                                        disabled={loading}
+                                    />
+                                    <button
+                                        onClick={() => fileInputRef?.click()}
+                                        disabled={loading}
+                                        className="w-full py-4 px-6 rounded-xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50"
+                                    >
+                                        <Upload size={24} className="group-hover:translate-y-1 transition-transform" />
+                                        <span>Import Local CSV</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button
-                                onClick={handleBackup}
-                                disabled={loading}
-                                className="py-4 px-6 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50 shadow-lg shadow-accent/20"
-                            >
-                                <Upload size={24} className="group-hover:-translate-y-1 transition-transform" />
-                                <span>Export CSV</span>
-                            </button>
-
-                            <button
-                                onClick={handleRestore}
-                                disabled={loading}
-                                className="py-4 px-6 rounded-xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50"
-                            >
-                                <Download size={24} className="group-hover:translate-y-1 transition-transform" />
-                                <span>Import CSV</span>
-                            </button>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button
+                                    onClick={handleBackup}
+                                    disabled={loading}
+                                    className="py-4 px-6 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50 shadow-lg shadow-green-600/20"
+                                >
+                                    <Upload size={24} className="group-hover:-translate-y-1 transition-transform" />
+                                    <span>Export to Drive</span>
+                                </button>
+                                <button
+                                    onClick={handleRestore}
+                                    disabled={loading}
+                                    className="py-4 px-6 rounded-xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50"
+                                >
+                                    <Download size={24} className="group-hover:translate-y-1 transition-transform" />
+                                    <span>Import from Drive</span>
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button
+                                    onClick={handleLocalExport}
+                                    disabled={loading}
+                                    className="py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50 shadow-lg shadow-blue-600/20"
+                                >
+                                    <Download size={24} className="group-hover:-translate-y-1 transition-transform" />
+                                    <span>Export Local CSV</span>
+                                </button>
+                                <div className="flex flex-col items-center justify-center">
+                                    <input
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={handleLocalImport}
+                                        ref={(ref) => setFileInputRef(ref)}
+                                        className="hidden"
+                                        disabled={loading}
+                                    />
+                                    <button
+                                        onClick={() => fileInputRef?.click()}
+                                        disabled={loading}
+                                        className="w-full py-4 px-6 rounded-xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold transition-all flex flex-col items-center gap-2 group disabled:opacity-50"
+                                    >
+                                        <Upload size={24} className="group-hover:translate-y-1 transition-transform" />
+                                        <span>Import Local CSV</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
 

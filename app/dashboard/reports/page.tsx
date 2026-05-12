@@ -85,7 +85,7 @@ export default function ReportsPage() {
         const toastId = toast.loading('Generating PDF...');
 
         try {
-            const jsPDF = (await import('jspdf')).default;
+            const { jsPDF } = await import('jspdf');
             const autoTable = (await import('jspdf-autotable')).default;
 
             const doc: any = new jsPDF();
@@ -124,15 +124,7 @@ export default function ReportsPage() {
                 styles: { fontSize: 9 }
             };
 
-            // Try prototype method first, then functional method
-            if (typeof doc.autoTable === 'function') {
-                doc.autoTable(tableOptions);
-            } else if (typeof autoTable === 'function') {
-                autoTable(doc, tableOptions);
-            } else {
-                console.error('autoTable type:', typeof autoTable, autoTable);
-                throw new Error('PDF plugin payload failed to load');
-            }
+            autoTable(doc, tableOptions);
 
             doc.save(`Kada_Report_${dateStart}_${dateEnd}.pdf`);
             toast.success('PDF downloaded', { id: toastId });

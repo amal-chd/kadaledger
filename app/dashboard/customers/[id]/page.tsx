@@ -105,9 +105,9 @@ export default function CustomerDetailsPage() {
             const reportData = await res.json();
             const allTransactions = reportData.transactions || [];
 
-            // Dynamic import for jspdf
-            const jsPDF = (await import('jspdf')).default;
-            await import('jspdf-autotable');
+            // Dynamic import for jspdf and jspdf-autotable
+            const { jsPDF } = await import('jspdf');
+            const autoTable = (await import('jspdf-autotable')).default;
 
             const doc: any = new jsPDF();
 
@@ -132,12 +132,7 @@ export default function CustomerDetailsPage() {
                 `₹${tx.amount.toLocaleString()}`
             ]);
 
-            // Ensure autoTable is available
-            if (typeof doc.autoTable !== 'function') {
-                throw new Error('PDF plugin not loaded. Please try again.');
-            }
-
-            doc.autoTable({
+            autoTable(doc, {
                 startY: 65,
                 head: headers,
                 body: data,
