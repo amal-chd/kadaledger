@@ -30,7 +30,27 @@ export async function GET(req: Request) {
                 .limit(50)
                 .get();
 
-            const transactions = transactionsSnapshot.docs.map(doc => doc.data());
+            const customerDoc = await db
+                .collection('vendors')
+                .doc(user.sub)
+                .collection('customers')
+                .doc(customerId)
+                .get();
+
+            const customerData = customerDoc.exists ? customerDoc.data() : null;
+            const customer = customerData ? {
+                id: customerId,
+                name: customerData.name,
+                phoneNumber: customerData.phoneNumber
+            } : null;
+
+            const transactions = transactionsSnapshot.docs.map(doc => {
+                const data = doc.data();
+                if (!data.customer) {
+                    data.customer = customer;
+                }
+                return data;
+            });
             return NextResponse.json(serializeFirestoreData(transactions));
         } else {
             // Fetch all recent transactions from vendor's transactions collection
@@ -42,7 +62,47 @@ export async function GET(req: Request) {
                 .limit(100)
                 .get();
 
-            const transactions = transactionsSnapshot.docs.map(doc => doc.data());
+            // Get all unique customer IDs to fetch in batch
+            const customerIds = new Set<string>();
+            transactionsSnapshot.docs.forEach(doc => {
+                const data = doc.data();
+                if (data.customerId) {
+                    customerIds.add(data.customerId);
+                }
+            });
+
+            // Fetch all customers in parallel
+            const customerPromises = Array.from(customerIds).map(async (id) => {
+                const doc = await db
+                    .collection('vendors')
+                    .doc(user.sub)
+                    .collection('customers')
+                    .doc(id)
+                    .get();
+                return { id, data: doc.exists ? doc.data() : null };
+            });
+
+            const customerResults = await Promise.all(customerPromises);
+            const customerMap = new Map<string, any>();
+            customerResults.forEach(({ id, data }) => {
+                if (data) {
+                    customerMap.set(id, {
+                        id,
+                        name: data.name,
+                        phoneNumber: data.phoneNumber
+                    });
+                }
+            });
+
+            // Attach customer to each transaction
+            const transactions = transactionsSnapshot.docs.map(doc => {
+                const data = doc.data();
+                if (!data.customer && data.customerId && customerMap.has(data.customerId)) {
+                    data.customer = customerMap.get(data.customerId);
+                }
+                return data;
+            });
+
             return NextResponse.json(serializeFirestoreData(transactions));
         }
     } catch (error) {
@@ -80,6 +140,21 @@ export async function POST(req: Request) {
         const db = firebaseAdmin.firestore();
         const batch = db.batch();
 
+        // Get customer details to include in transaction
+        const customerDoc = await db
+            .collection('vendors')
+            .doc(user.sub)
+            .collection('customers')
+            .doc(customerId)
+            .get();
+
+        const customerData = customerDoc.exists ? customerDoc.data() : null;
+        const customer = customerData ? {
+            id: customerId,
+            name: customerData.name,
+            phoneNumber: customerData.phoneNumber
+        } : null;
+
         // 1. Create transaction in customer's subcollection
         const transactionRef = db
             .collection('vendors')
@@ -97,7 +172,8 @@ export async function POST(req: Request) {
             amount: transactionAmount,
             description: description || null,
             date: transactionDate,
-            createdAt: transactionDate
+            createdAt: transactionDate,
+            customer
         };
 
         batch.set(transactionRef, transaction);
